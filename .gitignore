@@ -1,3 +1,7 @@
+# EMG RAG project
+raw/
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
