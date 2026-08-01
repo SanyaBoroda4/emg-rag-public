@@ -27,6 +27,8 @@ XLSX_PATH = Path("/opt/emg-rag/raw/qb/EMG_All_Invoices_2026-07-29.xlsx")
 
 # " x<qty> $<amount>" at the end of a segment; name is everything before it.
 LINE_RE = re.compile(r"^(?P<name>.*) x(?P<qty>[\d.]+) \$(?P<amt>-?[\d,]+\.?\d*)$")
+# Some segments carry no qty at all ("Additional:Sales $0.00") — qty stays NULL.
+LINE_NO_QTY_RE = re.compile(r"^(?P<name>.*) \$(?P<amt>-?[\d,]+\.?\d*)$")
 
 INVOICE_SQL = """
     INSERT INTO invoices (doc_number, qb_id, customer_name, txn_date, due_date,
@@ -58,11 +60,17 @@ def parse_lines(doc_number: str, summary):
     if not summary:
         return rows, fails
     for i, seg in enumerate(str(summary).split(" | "), start=1):
-        m = LINE_RE.match(seg.strip())
+        seg = seg.strip()
+        m = LINE_RE.match(seg)
+        if m:
+            qty = float(m.group("qty"))
+        else:
+            m = LINE_NO_QTY_RE.match(seg)
+            qty = None
         if not m:
+            # remaining failures are summaries QB truncated with a trailing "…"
             fails += 1
             continue
-        qty = float(m.group("qty"))
         amount = float(m.group("amt").replace(",", ""))
         unit = round(amount / qty, 4) if qty else None
         rows.append((doc_number, i, m.group("name"), None, qty, unit, amount))
