@@ -121,9 +121,10 @@ def main() -> int:
                 """)
                 in_qb = cur.fetchone()[0]
                 cur.execute("""
-                    SELECT DISTINCT ji.doc_number FROM job_invoices ji
+                    SELECT ji.doc_number FROM job_invoices ji
                     LEFT JOIN invoices i ON i.doc_number = ji.doc_number
                     WHERE i.doc_number IS NULL
+                    GROUP BY ji.doc_number
                     ORDER BY ji.doc_number::int
                 """)
                 not_in_qb = [r[0] for r in cur.fetchall()]
