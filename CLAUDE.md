@@ -30,6 +30,15 @@ limit.
 **Note on the JSON files:** they were written on Windows and carry a UTF-8 BOM. Any
 reader must use `encoding="utf-8-sig"`, not `utf-8`.
 
+## Server access rules
+SSH to root@SERVER_IP_REDACTED is permitted for this project only.
+- Only touch /opt/emg-rag and the emg_rag_db container
+- NEVER stop, restart, modify, or inspect: evolution_api, evolution_postgres,
+  evolution_redis, caddy, emg_mcp
+- NEVER run system-wide changes: apt upgrade, reboot, firewall rules, cron edits
+  outside this project
+- If a task seems to require touching production services, stop and ask
+
 ## Git workflow — MANDATORY
 Commit and push after every completed unit of work. Do not ask permission.
 - One logical change = one commit
