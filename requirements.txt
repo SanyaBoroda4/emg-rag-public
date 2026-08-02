@@ -1,3 +1,5 @@
 psycopg[binary]
 python-dotenv
 openpyxl
+anthropic
+voyageai
