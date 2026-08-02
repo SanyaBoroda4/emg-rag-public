@@ -30,6 +30,8 @@ Classify the question into exactly one route:
 - "hybrid": needs a structured filter first (material, amount, date, status) AND then reading the matching jobs' notes.
 - "refuse": not answerable from this company's data at all (general knowledge, weather, other companies).
 
+A bare name, invoice number, address fragment, or material with no other words is a LOOKUP — the user wants everything the data has about it. Route it to "semantic" (it searches notes; identifiers are matched by the keyword lane). Never refuse a bare identifier.
+
 Respond with JSON only: {"route": "...", "reason": "<one line>"}"""
 
 SCHEMA = {
