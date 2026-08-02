@@ -30,7 +30,9 @@ MODEL = "voyage-3.5-lite"
 # while ~128 texts (~16K tokens) passes roughly once a minute. So: small
 # batches, paced, with backoff absorbing the remainder. Full corpus ~1M
 # tokens => ~an hour wall-clock at this tier; run detached.
-BATCH_SIZE = 128
+# 48 texts ~= 7K tokens, safely under the unpaid tier's 10K token/min cap
+# (128-text ~18K-token calls were refused outright once note length grew).
+BATCH_SIZE = 48
 PAUSE_BETWEEN_CALLS = 60  # seconds between calls
 PER_MTOK = 0.02
 
@@ -107,8 +109,7 @@ def main() -> int:
                     cur.executemany(UPSERT_SQL, rows)
                 conn.commit()
                 done += len(rows)
-                if done % 1280 == 0 or done == len(todo):
-                    print(f"  {done}/{len(todo)} embedded")
+                print(f"  {done}/{len(todo)} embedded")
 
             cost = total_tokens * PER_MTOK / 1_000_000
             with conn.cursor() as cur:
