@@ -3,3 +3,5 @@ python-dotenv
 openpyxl
 anthropic
 voyageai
+sentence-transformers
+sqlglot
