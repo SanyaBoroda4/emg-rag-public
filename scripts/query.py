@@ -103,12 +103,15 @@ def main() -> int:
             try:
                 sql_result = run_structured(question,
                                             hybrid=(route == "hybrid"))
-            except ValueError as e:
-                print(f"\nSQL REJECTED by validator: {e}")
+            except Exception as e:
+                print(f"\nSQL lane failed ({type(e).__name__}): {e}")
+                print("falling back to semantic retrieval")
                 sql_result = None
+                route = "semantic" if route == "structured" else route
             watch.stage("sql", t0)
             if sql_result:
-                total_cost += cost_of("claude-sonnet-5", sql_result["usage"])
+                for u in sql_result["usages"]:
+                    total_cost += cost_of("claude-sonnet-5", u)
                 print(f"\nSQL:\n{sql_result['sql']}")
                 print(f"rows: {sql_result['row_count']}")
                 for r in sql_result["rows"][:10]:

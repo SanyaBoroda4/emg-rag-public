@@ -100,7 +100,10 @@ def generate_sql(question: str, hybrid: bool = False):
 
 def validate_sql(sql: str) -> str:
     """Validate and normalize; returns the SQL to execute. Raises ValueError."""
-    statements = sqlglot.parse(sql, dialect="postgres")
+    try:
+        statements = sqlglot.parse(sql, dialect="postgres")
+    except sqlglot.errors.ParseError as e:
+        raise ValueError(f"SQL does not parse: {e}") from e
     if len(statements) != 1:
         raise ValueError(f"expected exactly 1 statement, got {len(statements)}")
     tree = statements[0]
@@ -142,10 +145,45 @@ def execute_sql(sql: str):
     return columns, rows
 
 
+def repair_sql(question: str, bad_sql: str, error: str, hybrid: bool):
+    """One repair attempt: feed the validator error back to the model."""
+    client = anthropic.Anthropic()
+    prompt = question
+    if hybrid:
+        prompt += "\n\n(The SELECT must include the job_id column.)"
+    resp = client.messages.create(
+        model=SQL_MODEL, max_tokens=1000,
+        system=SYSTEM_PROMPT,
+        messages=[
+            {"role": "user", "content": prompt},
+            {"role": "assistant", "content": bad_sql},
+            {"role": "user", "content":
+             f"That SQL was rejected: {error}\nRewrite it. Same rules — "
+             f"output only the corrected SQL."},
+        ])
+    sql = next(b.text for b in resp.content if b.type == "text").strip()
+    if sql.startswith("```"):
+        sql = sql.strip("`")
+        if sql.lower().startswith("sql"):
+            sql = sql[3:]
+        sql = sql.strip()
+    return sql, resp.usage
+
+
 def run_structured(question: str, hybrid: bool = False) -> dict:
-    """Full lane: generate -> validate -> execute. Never rows without SQL."""
+    """Full lane: generate -> validate (with one repair) -> execute.
+
+    Never returns rows without the SQL that produced them. Raises ValueError
+    if even the repaired SQL fails validation.
+    """
     raw_sql, usage = generate_sql(question, hybrid=hybrid)
-    safe_sql = validate_sql(raw_sql)
+    usages = [usage]
+    try:
+        safe_sql = validate_sql(raw_sql)
+    except ValueError as e:
+        raw_sql, usage2 = repair_sql(question, raw_sql, str(e), hybrid)
+        usages.append(usage2)
+        safe_sql = validate_sql(raw_sql)  # second failure propagates
     columns, rows = execute_sql(safe_sql)
     return {"sql": safe_sql, "columns": columns, "rows": rows,
-            "row_count": len(rows), "usage": usage}
+            "row_count": len(rows), "usages": usages}
