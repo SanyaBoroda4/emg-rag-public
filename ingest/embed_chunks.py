@@ -23,13 +23,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import voyageai
 
 from ingest.db import get_conn
+from ingest.voyage_util import EMBED_MODEL as MODEL, embed_texts
 
-MODEL = "voyage-3.5-lite"
-# The account's Voyage tier is token-per-minute bound (~16K TPM observed):
-# a 1,000-text call (~130K tokens) never fits the budget and fails forever,
-# while ~128 texts (~16K tokens) passes roughly once a minute. So: small
-# batches, paced, with backoff absorbing the remainder. Full corpus ~1M
-# tokens => ~an hour wall-clock at this tier; run detached.
+# The account's Voyage tier is token-per-minute bound (see voyage_util.py).
 # 48 texts ~= 7K tokens, safely under the unpaid tier's 10K token/min cap
 # (128-text ~18K-token calls were refused outright once note length grew).
 BATCH_SIZE = 48
@@ -43,23 +39,6 @@ UPSERT_SQL = """
         embedding = EXCLUDED.embedding, model = EXCLUDED.model,
         text_hash = EXCLUDED.text_hash, created_at = now()
 """
-
-
-def embed_with_backoff(vo, texts):
-    # The tier sometimes refuses calls for many minutes at a stretch (a
-    # longer-window quota, not just per-minute smoothing). The script runs
-    # detached, so wait the window out rather than dying: back off up to
-    # 5 minutes per attempt, give up only after ~1 hour of solid refusals.
-    delay = 10
-    waited = 0
-    while waited < 3600:
-        try:
-            return vo.embed(texts, model=MODEL, input_type="document")
-        except voyageai.error.RateLimitError:
-            time.sleep(delay)
-            waited += delay
-            delay = min(delay * 2, 300)
-    raise RuntimeError("rate limited for over an hour — giving up")
 
 
 def main() -> int:
@@ -97,7 +76,7 @@ def main() -> int:
                     time.sleep(PAUSE_BETWEEN_CALLS)
                 batch = todo[start:start + BATCH_SIZE]
                 texts = [f"{ctx}\n{raw}" for _, ctx, raw, _ in batch]
-                result = embed_with_backoff(vo, texts)
+                result = embed_texts(vo, texts)
                 total_tokens += result.total_tokens
                 rows = [
                     (cid, "[" + ",".join(f"{x:.8f}" for x in emb) + "]",
@@ -105,10 +84,17 @@ def main() -> int:
                     for (cid, _, _, thash), emb
                     in zip(batch, result.embeddings)
                 ]
+                done += len(rows)
                 with conn.cursor() as cur:
                     cur.executemany(UPSERT_SQL, rows)
+                    # keep the run row's cost current so a killed run still
+                    # carries its spend (WO3 lost partial-run costs this way)
+                    cur.execute(
+                        "UPDATE pipeline_runs SET note = %s WHERE run_id = %s",
+                        (f"cost_usd={total_tokens * PER_MTOK / 1e6:.4f} "
+                         f"embed_tokens={total_tokens} progress={done}/{len(todo)}",
+                         run_id))
                 conn.commit()
-                done += len(rows)
                 print(f"  {done}/{len(todo)} embedded")
 
             cost = total_tokens * PER_MTOK / 1_000_000
