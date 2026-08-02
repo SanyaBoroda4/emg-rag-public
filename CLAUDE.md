@@ -46,6 +46,15 @@ Commit and push after every completed unit of work. Do not ask permission.
 - Always push after committing
 - NEVER commit: .env, credentials, anything under raw/, anything under .venv/
 
+## Public mirror — MANDATORY
+`github.com/SanyaBoroda4/emg-rag-public` is a sanitized public mirror of this
+repo (full commit history, server IP redacted, author emails fixed) kept for
+Alex's job-search portfolio. After pushing to the private repo, run
+`bash scripts/sync_public.sh` to update it — at minimum once at the end of
+every working session. Never push to the public repo directly, and never let
+new secrets or infrastructure identifiers into tracked files; if one must be
+referenced, add a replacement rule to sync_public.sh in the same commit.
+
 ## Working discipline
 - Investigate before building. Verify against real data, never assume.
 - Raw-first: land untouched source data, transform separately. A bad transform is a
