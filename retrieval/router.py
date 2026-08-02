@@ -16,6 +16,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ROUTER_MODEL = os.environ.get("ROUTER_MODEL", "claude-haiku-4-5")
 

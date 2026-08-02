@@ -24,9 +24,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import anthropic
 import sqlglot
+from dotenv import load_dotenv
 from sqlglot import exp
 
 from ingest.db import get_ro_conn
+
+load_dotenv()
 
 SQL_MODEL = os.environ.get("SQL_MODEL", "claude-sonnet-5")
 DEFAULT_LIMIT = 200

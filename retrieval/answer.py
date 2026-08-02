@@ -20,6 +20,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ANSWER_MODEL = os.environ.get("ANSWER_MODEL", "claude-haiku-4-5")
 

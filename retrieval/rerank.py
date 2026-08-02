@@ -21,6 +21,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 RERANK_ENABLED = os.environ.get("RERANK_ENABLED", "1") == "1"
 RERANK_BACKEND = os.environ.get("RERANK_BACKEND", "local")
 LOCAL_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
