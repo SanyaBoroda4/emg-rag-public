@@ -25,7 +25,11 @@ import voyageai
 from ingest.db import get_conn
 
 MODEL = "voyage-3.5-lite"
-BATCH_SIZE = 128
+# voyage-3.5-lite accepts up to 1,000 texts per call. The basic-tier rate
+# limit (~3 RPM) makes many small calls pathological — 128-text batches spent
+# ~75s in backoff per call — so we send few large ones and pace them.
+BATCH_SIZE = 1000
+PAUSE_BETWEEN_CALLS = 21  # seconds; stays under 3 requests/minute
 PER_MTOK = 0.02
 
 UPSERT_SQL = """
@@ -80,6 +84,8 @@ def main() -> int:
             total_tokens = 0
             done = 0
             for start in range(0, len(todo), BATCH_SIZE):
+                if start:
+                    time.sleep(PAUSE_BETWEEN_CALLS)
                 batch = todo[start:start + BATCH_SIZE]
                 texts = [f"{ctx}\n{raw}" for _, ctx, raw, _ in batch]
                 result = embed_with_backoff(vo, texts)
