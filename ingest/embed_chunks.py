@@ -31,7 +31,7 @@ MODEL = "voyage-3.5-lite"
 # batches, paced, with backoff absorbing the remainder. Full corpus ~1M
 # tokens => ~an hour wall-clock at this tier; run detached.
 BATCH_SIZE = 128
-PAUSE_BETWEEN_CALLS = 45  # seconds between calls
+PAUSE_BETWEEN_CALLS = 60  # seconds between calls
 PER_MTOK = 0.02
 
 UPSERT_SQL = """
@@ -44,14 +44,20 @@ UPSERT_SQL = """
 
 
 def embed_with_backoff(vo, texts):
+    # The tier sometimes refuses calls for many minutes at a stretch (a
+    # longer-window quota, not just per-minute smoothing). The script runs
+    # detached, so wait the window out rather than dying: back off up to
+    # 5 minutes per attempt, give up only after ~1 hour of solid refusals.
     delay = 10
-    for attempt in range(10):
+    waited = 0
+    while waited < 3600:
         try:
             return vo.embed(texts, model=MODEL, input_type="document")
         except voyageai.error.RateLimitError:
             time.sleep(delay)
-            delay = min(delay * 2, 60)
-    raise RuntimeError("still rate limited after 10 attempts")
+            waited += delay
+            delay = min(delay * 2, 300)
+    raise RuntimeError("rate limited for over an hour — giving up")
 
 
 def main() -> int:
