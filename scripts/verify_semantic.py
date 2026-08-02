@@ -28,18 +28,20 @@ def main() -> int:
     failed = False
     with get_conn() as conn, conn.cursor() as cur:
         # Expected chunk counts straight from the source tables (the truth)
+        # btrim over all whitespace to match Python's str.strip() in the builder
+        ws = " \t\r\n\x0b\x0c"
         cur.execute("SELECT count(*) FROM activities "
-                    "WHERE length(trim(notes)) >= %s", (MIN_CHARS,))
+                    "WHERE length(btrim(notes, %s)) >= %s", (ws, MIN_CHARS))
         exp_act = cur.fetchone()[0]
         cur.execute("SELECT count(*) FROM job_areas "
-                    "WHERE length(trim(notes)) >= %s", (MIN_CHARS,))
+                    "WHERE length(btrim(notes, %s)) >= %s", (ws, MIN_CHARS))
         exp_area = cur.fetchone()[0]
         cur.execute("""
             SELECT count(*) FROM area_fields af
             JOIN job_forms f ON f.form_id = af.form_id
             WHERE f.form_template_name = 'Job Summary'
               AND af.field_name = 'Notes'
-              AND length(trim(af.field_value)) >= %s""", (MIN_CHARS,))
+              AND length(btrim(af.field_value, %s)) >= %s""", (ws, MIN_CHARS))
         exp_js = cur.fetchone()[0]
         expected = exp_act + exp_area + exp_js
 
