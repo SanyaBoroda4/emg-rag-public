@@ -25,11 +25,13 @@ import voyageai
 from ingest.db import get_conn
 
 MODEL = "voyage-3.5-lite"
-# voyage-3.5-lite accepts up to 1,000 texts per call. The basic-tier rate
-# limit (~3 RPM) makes many small calls pathological — 128-text batches spent
-# ~75s in backoff per call — so we send few large ones and pace them.
-BATCH_SIZE = 1000
-PAUSE_BETWEEN_CALLS = 21  # seconds; stays under 3 requests/minute
+# The account's Voyage tier is token-per-minute bound (~16K TPM observed):
+# a 1,000-text call (~130K tokens) never fits the budget and fails forever,
+# while ~128 texts (~16K tokens) passes roughly once a minute. So: small
+# batches, paced, with backoff absorbing the remainder. Full corpus ~1M
+# tokens => ~an hour wall-clock at this tier; run detached.
+BATCH_SIZE = 128
+PAUSE_BETWEEN_CALLS = 45  # seconds between calls
 PER_MTOK = 0.02
 
 UPSERT_SQL = """
@@ -42,15 +44,14 @@ UPSERT_SQL = """
 
 
 def embed_with_backoff(vo, texts):
-    delay = 5
-    for attempt in range(6):
+    delay = 10
+    for attempt in range(10):
         try:
             return vo.embed(texts, model=MODEL, input_type="document")
         except voyageai.error.RateLimitError:
-            print(f"  rate limited, sleeping {delay}s")
             time.sleep(delay)
             delay = min(delay * 2, 60)
-    raise RuntimeError("still rate limited after 6 attempts")
+    raise RuntimeError("still rate limited after 10 attempts")
 
 
 def main() -> int:
