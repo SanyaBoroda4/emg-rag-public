@@ -3,5 +3,7 @@ python-dotenv
 openpyxl
 anthropic
 voyageai
-sentence-transformers
 sqlglot
+# NOTE: do NOT install requirements-rerank-local.txt on the 2GB server.
+# With torch/transformers present, `import voyageai` transitively imports
+# them (~430 MiB RSS in every process). The server uses RERANK_BACKEND=voyage.
