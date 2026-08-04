@@ -26,6 +26,15 @@ See `CLAUDE.md` for project context, server constraints, and working rules.
 - The server has ~1 GiB free RAM and runs live production containers; every
   component is memory-budgeted (see CLAUDE.md).
 
+## Known outstanding work
+
+- **`job_areas.material_name` needs a parser, not a mapping table**: 3,671
+  distinct values across ~4,700 filled rows, with slab count, thickness, and
+  finish embedded in free text (`2 x Shadow Storm Honed`,
+  `(1.5)Calcatta Liberty`, `0.3 SB Brazilian Carrera`). Deserves its own work
+  order producing structured columns (material, slab_count, thickness,
+  finish) the way WO5 normalized cities.
+
 ## Setup
 
 ```bash

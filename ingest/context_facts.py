@@ -28,9 +28,13 @@ def _fmt(parts):
 
 def load_job_facts(cur) -> dict:
     """job_id -> one-line fact string about the job (deterministic)."""
+    # city_normalized (WO5), not raw jobs.city: the raw label is often wrong
+    # ("Charleston" jobs are mostly West Ashley / James Island etc.), and
+    # switching the fact source is what flips text_hash for affected chunks,
+    # queueing them for re-contextualization.
     cur.execute("""
-        SELECT j.job_id, j.job_name, j.city, j.salesperson, j.account_name,
-               j.process_name, j.job_status_name,
+        SELECT j.job_id, j.job_name, j.city_normalized, j.salesperson,
+               j.account_name, j.process_name, j.job_status_name,
                m.materials, m.n_areas
         FROM jobs j
         LEFT JOIN (

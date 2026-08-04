@@ -36,7 +36,7 @@ DEFAULT_LIMIT = 200
 
 ALLOWED_VIEWS = {
     "v_jobs": ["job_id", "job_name", "customer", "salesperson", "city",
-               "process_name", "status", "creation_date"],
+               "process_name", "status", "creation_date", "city_raw"],
     "v_job_areas": ["job_id", "job_name", "area_name", "room_type", "sq_ft",
                     "material_name", "supplier", "edge", "backsplash", "sink"],
     "v_invoices": ["doc_number", "customer_name", "txn_date", "total_amt",
@@ -49,8 +49,9 @@ ALLOWED_VIEWS = {
 }
 
 SCHEMA_DDL = """
-v_jobs(job_id, job_name, customer, salesperson, city, process_name, status, creation_date date)
+v_jobs(job_id, job_name, customer, salesperson, city, process_name, status, creation_date date, city_raw)
   -- one row per job. status examples: 'Complete', 'Cancelled', 'In Progress'. job_name is usually the customer name.
+  -- city is NORMALIZED to 68 canonical Charleston-area names (e.g. 'West Ashley', 'Mount Pleasant', 'Johns Island') — filter on it with exact = matches. city_raw is the original free text; never filter on city_raw unless explicitly asked for raw values.
 v_job_areas(job_id, job_name, area_name, room_type, sq_ft numeric, material_name, supplier, edge, backsplash, sink)
   -- one row per countertop area of a job. material_name is free text, e.g. '3sl Calacatta Gold', 'Quartzite Sea Pearl'.
 v_invoices(doc_number, customer_name, txn_date date, total_amt numeric, balance numeric, status)
