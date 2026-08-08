@@ -78,8 +78,9 @@ Rules:
 """
 
 
-def generate_sql(question: str, hybrid: bool = False):
-    """Ask Sonnet for the SQL. Returns (sql_text, usage)."""
+def generate_sql(question: str, hybrid: bool = False, model: str = None):
+    """Ask the SQL model for the SQL. Returns (sql_text, usage).
+    `model` overrides SQL_MODEL (used by evals/benchmark_models.py)."""
     client = anthropic.Anthropic()
     prompt = question
     if hybrid:
@@ -87,7 +88,7 @@ def generate_sql(question: str, hybrid: bool = False):
                    "the job_id column so results can key a second retrieval "
                    "stage.)")
     resp = client.messages.create(
-        model=SQL_MODEL, max_tokens=1000,
+        model=model or SQL_MODEL, max_tokens=1000,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": prompt}])
     sql = next(b.text for b in resp.content if b.type == "text").strip()
@@ -146,14 +147,15 @@ def execute_sql(sql: str):
     return columns, rows
 
 
-def repair_sql(question: str, bad_sql: str, error: str, hybrid: bool):
+def repair_sql(question: str, bad_sql: str, error: str, hybrid: bool,
+               model: str = None):
     """One repair attempt: feed the validator error back to the model."""
     client = anthropic.Anthropic()
     prompt = question
     if hybrid:
         prompt += "\n\n(The SELECT must include the job_id column.)"
     resp = client.messages.create(
-        model=SQL_MODEL, max_tokens=1000,
+        model=model or SQL_MODEL, max_tokens=1000,
         system=SYSTEM_PROMPT,
         messages=[
             {"role": "user", "content": prompt},
@@ -171,18 +173,20 @@ def repair_sql(question: str, bad_sql: str, error: str, hybrid: bool):
     return sql, resp.usage
 
 
-def run_structured(question: str, hybrid: bool = False) -> dict:
+def run_structured(question: str, hybrid: bool = False,
+                   model: str = None) -> dict:
     """Full lane: generate -> validate (with one repair) -> execute.
 
     Never returns rows without the SQL that produced them. Raises ValueError
     if even the repaired SQL fails validation.
     """
-    raw_sql, usage = generate_sql(question, hybrid=hybrid)
+    raw_sql, usage = generate_sql(question, hybrid=hybrid, model=model)
     usages = [usage]
     try:
         safe_sql = validate_sql(raw_sql)
     except ValueError as e:
-        raw_sql, usage2 = repair_sql(question, raw_sql, str(e), hybrid)
+        raw_sql, usage2 = repair_sql(question, raw_sql, str(e), hybrid,
+                                     model=model)
         usages.append(usage2)
         safe_sql = validate_sql(raw_sql)  # second failure propagates
     columns, rows = execute_sql(safe_sql)

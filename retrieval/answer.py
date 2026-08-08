@@ -56,8 +56,10 @@ def load_chunk_rows(cur, chunk_ids):
     return [by_id[cid] for cid in chunk_ids if cid in by_id]
 
 
-def generate_answer(question: str, chunk_rows=None, sql_result=None):
-    """Returns (answer_text, usage). Supply chunks, SQL result, or both."""
+def generate_answer(question: str, chunk_rows=None, sql_result=None,
+                    model: str = None):
+    """Returns (answer_text, usage). Supply chunks, SQL result, or both.
+    `model` overrides ANSWER_MODEL (used by evals/benchmark_models.py)."""
     evidence = []
     if sql_result is not None:
         rows_disp = "\n".join(
@@ -75,7 +77,7 @@ def generate_answer(question: str, chunk_rows=None, sql_result=None):
 
     client = anthropic.Anthropic()
     resp = client.messages.create(
-        model=ANSWER_MODEL, max_tokens=1000,
+        model=model or ANSWER_MODEL, max_tokens=1000,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content":
                    f"Question: {question}\n\n" + "\n\n---\n\n".join(evidence)}])

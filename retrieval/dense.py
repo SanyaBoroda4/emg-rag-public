@@ -33,7 +33,12 @@ def embed_query(query: str):
 
 def dense_search(cur, query: str, n: int = 50, job_ids=None):
     """Return [(chunk_id, rank_position)] for the top-N nearest chunks."""
-    qvec = embed_query(query)
+    return dense_search_vec(cur, embed_query(query), n=n, job_ids=job_ids)
+
+
+def dense_search_vec(cur, qvec, n: int = 50, job_ids=None):
+    """Same as dense_search but with a precomputed query vector — the eval
+    harness embeds all golden questions in ONE Voyage call (rate limits)."""
     qstr = "[" + ",".join(f"{x:.8f}" for x in qvec) + "]"
     job_filter = "WHERE c.job_id = ANY(%s)" if job_ids is not None else ""
     params = ([list(job_ids)] if job_ids is not None else []) + [qstr, n]
