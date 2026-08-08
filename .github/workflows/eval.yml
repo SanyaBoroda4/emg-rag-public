@@ -1,0 +1,143 @@
+# Eval CI. Approach (b) from WO6: a committed synthetic fixture loaded into
+# an ephemeral pgvector service container. Chosen over a self-hosted runner
+# on the production box because (1) the Hetzner host has ~1 GiB free and runs
+# live WhatsApp/MCP containers — a long-lived CI agent there is exactly the
+# kind of standing risk the project rules forbid; (2) fixture CI is fully
+# reproducible by anyone who clones the repo, which the public portfolio
+# mirror needs; (3) the numbers CI guards are *directional* regressions in
+# routing/retrieval code, which the fixture detects just as well. Absolute
+# corpus metrics still come from eval runs on the server (committed in
+# evals/results/latest.md).
+#
+# Tier 1 (routing) runs against the REAL 58-question golden set — it needs no
+# database, only the router. Tier 2 runs against the fixture corpus.
+#
+# Secrets required: ANTHROPIC_API_KEY, VOYAGE_API_KEY.
+# Cost per push run: ~$0.04 (58 Haiku router calls; embeddings are pennies).
+
+name: eval
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"   # weekly, Monday 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  free-tiers:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: emg_rag
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: emg_rag
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U emg_rag" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+      PG_HOST: 127.0.0.1
+      PG_PORT: "5433"
+      PG_DB: emg_rag
+      PG_USER: emg_rag
+      PG_PASSWORD: ci
+      PG_RO_PASSWORD: ci-ro
+      RERANK_BACKEND: voyage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: Load fixture corpus
+        run: python evals/fixtures/load_fixture.py
+      - name: Tier 1 — routing on the real golden set (no DB)
+        run: >
+          python evals/run_eval.py --tiers 1
+          --check-baseline evals/baseline.json
+      - name: Tier 2 — retrieval on the fixture corpus
+        run: >
+          python evals/run_eval.py --tiers 2
+          --golden evals/fixtures/fixture_golden.csv
+          --check-baseline evals/fixtures/fixture_baseline.json
+
+  tier3-pr:
+    # LLM-judged generation on a 20-question subset (~$0.30) — PRs only.
+    # Uses the fixture DB (structured/semantic lanes exercise real code).
+    if: github.event_name == 'pull_request'
+    needs: free-tiers
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: emg_rag
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: emg_rag
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U emg_rag" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+      PG_HOST: 127.0.0.1
+      PG_PORT: "5433"
+      PG_DB: emg_rag
+      PG_USER: emg_rag
+      PG_PASSWORD: ci
+      PG_RO_PASSWORD: ci-ro
+      RERANK_BACKEND: voyage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - run: python evals/fixtures/load_fixture.py
+      - run: python scripts/setup_ro_role.py
+      - name: Tier 3 on the fixture set
+        run: >
+          python evals/run_eval.py --tiers 1,2,3
+          --golden evals/fixtures/fixture_golden.csv
+
+  weekly-full:
+    # Full tiers 1–3 on the fixture (~$1.50 ceiling; actual far less).
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: emg_rag
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: emg_rag
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U emg_rag" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+      PG_HOST: 127.0.0.1
+      PG_PORT: "5433"
+      PG_DB: emg_rag
+      PG_USER: emg_rag
+      PG_PASSWORD: ci
+      PG_RO_PASSWORD: ci-ro
+      RERANK_BACKEND: voyage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - run: python evals/fixtures/load_fixture.py
+      - run: python scripts/setup_ro_role.py
+      - run: >
+          python evals/run_eval.py --tiers 1,2,3
+          --golden evals/fixtures/fixture_golden.csv
+          --check-baseline evals/fixtures/fixture_baseline.json

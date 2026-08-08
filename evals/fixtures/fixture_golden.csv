@@ -1,0 +1,14 @@
+id,question,route,expected_answer,relevant_ids,source_of_truth,difficulty,status,notes
+1,How many jobs are in Croft Harbor?,structured,7,,computed by make_fixture.py,easy,verified,synthetic fixture
+2,How many jobs are in Pelican Point?,structured,5,,computed by make_fixture.py,easy,verified,synthetic fixture
+3,How many jobs are in Marsh Landing?,structured,3,,computed by make_fixture.py,easy,verified,synthetic fixture
+4,How many jobs used Nebula Quartz?,structured,10,,computed by make_fixture.py,easy,verified,synthetic fixture
+5,How many jobs used Ashgrove Granite?,structured,6,,computed by make_fixture.py,easy,verified,synthetic fixture
+6,How many jobs did Rae Winslow sell?,structured,11,,computed by make_fixture.py,easy,verified,synthetic fixture
+7,What is the largest area in square feet?,structured,88.5,,computed by make_fixture.py,medium,verified,synthetic fixture
+8,Which jobs had a cracked sink delivered?,semantic,"jobs with notes: chunks 3,31,42,57,80","3,31,42,57,80,103,108,111,133,139",computed by make_fixture.py,medium,verified,synthetic fixture
+9,Where did the customer change their mind about the sink?,semantic,"jobs with notes: chunks 18,24,39,47,49","18,24,39,47,49,53,59,62,76,83,88,94,95,97,101,109,138",computed by make_fixture.py,medium,verified,synthetic fixture
+10,Which jobs went quiet after the quote was sent?,semantic,"jobs with notes: chunks 12,63,65,67,96","12,63,65,67,96,121,124,136,137",computed by make_fixture.py,medium,verified,synthetic fixture
+11,Any notes about out-of-level walls?,semantic,"jobs with notes: chunks 2,5,8,20,33","2,5,8,20,33,34,37,40,51,70,77,86,87,89,91,116,123",computed by make_fixture.py,medium,verified,synthetic fixture
+12,Who switched edge profiles after seeing a sample?,semantic,"jobs with notes: chunks 10,55,60,72,84","10,55,60,72,84,98,122,125,127",computed by make_fixture.py,medium,verified,synthetic fixture
+13,What is the tallest mountain in Europe?,refuse,decline — outside the data,,computed by make_fixture.py,easy,verified,synthetic fixture

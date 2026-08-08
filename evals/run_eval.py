@@ -249,10 +249,12 @@ def main() -> int:
     ap.add_argument("--tiers", default="1,2,3")
     ap.add_argument("--subset", type=int, default=None)
     ap.add_argument("--check-baseline", default=None)
+    ap.add_argument("--golden", default=None,
+                    help="alternate golden CSV (CI uses the fixture set)")
     args = ap.parse_args()
     tiers = {int(t) for t in args.tiers.split(",")}
 
-    rows = load_golden()
+    rows = load_golden(args.golden) if args.golden else load_golden()
     if args.subset:
         rows = rows[:args.subset]
     meta = run_metadata({"tiers": sorted(tiers),
@@ -262,18 +264,18 @@ def main() -> int:
 
     t1 = t2 = t3 = None
     failures = {}
-    with get_conn() as conn, conn.cursor() as cur:
-        if 1 in tiers:
-            t1 = tier1(rows)
-        if 2 in tiers or 3 in tiers:
-            qvecs = embed_questions(rows)
-        if 2 in tiers:
-            t2 = tier2(rows, cur, qvecs)
-        if 3 in tiers:
-            if t1 is None:
-                t1 = tier1(rows)
-            t3 = tier3(rows, cur, qvecs)
-            failures = report_failures(rows)
+    if 1 in tiers:
+        t1 = tier1(rows)  # routing needs no database
+    if 2 in tiers or 3 in tiers:
+        qvecs = embed_questions(rows)
+        with get_conn() as conn, conn.cursor() as cur:
+            if 2 in tiers:
+                t2 = tier2(rows, cur, qvecs)
+            if 3 in tiers:
+                if t1 is None:
+                    t1 = tier1(rows)
+                t3 = tier3(rows, cur, qvecs)
+                failures = report_failures(rows)
 
     total = (t1["cost"] if t1 else 0) + (t3["cost"] if t3 else 0)
     meta["total_cost_usd"] = round(total, 4)
@@ -283,10 +285,12 @@ def main() -> int:
     if args.check_baseline:
         base = json.loads(Path(args.check_baseline).read_text())
         bad = []
-        if t1 and t1["accuracy"] < base["routing_accuracy"] - 0.05:
+        if t1 and "routing_accuracy" in base and \
+                t1["accuracy"] < base["routing_accuracy"] - 0.05:
             bad.append(f"routing {t1['accuracy']:.3f} < baseline "
                        f"{base['routing_accuracy']:.3f} - 0.05")
-        if t2 and t2["reranked"]["recall@10"] < base["recall_at_10"] - 0.05:
+        if t2 and "recall_at_10" in base and \
+                t2["reranked"]["recall@10"] < base["recall_at_10"] - 0.05:
             bad.append(f"recall@10 {t2['reranked']['recall@10']:.3f} < "
                        f"baseline {base['recall_at_10']:.3f} - 0.05")
         if bad:
