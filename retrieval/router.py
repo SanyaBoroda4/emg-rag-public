@@ -54,5 +54,10 @@ def route_query(question: str):
         system=SYSTEM_PROMPT,
         output_config={"format": {"type": "json_schema", "schema": SCHEMA}},
         messages=[{"role": "user", "content": question}])
-    text = next(b.text for b in resp.content if b.type == "text")
-    return json.loads(text), resp.usage
+    text = next((b.text for b in resp.content if b.type == "text"), "")
+    try:
+        return json.loads(text), resp.usage
+    except json.JSONDecodeError:
+        return {"route": "semantic",
+                "reason": "router returned no parseable output — "
+                          "defaulting to semantic"}, resp.usage

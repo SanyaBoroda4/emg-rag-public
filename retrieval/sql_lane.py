@@ -88,10 +88,10 @@ def generate_sql(question: str, hybrid: bool = False, model: str = None):
                    "the job_id column so results can key a second retrieval "
                    "stage.)")
     resp = client.messages.create(
-        model=model or SQL_MODEL, max_tokens=1000,
+        model=model or SQL_MODEL, max_tokens=2500,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": prompt}])
-    sql = next(b.text for b in resp.content if b.type == "text").strip()
+    sql = next((b.text for b in resp.content if b.type == "text"), "").strip()
     if sql.startswith("```"):
         sql = sql.strip("`")
         if sql.lower().startswith("sql"):
@@ -164,7 +164,7 @@ def repair_sql(question: str, bad_sql: str, error: str, hybrid: bool,
              f"That SQL was rejected: {error}\nRewrite it. Same rules — "
              f"output only the corrected SQL."},
         ])
-    sql = next(b.text for b in resp.content if b.type == "text").strip()
+    sql = next((b.text for b in resp.content if b.type == "text"), "").strip()
     if sql.startswith("```"):
         sql = sql.strip("`")
         if sql.lower().startswith("sql"):

@@ -77,8 +77,9 @@ def generate_answer(question: str, chunk_rows=None, sql_result=None,
 
     client = anthropic.Anthropic()
     resp = client.messages.create(
-        model=model or ANSWER_MODEL, max_tokens=1000,
+        model=model or ANSWER_MODEL, max_tokens=2000,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content":
                    f"Question: {question}\n\n" + "\n\n---\n\n".join(evidence)}])
-    return next(b.text for b in resp.content if b.type == "text"), resp.usage
+    text = next((b.text for b in resp.content if b.type == "text"), "")
+    return text, resp.usage

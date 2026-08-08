@@ -191,14 +191,26 @@ def judge_answer(row, record, chunk_rows, judge_model):
               f"Expected answer (ground truth): {row['expected_answer']}\n\n"
               f"Evidence retrieved:\n\n" + ("\n\n".join(ev) or "(none)") +
               f"\n\nSystem's answer:\n{record['answer']}")
-    resp = client.messages.create(
-        model=judge_model, max_tokens=600, system=JUDGE_SYSTEM,
-        output_config={"format": {"type": "json_schema",
-                                  "schema": JUDGE_SCHEMA}},
-        messages=[{"role": "user", "content": prompt}])
-    verdict = json.loads(next(b.text for b in resp.content
-                              if b.type == "text"))
-    return verdict, cost_of(judge_model, resp.usage)
+    # max_tokens must cover adaptive thinking (Sonnet 5 thinks by default and
+    # can consume a small budget entirely, leaving no text block).
+    cost = 0.0
+    for attempt in range(2):
+        resp = client.messages.create(
+            model=judge_model, max_tokens=2500, system=JUDGE_SYSTEM,
+            output_config={"format": {"type": "json_schema",
+                                      "schema": JUDGE_SCHEMA}},
+            messages=[{"role": "user", "content": prompt}])
+        cost += cost_of(judge_model, resp.usage)
+        text = next((b.text for b in resp.content if b.type == "text"), "")
+        if text:
+            try:
+                return json.loads(text), cost
+            except json.JSONDecodeError:
+                pass
+    return {"faithful": None, "correct": None, "useful_chunk_ids": [],
+            "declined": False,
+            "reason": f"judge returned no parseable verdict "
+                      f"(stop_reason={resp.stop_reason})"}, cost
 
 
 def run_router(row):
