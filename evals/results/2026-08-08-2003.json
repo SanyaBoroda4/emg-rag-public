@@ -1,0 +1,818 @@
+{
+ "meta": {
+  "git_sha": "c568b2b",
+  "answer_model": "claude-haiku-4-5",
+  "sql_model": "claude-sonnet-5",
+  "router_model": "claude-haiku-4-5",
+  "rerank_backend": "voyage",
+  "rerank_enabled": "1",
+  "embed_model": "voyage-3.5-lite",
+  "timestamp": "2026-08-08 20:02:10",
+  "tiers": [
+   2
+  ],
+  "questions": 13,
+  "total_cost_usd": 0
+ },
+ "tier1": null,
+ "tier2": {
+  "bm25": {
+   "recall@5": 0.373202614379085,
+   "recall@10": 0.74640522875817,
+   "recall@20": 1.0,
+   "mrr": 1.0,
+   "ndcg@10": 0.9192381113818161
+  },
+  "dense": {
+   "recall@5": 0.4176470588235294,
+   "recall@10": 0.7686274509803922,
+   "recall@20": 0.9555555555555555,
+   "mrr": 1.0,
+   "ndcg@10": 0.9488372358215086
+  },
+  "fused": {
+   "recall@5": 0.373202614379085,
+   "recall@10": 0.7686274509803922,
+   "recall@20": 0.9777777777777779,
+   "mrr": 1.0,
+   "ndcg@10": 0.9349078146761152
+  },
+  "reranked": {
+   "recall@5": 0.4398692810457517,
+   "recall@10": 0.8352941176470589,
+   "recall@20": 1.0,
+   "mrr": 1.0,
+   "ndcg@10": 1.0
+  }
+ },
+ "tier3": null,
+ "failures": {},
+ "questions": [
+  {
+   "id": "1",
+   "question": "How many jobs are in Croft Harbor?",
+   "route": "structured",
+   "expected_answer": "7",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": null,
+   "generation": null
+  },
+  {
+   "id": "2",
+   "question": "How many jobs are in Pelican Point?",
+   "route": "structured",
+   "expected_answer": "5",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": null,
+   "generation": null
+  },
+  {
+   "id": "3",
+   "question": "How many jobs are in Marsh Landing?",
+   "route": "structured",
+   "expected_answer": "3",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": null,
+   "generation": null
+  },
+  {
+   "id": "4",
+   "question": "How many jobs used Nebula Quartz?",
+   "route": "structured",
+   "expected_answer": "10",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": null,
+   "generation": null
+  },
+  {
+   "id": "5",
+   "question": "How many jobs used Ashgrove Granite?",
+   "route": "structured",
+   "expected_answer": "6",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": null,
+   "generation": null
+  },
+  {
+   "id": "6",
+   "question": "How many jobs did Rae Winslow sell?",
+   "route": "structured",
+   "expected_answer": "11",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": null,
+   "generation": null
+  },
+  {
+   "id": "7",
+   "question": "What is the largest area in square feet?",
+   "route": "structured",
+   "expected_answer": "88.5",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": null,
+   "generation": null
+  },
+  {
+   "id": "8",
+   "question": "Which jobs had a cracked sink delivered?",
+   "route": "semantic",
+   "expected_answer": "jobs with notes: chunks 3,31,42,57,80",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [
+    3,
+    31,
+    42,
+    57,
+    80,
+    103,
+    108,
+    111,
+    133,
+    139
+   ],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": {
+    "bm25": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    }
+   },
+   "retrieved": [
+    {
+     "chunk_id": 80,
+     "bm25_rank": 5,
+     "dense_rank": 5,
+     "rrf": 0.03077,
+     "rerank_score": 0.8281
+    },
+    {
+     "chunk_id": 3,
+     "bm25_rank": 1,
+     "dense_rank": 2,
+     "rrf": 0.03252,
+     "rerank_score": 0.8086
+    },
+    {
+     "chunk_id": 111,
+     "bm25_rank": 8,
+     "dense_rank": 10,
+     "rrf": 0.02899,
+     "rerank_score": 0.8086
+    },
+    {
+     "chunk_id": 31,
+     "bm25_rank": 2,
+     "dense_rank": 7,
+     "rrf": 0.03105,
+     "rerank_score": 0.8008
+    },
+    {
+     "chunk_id": 139,
+     "bm25_rank": 10,
+     "dense_rank": 1,
+     "rrf": 0.03068,
+     "rerank_score": 0.8008
+    },
+    {
+     "chunk_id": 108,
+     "bm25_rank": 7,
+     "dense_rank": 3,
+     "rrf": 0.0308,
+     "rerank_score": 0.7969
+    },
+    {
+     "chunk_id": 133,
+     "bm25_rank": 9,
+     "dense_rank": 9,
+     "rrf": 0.02899,
+     "rerank_score": 0.7969
+    },
+    {
+     "chunk_id": 57,
+     "bm25_rank": 4,
+     "dense_rank": 6,
+     "rrf": 0.03078,
+     "rerank_score": 0.793
+    },
+    {
+     "chunk_id": 42,
+     "bm25_rank": 3,
+     "dense_rank": 4,
+     "rrf": 0.0315,
+     "rerank_score": 0.7852
+    },
+    {
+     "chunk_id": 103,
+     "bm25_rank": 6,
+     "dense_rank": 8,
+     "rrf": 0.02986,
+     "rerank_score": 0.7852
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.004523832001723349,
+    "dense": 0.0026289899833500385,
+    "rerank": 0.14789916400332004
+   },
+   "generation": null
+  },
+  {
+   "id": "9",
+   "question": "Where did the customer change their mind about the sink?",
+   "route": "semantic",
+   "expected_answer": "jobs with notes: chunks 18,24,39,47,49",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [
+    18,
+    24,
+    39,
+    47,
+    49,
+    53,
+    59,
+    62,
+    76,
+    83,
+    88,
+    94,
+    95,
+    97,
+    101,
+    109,
+    138
+   ],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": {
+    "bm25": {
+     "recall@5": 0.29411764705882354,
+     "recall@10": 0.5882352941176471,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "dense": {
+     "recall@5": 0.29411764705882354,
+     "recall@10": 0.5882352941176471,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "fused": {
+     "recall@5": 0.29411764705882354,
+     "recall@10": 0.5882352941176471,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.29411764705882354,
+     "recall@10": 0.5882352941176471,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    }
+   },
+   "retrieved": [
+    {
+     "chunk_id": 18,
+     "bm25_rank": 1,
+     "dense_rank": 16,
+     "rrf": 0.02955,
+     "rerank_score": 0.9023
+    },
+    {
+     "chunk_id": 88,
+     "bm25_rank": 11,
+     "dense_rank": 12,
+     "rrf": 0.02797,
+     "rerank_score": 0.9023
+    },
+    {
+     "chunk_id": 53,
+     "bm25_rank": 6,
+     "dense_rank": 7,
+     "rrf": 0.03008,
+     "rerank_score": 0.8984
+    },
+    {
+     "chunk_id": 47,
+     "bm25_rank": 4,
+     "dense_rank": 15,
+     "rrf": 0.02896,
+     "rerank_score": 0.8984
+    },
+    {
+     "chunk_id": 49,
+     "bm25_rank": 5,
+     "dense_rank": 14,
+     "rrf": 0.0289,
+     "rerank_score": 0.8984
+    },
+    {
+     "chunk_id": 24,
+     "bm25_rank": 2,
+     "dense_rank": 5,
+     "rrf": 0.03151,
+     "rerank_score": 0.8945
+    },
+    {
+     "chunk_id": 62,
+     "bm25_rank": 8,
+     "dense_rank": 8,
+     "rrf": 0.02941,
+     "rerank_score": 0.8945
+    },
+    {
+     "chunk_id": 83,
+     "bm25_rank": 10,
+     "dense_rank": 9,
+     "rrf": 0.02878,
+     "rerank_score": 0.8945
+    },
+    {
+     "chunk_id": 97,
+     "bm25_rank": 14,
+     "dense_rank": 13,
+     "rrf": 0.02721,
+     "rerank_score": 0.8945
+    },
+    {
+     "chunk_id": 39,
+     "bm25_rank": 3,
+     "dense_rank": 1,
+     "rrf": 0.03227,
+     "rerank_score": 0.8906
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.0009558929596096277,
+    "dense": 0.001689288066700101,
+    "rerank": 0.12429462396539748
+   },
+   "generation": null
+  },
+  {
+   "id": "10",
+   "question": "Which jobs went quiet after the quote was sent?",
+   "route": "semantic",
+   "expected_answer": "jobs with notes: chunks 12,63,65,67,96",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [
+    12,
+    63,
+    65,
+    67,
+    96,
+    121,
+    124,
+    136,
+    137
+   ],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": {
+    "bm25": {
+     "recall@5": 0.2222222222222222,
+     "recall@10": 0.5555555555555556,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 0.5961905569090805
+    },
+    "dense": {
+     "recall@5": 0.4444444444444444,
+     "recall@10": 0.6666666666666666,
+     "recall@20": 0.7777777777777778,
+     "mrr": 1.0,
+     "ndcg@10": 0.7441861791075427
+    },
+    "fused": {
+     "recall@5": 0.2222222222222222,
+     "recall@10": 0.6666666666666666,
+     "recall@20": 0.8888888888888888,
+     "mrr": 1.0,
+     "ndcg@10": 0.6745390733805756
+    },
+    "reranked": {
+     "recall@5": 0.5555555555555556,
+     "recall@10": 1.0,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    }
+   },
+   "retrieved": [
+    {
+     "chunk_id": 12,
+     "bm25_rank": 1,
+     "dense_rank": 2,
+     "rrf": 0.03252,
+     "rerank_score": 0.6875
+    },
+    {
+     "chunk_id": 137,
+     "bm25_rank": 18,
+     "dense_rank": 1,
+     "rrf": 0.02921,
+     "rerank_score": 0.6875
+    },
+    {
+     "chunk_id": 65,
+     "bm25_rank": 9,
+     "dense_rank": 10,
+     "rrf": 0.02878,
+     "rerank_score": 0.6875
+    },
+    {
+     "chunk_id": 124,
+     "bm25_rank": 17,
+     "dense_rank": 4,
+     "rrf": 0.02861,
+     "rerank_score": 0.6875
+    },
+    {
+     "chunk_id": 136,
+     "bm25_rank": 2,
+     "dense_rank": 3,
+     "rrf": 0.032,
+     "rerank_score": 0.6797
+    },
+    {
+     "chunk_id": 63,
+     "bm25_rank": 8,
+     "dense_rank": 18,
+     "rrf": 0.02753,
+     "rerank_score": 0.6797
+    },
+    {
+     "chunk_id": 67,
+     "bm25_rank": 10,
+     "dense_rank": 8,
+     "rrf": 0.02899,
+     "rerank_score": 0.6758
+    },
+    {
+     "chunk_id": 121,
+     "bm25_rank": 16,
+     "dense_rank": 22,
+     "rrf": 0.02535,
+     "rerank_score": 0.6758
+    },
+    {
+     "chunk_id": 96,
+     "bm25_rank": 14,
+     "dense_rank": 33,
+     "rrf": 0.02427,
+     "rerank_score": 0.6719
+    },
+    {
+     "chunk_id": 72,
+     "bm25_rank": 27,
+     "dense_rank": 11,
+     "rrf": 0.02558,
+     "rerank_score": 0.5352
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.0033317579654976726,
+    "dense": 0.0027628300013020635,
+    "rerank": 0.13372667005751282
+   },
+   "generation": null
+  },
+  {
+   "id": "11",
+   "question": "Any notes about out-of-level walls?",
+   "route": "semantic",
+   "expected_answer": "jobs with notes: chunks 2,5,8,20,33",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [
+    2,
+    5,
+    8,
+    20,
+    33,
+    34,
+    37,
+    40,
+    51,
+    70,
+    77,
+    86,
+    87,
+    89,
+    91,
+    116,
+    123
+   ],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": {
+    "bm25": {
+     "recall@5": 0.29411764705882354,
+     "recall@10": 0.5882352941176471,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "dense": {
+     "recall@5": 0.29411764705882354,
+     "recall@10": 0.5882352941176471,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "fused": {
+     "recall@5": 0.29411764705882354,
+     "recall@10": 0.5882352941176471,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.29411764705882354,
+     "recall@10": 0.5882352941176471,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    }
+   },
+   "retrieved": [
+    {
+     "chunk_id": 51,
+     "bm25_rank": 2,
+     "dense_rank": 7,
+     "rrf": 0.03105,
+     "rerank_score": 0.7383
+    },
+    {
+     "chunk_id": 70,
+     "bm25_rank": 10,
+     "dense_rank": 12,
+     "rrf": 0.02817,
+     "rerank_score": 0.7266
+    },
+    {
+     "chunk_id": 91,
+     "bm25_rank": 16,
+     "dense_rank": 13,
+     "rrf": 0.02686,
+     "rerank_score": 0.7266
+    },
+    {
+     "chunk_id": 116,
+     "bm25_rank": 17,
+     "dense_rank": 16,
+     "rrf": 0.02614,
+     "rerank_score": 0.7266
+    },
+    {
+     "chunk_id": 20,
+     "bm25_rank": 5,
+     "dense_rank": 11,
+     "rrf": 0.02947,
+     "rerank_score": 0.7227
+    },
+    {
+     "chunk_id": 87,
+     "bm25_rank": 14,
+     "dense_rank": 6,
+     "rrf": 0.02867,
+     "rerank_score": 0.7188
+    },
+    {
+     "chunk_id": 8,
+     "bm25_rank": 1,
+     "dense_rank": 2,
+     "rrf": 0.03252,
+     "rerank_score": 0.7148
+    },
+    {
+     "chunk_id": 34,
+     "bm25_rank": 7,
+     "dense_rank": 1,
+     "rrf": 0.03132,
+     "rerank_score": 0.7148
+    },
+    {
+     "chunk_id": 37,
+     "bm25_rank": 8,
+     "dense_rank": 10,
+     "rrf": 0.02899,
+     "rerank_score": 0.7148
+    },
+    {
+     "chunk_id": 86,
+     "bm25_rank": 13,
+     "dense_rank": 8,
+     "rrf": 0.0284,
+     "rerank_score": 0.7148
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.0021210670238360763,
+    "dense": 0.0017885529669001698,
+    "rerank": 68.17491983692162
+   },
+   "generation": null
+  },
+  {
+   "id": "12",
+   "question": "Who switched edge profiles after seeing a sample?",
+   "route": "semantic",
+   "expected_answer": "jobs with notes: chunks 10,55,60,72,84",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [
+    10,
+    55,
+    60,
+    72,
+    84,
+    98,
+    122,
+    125,
+    127
+   ],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": {
+    "bm25": {
+     "recall@5": 0.5555555555555556,
+     "recall@10": 1.0,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "dense": {
+     "recall@5": 0.5555555555555556,
+     "recall@10": 1.0,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "fused": {
+     "recall@5": 0.5555555555555556,
+     "recall@10": 1.0,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.5555555555555556,
+     "recall@10": 1.0,
+     "recall@20": 1.0,
+     "mrr": 1.0,
+     "ndcg@10": 1.0
+    }
+   },
+   "retrieved": [
+    {
+     "chunk_id": 98,
+     "bm25_rank": 6,
+     "dense_rank": 7,
+     "rrf": 0.03008,
+     "rerank_score": 0.8906
+    },
+    {
+     "chunk_id": 10,
+     "bm25_rank": 1,
+     "dense_rank": 4,
+     "rrf": 0.03202,
+     "rerank_score": 0.8867
+    },
+    {
+     "chunk_id": 55,
+     "bm25_rank": 2,
+     "dense_rank": 3,
+     "rrf": 0.032,
+     "rerank_score": 0.8828
+    },
+    {
+     "chunk_id": 122,
+     "bm25_rank": 7,
+     "dense_rank": 6,
+     "rrf": 0.03008,
+     "rerank_score": 0.8828
+    },
+    {
+     "chunk_id": 84,
+     "bm25_rank": 5,
+     "dense_rank": 1,
+     "rrf": 0.03178,
+     "rerank_score": 0.875
+    },
+    {
+     "chunk_id": 60,
+     "bm25_rank": 3,
+     "dense_rank": 9,
+     "rrf": 0.03037,
+     "rerank_score": 0.875
+    },
+    {
+     "chunk_id": 72,
+     "bm25_rank": 4,
+     "dense_rank": 5,
+     "rrf": 0.03101,
+     "rerank_score": 0.8672
+    },
+    {
+     "chunk_id": 125,
+     "bm25_rank": 8,
+     "dense_rank": 2,
+     "rrf": 0.03083,
+     "rerank_score": 0.8633
+    },
+    {
+     "chunk_id": 127,
+     "bm25_rank": 9,
+     "dense_rank": 8,
+     "rrf": 0.0292,
+     "rerank_score": 0.8633
+    },
+    {
+     "chunk_id": 117,
+     "bm25_rank": null,
+     "dense_rank": 16,
+     "rrf": 0.01316,
+     "rerank_score": 0.3105
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.0009240420768037438,
+    "dense": 0.0029471860034391284,
+    "rerank": 0.15236301301047206
+   },
+   "generation": null
+  },
+  {
+   "id": "13",
+   "question": "What is the tallest mountain in Europe?",
+   "route": "refuse",
+   "expected_answer": "decline \u2014 outside the data",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": null,
+   "route_reason": null,
+   "lane_metrics": null,
+   "generation": null
+  }
+ ]
+}
