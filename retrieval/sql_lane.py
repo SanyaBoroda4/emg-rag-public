@@ -49,6 +49,8 @@ ALLOWED_VIEWS = {
     "v_activities": ["activity_id", "job_id", "job_name", "type_name",
                      "status_name", "activity_date", "phase", "assignees",
                      "note"],
+    "v_quote_conversion_monthly": ["quote_month", "quoted_jobs",
+                                   "moved_forward", "conversion_pct"],
 }
 
 # Low-cardinality columns have their EXACT value sets enumerated below (WO7
@@ -79,6 +81,9 @@ v_activities(activity_id, job_id, job_name, type_name, status_name, activity_dat
   -- status_name is EXACTLY one of: Estimate, Complete, Paid in Full and Finished, Confirmed, RTF, In Progress.
   -- assignees is a comma-joined list drawn from: Alex, Diana, Eugene, Fabricators, Francisco, Ihor/Tolik, Installers, Ivan Andreev, Ivan Tile, Leo, Max, Max Tile, Measuring Specialist (Heidi), Measuring Specialist (Jack), Murilo, Natalia, Office People, Others, Sasha, Thiago, Tile Guys, Victor, Walter, Wes, Yuri/Petro — match with ILIKE '%name%' (it is a joined list).
   -- CAUTION: activity_date IS NULL for ~44% of activities (never-scheduled placeholders).
+v_quote_conversion_monthly(quote_month date, quoted_jobs, moved_forward, conversion_pct)
+  -- Quote -> moved-forward conversion by monthly cohort (locked business definition: quoted = job's first DATED Quote; moved forward = dated Install OR dated Removal OR a chatbot payment-confirmation note; quotes <7 days old excluded unless already moved). USE THIS VIEW for any conversion / close-rate / "moved forward after quote" question — do not re-derive.
+  -- An invoice NUMBER on a job does NOT imply the customer moved forward (invoices can be created before commitment); only dated Install/Removal or a payment note counts.
 """
 
 SYSTEM_PROMPT = f"""You translate questions about a countertop fabrication company's data into a single PostgreSQL SELECT statement.

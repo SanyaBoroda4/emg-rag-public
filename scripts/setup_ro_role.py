@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from ingest.db import get_conn
 
 VIEWS = ["v_jobs", "v_job_areas", "v_invoices", "v_job_invoices",
-         "v_activities"]
+         "v_activities", "v_quote_conversion_monthly"]
 
 
 def main() -> int:
