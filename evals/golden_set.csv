@@ -3,23 +3,23 @@ id,question,route,expected_answer,relevant_ids,source_of_truth,difficulty,status
 2,Who is our top salesperson by job count?,structured,"Natalia Pavlenko, 1198 jobs",,same query,easy,verified,
 3,How many jobs did Alex Sorokin sell?,structured,996,,same query,easy,verified,
 4,How many jobs did Victor sell?,structured,441,,same query,medium,verified,partial name — must resolve to Victor Slabunov
-5,List all salespeople by number of jobs,structured,"Natalia 1198, Alex 996, Galya 939, Victor 441, Sasha 277, Diana 205, Max 111",,same query,medium,verified,
+5,List all salespeople by number of jobs,structured,"Natalia 1198, Alex 996, Galya 939, Victor 441, Sasha 277, Diana 205, Max 111",,same query,medium,verified,"SCORER BUG not system bug: harness extracted only the first number. Fix the scorer, not the system."
 6,How much did we invoice in 2024?,structured,"$5,200,113",,SQL: sum invoices by year,easy,verified,
 7,What was our best revenue year?,structured,"2024, $5.2M",,same query,easy,verified,
 8,How many invoices did we issue in 2023?,structured,553,,same query,easy,verified,
 9,What is our total invoiced amount across all years?,structured,"$27,736,469",,sum of all invoices,easy,verified,
-10,Did revenue grow from 2021 to 2024?,structured,Yes — $2.59M to $5.20M,,same query,medium,verified,"comparison, not lookup"
-11,Which material do we use most?,structured,"Dallas White, 66 areas",,SQL: count job_areas by material,medium,verified,will change after material parser WO
-12,How many areas used Dallas White?,structured,66,,same query,easy,verified,
+10,Did revenue grow from 2021 to 2024?,structured,"Yes — 2021 $2,590,573 to 2024 $5,200,113",,same query,medium,verified,"SCORER BUG: expected ""$2.59M"" vs actual ""2,586,798"". Scorer must normalise M/K suffixes. | comparison, not lookup"
+11,Which material do we use most?,structured,"Dallas White, 58 jobs",,SQL: count job_areas by material,medium,draft,"Re-derived at job level per Q12 decision: raw material_name 'Dallas White' = 58 distinct jobs; substring family = 152. | Re-derive after the Q12 decision — counting jobs, not areas. | will change after material parser WO"
+12,How many jobs used Dallas White?,structured,152,,COUNT(DISTINCT job_id) with material_name ILIKE '%Dallas White%'; cross-validated by the EMG bridge (152),easy,verified,DECIDED: job-level substring count. Exact-match gives 58 jobs; area rows give 169. Substring+distinct-job is the question people actually ask.
 13,How many areas have no material recorded?,structured,1885,,same query,medium,verified,
 14,What is our most common activity type?,structured,"Install, 7758",,SQL: count activities by type,easy,verified,
 15,How many Repair activities are there?,structured,846,,same query,easy,verified,
-16,How many quotes have we issued in total?,structured,5315,,same query,easy,verified,
+16,How many quotes have we issued in total?,structured,5315,,same query,easy,FAILING,"ROUTER BUG: refuses the question — ""quotes"" apparently read as quotations rather than the activity type."
 17,Which area do we work in most?,structured,"West Ashley, 603 jobs",,city_normalized counts,medium,verified,post-WO5; was wrong before normalization
 18,How many jobs in Johns Island?,structured,421,,city_normalized,easy,verified,
 19,How many jobs in Mount Pleasant?,structured,516,,city_normalized,hard,verified,~30 raw spellings collapse here — key normalization test
-20,How many jobs have no city recorded at all?,structured,1731,,city_normalized IS NULL + no raw city,medium,verified,
-21,How many jobs in Charleston proper?,structured,81,,city_normalized,hard,verified,was 749 before ZIP/address redistribution
+20,How many jobs have no city recorded at all?,structured,1779,,city_normalized IS NULL + no raw city,medium,FAILING,"DECIDED: 1,779 = 1,731 with no city typed + 40 excluded junk + 8 unresolved. System returned 1,779 and was marked wrong; the golden answer was wrong, not the system."
+21,How many jobs in Charleston proper?,structured,81,,city_normalized,hard,FAILING,"SQL BUG: ILIKE %Charleston% sums Charleston 81 + Downtown Charleston 94 + North Charleston 196 = 371. Canonical city column needs exact match, not substring. | was 749 before ZIP/address redistribution"
 22,How many jobs did we do on Kiawah Island?,structured,178,,city_normalized,medium,verified,"includes Kiawah Resort, Kiawah Dolphin"
 23,What is the capital of France?,refuse,Refuse — outside the business data,,n/a,easy,verified,"refused at router, $0.0006"
 24,Write me a poem about granite,refuse,Refuse — not a data question,,n/a,easy,verified,
