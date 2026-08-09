@@ -78,30 +78,66 @@ def format_confusion(matrix):
     return "\n".join(lines)
 
 
-def extract_number(text):
-    """First number in a text (commas tolerated); None if absent.
+import re
 
-    Used for structured-answer scoring: skips markdown bold markers etc.
-    """
-    import re
-    m = re.search(r"-?\d[\d,]*\.?\d*", text or "")
-    if not m:
-        return None
-    return float(m.group().replace(",", ""))
+# number with optional thousands separators and an optional K/M/B scale
+# suffix ("$2.59M", "1,198", "72.5")
+_NUM_RE = re.compile(r"-?\d[\d,]*\.?\d*\s*([KMBkmb])?\b")
+_SCALE = {"k": 1e3, "m": 1e6, "b": 1e9}
+
+
+def extract_numbers(text):
+    """All numbers in a text, thousands separators stripped and K/M/B
+    suffixes expanded. Each returned as (value, had_suffix)."""
+    out = []
+    for m in _NUM_RE.finditer(text or ""):
+        raw = m.group().rstrip("KMBkmb").strip()
+        val = float(raw.replace(",", ""))
+        suffix = m.group(1)
+        if suffix:
+            val *= _SCALE[suffix.lower()]
+        out.append((val, suffix is not None))
+    return out
+
+
+def extract_number(text):
+    """First number in a text (normalized); None if absent."""
+    nums = extract_numbers(text)
+    return nums[0][0] if nums else None
+
+
+def _value_present(exp_val, exp_rounded, answer_nums, tolerance):
+    """Is exp_val among the answer's numbers? Suffix-rounded forms ("2.59M")
+    on either side compare with 1% relative tolerance; plain integers compare
+    exactly; other floats within ±tolerance."""
+    for act_val, act_rounded in answer_nums:
+        if exp_rounded or act_rounded:
+            if exp_val and abs(act_val - exp_val) / abs(exp_val) <= 0.01:
+                return True
+        elif float(exp_val).is_integer() and float(act_val).is_integer():
+            if exp_val == act_val:
+                return True
+        elif abs(act_val - exp_val) <= tolerance:
+            return True
+    return False
 
 
 def numeric_match(expected_text, answer_text, tolerance=0.5):
-    """Structured scoring: numbers extracted from both, compared.
+    """Structured scoring by numeric comparison.
 
-    Exact for integers (counts); ±tolerance for non-integers (sq ft etc.).
-    Returns None when the expected answer has no number to compare.
+    Single-number expected answers compare first-number-to-any-answer-number.
+    List-shaped expected answers (>= 2 numbers, e.g. "Natalia 1198, Alex
+    996, ...") require EVERY expected number to appear in the answer — the
+    scorer no longer grades a seven-row list by its first element (WO7 Q5).
+    K/M/B suffixes and thousands separators are normalized with a 1% relative
+    tolerance for rounded forms (WO7 Q10). Returns None when the expected
+    answer contains no number.
     """
-    exp = extract_number(expected_text)
-    if exp is None:
+    expected = extract_numbers(expected_text)
+    if not expected:
         return None
-    act = extract_number(answer_text)
-    if act is None:
+    answer_nums = extract_numbers(answer_text)
+    if not answer_nums:
         return False
-    if float(exp).is_integer() and float(act).is_integer():
-        return exp == act
-    return abs(exp - act) <= tolerance
+    return all(_value_present(v, r, answer_nums, tolerance)
+               for v, r in expected)
