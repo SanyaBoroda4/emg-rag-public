@@ -26,6 +26,16 @@ See `CLAUDE.md` for project context, server constraints, and working rules.
 - The server has ~1 GiB free RAM and runs live production containers; every
   component is memory-budgeted (see CLAUDE.md).
 
+## Model choices (measured, not asserted)
+
+- **`SQL_MODEL` defaults to Haiku** (WO7). WO4 chose Sonnet on the argument
+  that a wrong join fails silently; the WO6 benchmark refuted it on the
+  golden set's judge-free numeric comparison — Haiku 18/31 vs Sonnet 17/31,
+  at 42% of the cost and half the latency, zero validator failures
+  (`evals/results/benchmark.md`). The structured lane's failure modes turned
+  out to be semantic (which column, substring vs exact), not join
+  complexity, and prompt-side schema enumeration addresses those.
+
 ## Known outstanding work
 
 - **`job_areas.material_name` needs a parser, not a mapping table**: 3,671

@@ -18,7 +18,7 @@ from retrieval.fuse import rrf_fuse
 from retrieval.keyword import keyword_search
 from retrieval.rerank import rerank
 from retrieval.router import route_query
-from retrieval.sql_lane import run_structured
+from retrieval.sql_lane import SQL_MODEL, run_structured
 
 # $/MTok (in, out). Sonnet 5 at intro pricing through 2026-08-31.
 PRICES = {"claude-haiku-4-5": (1.0, 5.0), "claude-sonnet-5": (2.0, 10.0)}
@@ -111,7 +111,7 @@ def main() -> int:
             watch.stage("sql", t0)
             if sql_result:
                 for u in sql_result["usages"]:
-                    total_cost += cost_of("claude-sonnet-5", u)
+                    total_cost += cost_of(SQL_MODEL, u)
                 print(f"\nSQL:\n{sql_result['sql']}")
                 print(f"rows: {sql_result['row_count']}")
                 for r in sql_result["rows"][:10]:

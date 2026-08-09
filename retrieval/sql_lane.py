@@ -31,7 +31,10 @@ from ingest.db import get_ro_conn
 
 load_dotenv()
 
-SQL_MODEL = os.environ.get("SQL_MODEL", "claude-sonnet-5")
+# Default flipped to Haiku in WO7: on the golden set's judge-free numeric
+# comparison Haiku scored 18/31 vs Sonnet's 17/31, at 42% of the cost and
+# half the latency, with zero validator failures (evals/results/benchmark.md).
+SQL_MODEL = os.environ.get("SQL_MODEL", "claude-haiku-4-5")
 DEFAULT_LIMIT = 200
 
 ALLOWED_VIEWS = {
@@ -48,18 +51,31 @@ ALLOWED_VIEWS = {
                      "note"],
 }
 
+# Low-cardinality columns have their EXACT value sets enumerated below (WO7
+# Bug C fix): without the values, the model has no reason to consult a
+# column — "find jobs with tile work" searched material_name and missed all
+# 246 Tile activities. material_name (3,671 distinct unparsed values) is the
+# one column that CANNOT benefit from enumeration until it is parsed.
 SCHEMA_DDL = """
 v_jobs(job_id, job_name, customer, salesperson, city, process_name, status, creation_date date, city_raw)
-  -- one row per job. status examples: 'Complete', 'Cancelled', 'In Progress'. job_name is usually the customer name.
-  -- city is NORMALIZED to 68 canonical Charleston-area names (e.g. 'West Ashley', 'Mount Pleasant', 'Johns Island') — filter on it with exact = matches. city_raw is the original free text; never filter on city_raw unless explicitly asked for raw values.
+  -- one row per job. job_name is usually the customer name.
+  -- city holds EXACTLY one of these canonical area names; ALWAYS filter it with = or IN, NEVER ILIKE/substring ('Charleston', 'North Charleston' and 'Downtown Charleston' are three DIFFERENT areas). NULL = no city recorded. Values:
+  --   Adams Run, Awendaw, Beaufort, Bluffton, Blythewood, Charleston, Cottageville, Daniel Island, Dewees Island, Downtown Charleston, Edisto Island, Elloree, Eutawville, Fairfax, Fayeheville, Georgetown, Goose Creek, Green Pond, Greensboro, Hanahan, Harleyville, Hilton Head Island, Hollywood, Huger, Islandton, Isle of Palms, Islington, James Island, Jamestown, Johns Island, Kiawah Island, Ladson, Mcclellanville, Meggett, Moncks Corner, Mount Pleasant, Myrtle Beach, North Charleston, Oak Island, Okatie, Orangeburg, Pawleys Island, Pineville, Ravenel, Reevesville, Ridgeville, Round O, Ruffin, Savannah, Seabrook Island, Smoaks, Southbury, Spring Island, St Helena Island, St Stephen, Sullivan's Island, Sullivan S Island, Summerville, Sumter, Ulmer, Vance, Varnville, Wadmalaw Island, Walterboro, Wando, West Ashley, Yamasee, Yonges Island
+  -- status: exactly 'Active' or 'Complete'. process_name: Canceled, Done, Hold, Job, Lead, Leads with Layouts, Measurement (exact match).
+  -- city_raw is the original free text; never use it unless raw values are explicitly requested.
 v_job_areas(job_id, job_name, area_name, room_type, sq_ft numeric, material_name, supplier, edge, backsplash, sink)
-  -- one row per countertop area of a job. material_name is free text, e.g. '3sl Calacatta Gold', 'Quartzite Sea Pearl'.
+  -- one row per countertop area of a job.
+  -- room_type values (exact): Kitchen, Secondary Bath, Entire Project, Master Bath, Outdoor Kitchen, Other, Fireplace, Laundry, Curbs, Bar, Table top, Island, Desk, Bck, Pantry, Bench, Kitchen and Fireplace, Closet, Pool, Wall.
+  -- material_name is UNPARSED free text ('3sl Calacatta Gold Honed', '(1.5)Calcatta Liberty') — the ONE column where ILIKE '%...%' substring matching is correct.
 v_invoices(doc_number, customer_name, txn_date date, total_amt numeric, balance numeric, status)
   -- QuickBooks invoices. doc_number is text.
 v_job_invoices(job_id, job_name, doc_number, txn_date date, total_amt numeric, balance numeric, status)
   -- job <-> invoice links (a job can have several invoices).
 v_activities(activity_id, job_id, job_name, type_name, status_name, activity_date date, phase, assignees, note)
-  -- Moraware activities. type_name e.g. 'Template','Install','Invoice','Quote','Follow Up','Measure','Phone, Email'.
+  -- Moraware activities — the record of WORK: quotes, templates, installs, tile work etc. are activities, found HERE by type_name, not in material or note text.
+  -- type_name is EXACTLY one of (use =): Contract, Email, Fabrication, Follow Up, Follow Up After Install, Install, Invoice, Measure, Meeting, Paid if Full, Phone call, Phone, Email, Plumbing, Quote, Removal, Repair, Template, Tile.
+  -- status_name is EXACTLY one of: Estimate, Complete, Paid in Full and Finished, Confirmed, RTF, In Progress.
+  -- assignees is a comma-joined list drawn from: Alex, Diana, Eugene, Fabricators, Francisco, Ihor/Tolik, Installers, Ivan Andreev, Ivan Tile, Leo, Max, Max Tile, Measuring Specialist (Heidi), Measuring Specialist (Jack), Murilo, Natalia, Office People, Others, Sasha, Thiago, Tile Guys, Victor, Walter, Wes, Yuri/Petro — match with ILIKE '%name%' (it is a joined list).
   -- CAUTION: activity_date IS NULL for ~44% of activities (never-scheduled placeholders).
 """
 
@@ -70,8 +86,9 @@ Available views (the ONLY relations you may reference):
 Rules:
 - Output ONLY the SQL statement. No prose, no markdown fences, no comments.
 - One SELECT statement (CTEs allowed). Never modify data.
-- Text values are messy free text: match with ILIKE '%...%', never equality.
-- Material names embed slab counts and finishes ('3sl Calacatta Gold Honed') — always ILIKE.
+- Columns with enumerated values above: match with = or IN against the exact listed values.
+- Genuinely free-text columns (job_name, customer, material_name, note, supplier, edge): match with ILIKE '%...%', never equality.
+- Kinds of work (quote, template, measure, install, removal, fabrication, repair, tile) are activity types: count/filter them via v_activities.type_name.
 - Year filters: use date ranges, e.g. creation_date >= '2025-01-01' AND creation_date < '2026-01-01'.
 - If the question is about jobs, prefer counting DISTINCT job_id when joins could duplicate rows.
 - activity_date is NULL for ~44% of activities; when filtering on it, that silently excludes undated rows (acceptable, but do not pretend the data is complete).
