@@ -1,0 +1,5759 @@
+{
+ "meta": {
+  "git_sha": "aa69240",
+  "answer_model": "claude-haiku-4-5",
+  "sql_model": "claude-haiku-4-5",
+  "router_model": "claude-haiku-4-5",
+  "rerank_backend": "voyage",
+  "rerank_enabled": "1",
+  "embed_model": "voyage-3.5-lite",
+  "timestamp": "2026-08-09 22:40:09",
+  "tiers": [
+   1,
+   3
+  ],
+  "questions": 58,
+  "total_cost_usd": 0.6509
+ },
+ "tier1": {
+  "accuracy": 0.9482758620689655,
+  "matrix": {
+   "structured": {
+    "structured": 31,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 0
+   },
+   "semantic": {
+    "structured": 3,
+    "semantic": 20,
+    "hybrid": 0,
+    "refuse": 0
+   },
+   "hybrid": {
+    "structured": 0,
+    "semantic": 0,
+    "hybrid": 1,
+    "refuse": 0
+   },
+   "refuse": {
+    "structured": 0,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 3
+   }
+  },
+  "cost": 0.04865599999999999
+ },
+ "tier2": null,
+ "tier3": {
+  "correct": 35,
+  "total": 58,
+  "accuracy": 0.603448275862069,
+  "faithfulness": 0.8181818181818182,
+  "context_precision": 0.6428571428571429,
+  "cost": 0.6022460000000001,
+  "judge_model": "claude-sonnet-5"
+ },
+ "failures": {
+  "new_failures": [
+   "28",
+   "30"
+  ],
+  "known_failing": {
+   "16": true,
+   "20": true,
+   "21": true,
+   "26": true,
+   "29": true
+  }
+ },
+ "questions": [
+  {
+   "id": "1",
+   "question": "How many jobs has Natalia Pavlenko sold?",
+   "route": "structured",
+   "expected_answer": "1198",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs by salesperson is a structured query over the jobs table, filtered by the assigned salesperson field.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS jobs_sold FROM v_jobs WHERE salesperson = 'Natalia Pavlenko' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_sold"
+    ],
+    "sql_rows": [
+     [
+      1198
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Natalia Pavlenko has sold **1,198 jobs** [SQL].",
+    "cost": 0.002261,
+    "latency": {
+     "sql": 0.7708603581413627,
+     "answer": 2.0620147751178592
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "SQL result matches expected answer of 1198 jobs sold."
+   }
+  },
+  {
+   "id": "2",
+   "question": "Who is our top salesperson by job count?",
+   "route": "structured",
+   "expected_answer": "Natalia Pavlenko, 1198 jobs",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by counting jobs assigned to each salesperson and ranking by frequency.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT salesperson, COUNT(*) AS job_count FROM v_jobs WHERE salesperson IS NOT NULL AND salesperson <> '' GROUP BY salesperson ORDER BY job_count DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 11,
+    "sql_columns": [
+     "salesperson",
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      "Natalia Pavlenko",
+      1198
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Natalia Pavlenko** is your top salesperson by job count with **1,198 jobs**. [SQL]",
+    "cost": 0.00244,
+    "latency": {
+     "sql": 0.8706389130093157,
+     "answer": 0.707825566874817
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Answer matches the ground truth exactly and is fully supported by the SQL result."
+   }
+  },
+  {
+   "id": "3",
+   "question": "How many jobs did Alex Sorokin sell?",
+   "route": "structured",
+   "expected_answer": "996",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Count of jobs filtered by salesperson name is a straightforward structured query over job records.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS jobs_sold FROM v_jobs WHERE salesperson = 'Alex Sorokin' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_sold"
+    ],
+    "sql_rows": [
+     [
+      996
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Alex Sorokin sold **996 jobs** [SQL].",
+    "cost": 0.002219,
+    "latency": {
+     "sql": 0.7248153910040855,
+     "answer": 1.0979924369603395
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The SQL result matches the expected answer of 996 jobs, and the system's answer accurately reflects this."
+   }
+  },
+  {
+   "id": "4",
+   "question": "How many jobs did Victor sell?",
+   "route": "structured",
+   "expected_answer": "441",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs by salesperson is a direct structured query over job records and their assigned salespeople.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS jobs_sold_by_victor FROM v_jobs WHERE salesperson = 'Victor Slabunov' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_sold_by_victor"
+    ],
+    "sql_rows": [
+     [
+      441
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Victor Slabunov sold **441 jobs** [SQL].",
+    "cost": 0.0022500000000000003,
+    "latency": {
+     "sql": 1.96583631914109,
+     "answer": 0.6612087390385568
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Matches ground truth exactly and is supported by SQL result."
+   }
+  },
+  {
+   "id": "5",
+   "question": "List all salespeople by number of jobs",
+   "route": "structured",
+   "expected_answer": "Natalia 1198, Alex 996, Galya 939, Victor 441, Sasha 277, Diana 205, Max 111",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs per salesperson is a straightforward aggregation over the structured salesperson field.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT salesperson, COUNT(DISTINCT job_id) AS job_count FROM v_jobs WHERE salesperson IS NOT NULL AND salesperson <> '' GROUP BY salesperson ORDER BY job_count DESC, salesperson ASC LIMIT 200",
+    "sql_error": null,
+    "row_count": 11,
+    "sql_columns": [
+     "salesperson",
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      "Natalia Pavlenko",
+      1198
+     ],
+     [
+      "Alex Sorokin",
+      996
+     ],
+     [
+      "Galya Gornishka",
+      939
+     ],
+     [
+      "Victor Slabunov",
+      441
+     ],
+     [
+      "Sasha Nosova",
+      277
+     ],
+     [
+      "Diana Diaz",
+      205
+     ],
+     [
+      "Max Konikov",
+      111
+     ],
+     [
+      "Other",
+      7
+     ],
+     [
+      "Eugene Konikov",
+      5
+     ],
+     [
+      "Denis Trofimov",
+      2
+     ],
+     [
+      "Vlad Gorshchynskiy",
+      2
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Here are all salespeople ranked by number of jobs [SQL]:\n\n1. **Natalia Pavlenko** \u2013 1,198 jobs\n2. **Alex Sorokin** \u2013 996 jobs\n3. **Galya Gornishka** \u2013 939 jobs\n4. **Victor Slabunov** \u2013 441 jobs\n5. **Sasha Nosova** \u2013 277 jobs\n6. **Diana Diaz** \u2013 205 jobs\n7. **Max Konikov** \u2013 111 jobs\n8. **Other** \u2013 7 jobs\n9. **Eugene Konikov** \u2013 5 jobs\n10. **Denis Trofimov** \u2013 2 jobs\n11. **Vlad Gorshchynskiy** \u2013 2 jobs\n\nNatalia Pavlenko leads with nearly 1,200 jobs, followed by Alex Sorokin and Galya Gornishka. The remaining eight salespeople account for significantly fewer jobs.",
+    "cost": 0.003593,
+    "latency": {
+     "sql": 0.92722163698636,
+     "answer": 1.5291519681923091
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System's answer matches SQL results exactly and includes all salespeople with correct job counts, consistent with (and more complete than) the expected answer which only listed the top 7."
+   }
+  },
+  {
+   "id": "6",
+   "question": "How much did we invoice in 2024?",
+   "route": "structured",
+   "expected_answer": "$5,200,113",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answering this requires summing invoice totals filtered by year 2024 \u2014 a straightforward aggregation over structured invoice date and amount fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT SUM(total_amt) AS total_invoiced_2024 FROM v_invoices WHERE txn_date >= '2024-01-01' AND txn_date < '2025-01-01' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "total_invoiced_2024"
+    ],
+    "sql_rows": [
+     [
+      "5200113.02"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "According to the invoice records, your company invoiced **$5,200,113.02** in 2024. [SQL]",
+    "cost": 0.002449,
+    "latency": {
+     "sql": 0.8032063669525087,
+     "answer": 0.6957321909721941
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "SQL result matches expected value exactly ($5,200,113.02 rounds to $5,200,113), and the answer is fully supported by the retrieved SQL evidence."
+   }
+  },
+  {
+   "id": "7",
+   "question": "What was our best revenue year?",
+   "route": "structured",
+   "expected_answer": "2024, $5.2M",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by summing invoice totals grouped by year\u2014a standard aggregation over structured financial data.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT EXTRACT(YEAR FROM txn_date) AS year, SUM(total_amt) AS revenue, COUNT(*) AS invoice_count FROM v_invoices WHERE txn_date IS NOT NULL GROUP BY EXTRACT(YEAR FROM txn_date) ORDER BY revenue DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 9,
+    "sql_columns": [
+     "year",
+     "revenue",
+     "invoice_count"
+    ],
+    "sql_rows": [
+     [
+      "2024",
+      "5200113.02",
+      574
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Your best revenue year was **2024** with **$5,200,113.02** across 574 invoices. [SQL]",
+    "cost": 0.002633,
+    "latency": {
+     "sql": 0.9975004009902477,
+     "answer": 0.7144154729321599
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System correctly identifies 2024 as best revenue year with $5.2M, matching expected answer and supported by SQL result."
+   }
+  },
+  {
+   "id": "8",
+   "question": "How many invoices did we issue in 2023?",
+   "route": "structured",
+   "expected_answer": "553",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting invoices by year is a straightforward aggregation over structured invoice date fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS invoice_count FROM v_invoices WHERE txn_date >= '2023-01-01' AND txn_date < '2024-01-01' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "invoice_count"
+    ],
+    "sql_rows": [
+     [
+      553
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "We issued **553 invoices in 2023** [SQL].",
+    "cost": 0.002328,
+    "latency": {
+     "sql": 0.7987344728317112,
+     "answer": 0.6714795369189233
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "SQL result matches expected count of 553, and answer accurately reflects it."
+   }
+  },
+  {
+   "id": "9",
+   "question": "What is our total invoiced amount across all years?",
+   "route": "structured",
+   "expected_answer": "$27,736,469",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Sum of all invoice totals across all jobs and years is a direct aggregation over the structured invoice field.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT SUM(total_amt) AS total_invoiced_amount FROM v_invoices LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "total_invoiced_amount"
+    ],
+    "sql_rows": [
+     [
+      "27736469.23"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "The total invoiced amount across all years is **$27,736,469.23** [SQL].",
+    "cost": 0.002245,
+    "latency": {
+     "sql": 0.6003593550994992,
+     "answer": 0.6841564360074699
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System's answer matches SQL query result ($27,736,469.23), which rounds to the expected $27,736,469."
+   }
+  },
+  {
+   "id": "10",
+   "question": "Did revenue grow from 2021 to 2024?",
+   "route": "structured",
+   "expected_answer": "Yes \u2014 2021 $2,590,573 to 2024 $5,200,113",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by summing invoice totals (revenue) for 2021 and comparing to 2024 sums \u2014 a straightforward aggregation over structured date and amount fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT EXTRACT(YEAR FROM txn_date) AS year, SUM(total_amt) AS annual_revenue FROM v_invoices WHERE EXTRACT(YEAR FROM txn_date) IN (2021, 2024) GROUP BY EXTRACT(YEAR FROM txn_date) ORDER BY year LIMIT 200",
+    "sql_error": null,
+    "row_count": 2,
+    "sql_columns": [
+     "year",
+     "annual_revenue"
+    ],
+    "sql_rows": [
+     [
+      "2021",
+      "2590573.38"
+     ],
+     [
+      "2024",
+      "5200113.02"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yes, revenue grew significantly from 2021 to 2024. Annual revenue increased from $2,590,573.38 in 2021 to $5,200,113.02 in 2024, representing approximately a 101% increase [SQL].",
+    "cost": 0.002775,
+    "latency": {
+     "sql": 1.3351178199518472,
+     "answer": 0.98069250700064
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Answer matches expected values exactly and correctly states growth; percentage calculation (~100.8%) is accurate and supported by the data."
+   }
+  },
+  {
+   "id": "11",
+   "question": "Which material do we use most?",
+   "route": "structured",
+   "expected_answer": "Dallas White, 58 jobs",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by counting or summing material field across all jobs; no free-text reading required.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT material_name, COUNT(*) AS usage_count FROM v_job_areas WHERE material_name IS NOT NULL AND material_name <> '' GROUP BY material_name ORDER BY usage_count DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 3671,
+    "sql_columns": [
+     "material_name",
+     "usage_count"
+    ],
+    "sql_rows": [
+     [
+      "Dallas White",
+      66
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Dallas White** is the material used most, appearing in 66 job areas. [SQL]\n\nNote: The query shows only the top result; the full dataset contains 3,671 material instances across your jobs, so Dallas White represents a significant but not dominant portion of overall material usage.",
+    "cost": 0.002633,
+    "latency": {
+     "sql": 0.7886181129142642,
+     "answer": 1.2285421290434897
+    },
+    "correct": false,
+    "faithful": false,
+    "context_precision": null,
+    "judge_reason": "The system correctly identifies Dallas White as the most used material, matching the substance of the expected answer, though the count (66) differs from the ground truth's 58, likely due to differing aggregation units (job areas vs jobs). However, the added interpretive claim about it being a 'significant but not dominant portion' is not directly supported by the retrieved evidence (only aggregate row count of 3671 is known, not proportion)."
+   }
+  },
+  {
+   "id": "12",
+   "question": "How many jobs used Dallas White?",
+   "route": "structured",
+   "expected_answer": "152",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs by material name is a structured query over the countertop materials field.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS job_count FROM v_job_areas WHERE material_name ILIKE '%Dallas White%' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      152
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**152 jobs used Dallas White** [SQL].",
+    "cost": 0.002238,
+    "latency": {
+     "sql": 0.9761941418983042,
+     "answer": 0.623673829017207
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "SQL result matches expected answer of 152 jobs."
+   }
+  },
+  {
+   "id": "13",
+   "question": "How many areas have no material recorded?",
+   "route": "structured",
+   "expected_answer": "1885",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs or countertop areas with missing/null material field is a direct structured query over data attributes.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS areas_with_no_material FROM v_job_areas WHERE (material_name = '' OR material_name IS NULL) LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "areas_with_no_material"
+    ],
+    "sql_rows": [
+     [
+      1885
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**1,885 areas have no material recorded.** [SQL]",
+    "cost": 0.002271,
+    "latency": {
+     "sql": 0.761969868093729,
+     "answer": 0.904553784057498
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System's answer matches the ground truth count of 1885 and is directly supported by the SQL result."
+   }
+  },
+  {
+   "id": "14",
+   "question": "What is our most common activity type?",
+   "route": "structured",
+   "expected_answer": "Install, 7758",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Count frequency of activity types across all jobs to identify the most common one.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT type_name, COUNT(*) AS activity_count FROM v_activities GROUP BY type_name ORDER BY activity_count DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 18,
+    "sql_columns": [
+     "type_name",
+     "activity_count"
+    ],
+    "sql_rows": [
+     [
+      "Install",
+      7758
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "The most common activity type is **Install** with 7,758 recorded activities. [SQL]",
+    "cost": 0.002356,
+    "latency": {
+     "sql": 0.8901971159502864,
+     "answer": 1.871977792819962
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System's answer matches expected answer exactly and is supported by the SQL result."
+   }
+  },
+  {
+   "id": "15",
+   "question": "How many Repair activities are there?",
+   "route": "structured",
+   "expected_answer": "846",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Count of Repair activities\u2014a built-in activity type\u2014is answerable by filtering and counting structured records.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS repair_count FROM v_activities WHERE type_name = 'Repair' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "repair_count"
+    ],
+    "sql_rows": [
+     [
+      846
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "There are **846 Repair activities** [SQL].",
+    "cost": 0.002191,
+    "latency": {
+     "sql": 0.7707660610321909,
+     "answer": 0.6778314670082182
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System's answer matches the SQL result of 846, consistent with the ground truth."
+   }
+  },
+  {
+   "id": "16",
+   "question": "How many quotes have we issued in total?",
+   "route": "structured",
+   "expected_answer": "5315",
+   "difficulty": "easy",
+   "status": "FAILING",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Count of Quote activity type is a direct aggregation over structured activity records.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS total_quotes FROM v_activities WHERE type_name = 'Quote' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "total_quotes"
+    ],
+    "sql_rows": [
+     [
+      5315
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "We have issued **5,315 quotes in total** [SQL].",
+    "cost": 0.002203,
+    "latency": {
+     "sql": 0.7391894629690796,
+     "answer": 1.0049998140893877
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "SQL result matches expected answer of 5315 quotes, and the system's answer accurately reflects this without unsupported claims."
+   }
+  },
+  {
+   "id": "17",
+   "question": "Which area do we work in most?",
+   "route": "structured",
+   "expected_answer": "West Ashley, 603 jobs",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answering which area (geography/region) the company works in most requires counting or grouping jobs by location/area field, a structured operation.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT city, COUNT(DISTINCT job_id) AS job_count FROM v_jobs WHERE city IS NOT NULL GROUP BY city ORDER BY job_count DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 68,
+    "sql_columns": [
+     "city",
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      "West Ashley",
+      603
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "We work most in **West Ashley**, with 603 jobs [SQL].",
+    "cost": 0.002345,
+    "latency": {
+     "sql": 2.178997129900381,
+     "answer": 0.5970448809675872
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Matches expected answer exactly and is fully supported by SQL result."
+   }
+  },
+  {
+   "id": "18",
+   "question": "How many jobs in Johns Island?",
+   "route": "structured",
+   "expected_answer": "421",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Filtering jobs by location (Johns Island) is a straightforward structured query over job addresses; count is directly answerable.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS job_count FROM v_jobs WHERE city = 'Johns Island' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      421
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "There are **421 jobs in Johns Island** [SQL].",
+    "cost": 0.002212,
+    "latency": {
+     "sql": 0.6796227269805968,
+     "answer": 0.9196062479168177
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System correctly reports 421 jobs, matching the ground truth and supported by the SQL result."
+   }
+  },
+  {
+   "id": "19",
+   "question": "How many jobs in Mount Pleasant?",
+   "route": "structured",
+   "expected_answer": "516",
+   "difficulty": "hard",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs filtered by location (Mount Pleasant) is a straightforward query over structured job data.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS job_count FROM v_jobs WHERE city = 'Mount Pleasant' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      516
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "There are **516 jobs in Mount Pleasant** [SQL].",
+    "cost": 0.002212,
+    "latency": {
+     "sql": 0.6297181940171868,
+     "answer": 0.6888206519652158
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System's answer matches the SQL result of 516 jobs, which matches the expected answer."
+   }
+  },
+  {
+   "id": "20",
+   "question": "How many jobs have no city recorded at all?",
+   "route": "structured",
+   "expected_answer": "1779",
+   "difficulty": "medium",
+   "status": "FAILING",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs by completeness of a structured field (city) is a direct database query over job records.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS jobs_with_no_city FROM v_jobs WHERE city IS NULL LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_with_no_city"
+    ],
+    "sql_rows": [
+     [
+      1779
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**1,779 jobs have no city recorded at all.** [SQL]",
+    "cost": 0.002248,
+    "latency": {
+     "sql": 1.0586646748706698,
+     "answer": 0.8536286200396717
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System's answer matches the SQL result and ground truth exactly (1779)."
+   }
+  },
+  {
+   "id": "21",
+   "question": "How many jobs in Charleston proper?",
+   "route": "structured",
+   "expected_answer": "81",
+   "difficulty": "hard",
+   "status": "FAILING",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs filtered by location (Charleston proper) is a straightforward structured query over job address fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS job_count FROM v_jobs WHERE city = 'Charleston' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      81
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "There are **81 jobs in Charleston proper** [SQL].",
+    "cost": 0.002206,
+    "latency": {
+     "sql": 0.7061408669687808,
+     "answer": 0.6432076769415289
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "SQL result shows 81 jobs in Charleston, matching the expected answer, and the system's answer accurately reflects this."
+   }
+  },
+  {
+   "id": "22",
+   "question": "How many jobs did we do on Kiawah Island?",
+   "route": "structured",
+   "expected_answer": "178",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs filtered by location (Kiawah Island) is a straightforward structured query over job records with address/location fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS job_count FROM v_jobs WHERE city = 'Kiawah Island' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      178
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "We completed **178 jobs on Kiawah Island** [SQL].",
+    "cost": 0.002257,
+    "latency": {
+     "sql": 1.1036489519756287,
+     "answer": 0.7353372708894312
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "SQL result shows 178 jobs, matching expected answer; system's answer accurately reflects the evidence."
+   }
+  },
+  {
+   "id": "23",
+   "question": "What is the capital of France?",
+   "route": "refuse",
+   "expected_answer": "Refuse \u2014 outside the business data",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "refuse",
+   "route_reason": "General knowledge question unrelated to countertop fabrication company data",
+   "lane_metrics": null,
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [],
+    "answer": "This system only answers questions about EMG's job-tracking and invoicing data; that question is outside it.",
+    "cost": 0.0,
+    "latency": {},
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "24",
+   "question": "Write me a poem about granite",
+   "route": "refuse",
+   "expected_answer": "Refuse \u2014 not a data question",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "refuse",
+   "route_reason": "Request is for creative writing (a poem about granite material in general), not a question answerable from the company's job-tracking and invoicing data.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [],
+    "answer": "This system only answers questions about EMG's job-tracking and invoicing data; that question is outside it.",
+    "cost": 0.0,
+    "latency": {},
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "25",
+   "question": "What is our profit margin?",
+   "route": "refuse",
+   "expected_answer": "Refuse or state the gap \u2014 revenue exists, cost data does not",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "refuse",
+   "route_reason": "Profit margin calculation requires cost data (labor, materials, overhead) not present in job-tracking and invoicing data; only revenue-side data is available.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [],
+    "answer": "This system only answers questions about EMG's job-tracking and invoicing data; that question is outside it.",
+    "cost": 0.0,
+    "latency": {},
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "26",
+   "question": "Which jobs went quiet after a quote?",
+   "route": "structured",
+   "expected_answer": "Jobs whose latest activity is a Quote with no subsequent activity \u2014 needs a SQL definition, not note search",
+   "difficulty": "hard",
+   "status": "FAILING",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering jobs with Quote activities and checking for absence of subsequent activities within a defined period; requires structured fields (activity types and dates), not free-text interpretation.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT DISTINCT j.job_id, j.job_name, j.customer, j.salesperson, j.city, j.status, j.creation_date FROM v_jobs AS j WHERE j.job_id IN (SELECT a.job_id FROM v_activities AS a WHERE a.type_name = 'Quote' AND a.activity_date IS NOT NULL AND NOT a.job_id IN (SELECT job_id FROM v_activities WHERE activity_date > (SELECT MAX(activity_date) FROM v_activities WHERE job_id = a.job_id AND type_name = 'Quote' AND activity_date IS NOT NULL))) ORDER BY j.creation_date DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 693,
+    "sql_columns": [
+     "job_id",
+     "job_name",
+     "customer",
+     "salesperson",
+     "city",
+     "status",
+     "creation_date"
+    ],
+    "sql_rows": [
+     [
+      5857,
+      "David Stratton_2465 Edenforest",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Johns Island",
+      "Active",
+      "2026-07-30"
+     ],
+     [
+      5853,
+      "Paul Daggy",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "Active",
+      "2026-07-29"
+     ],
+     [
+      5854,
+      "Mattew Martin_outdoor",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "Active",
+      "2026-07-29"
+     ],
+     [
+      5855,
+      "Russ Whited_Carper Baggers",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "North Charleston",
+      "Active",
+      "2026-07-29"
+     ],
+     [
+      5856,
+      "Method Kitchens - 2437 Daniel Island Dr",
+      "Method Kitchens",
+      null,
+      "Daniel Island",
+      "Active",
+      "2026-07-29"
+     ],
+     [
+      5841,
+      "Kenneth  Stephens_COSTCO",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "Active",
+      "2026-07-27"
+     ],
+     [
+      5842,
+      "Jason Randall",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "Active",
+      "2026-07-27"
+     ],
+     [
+      5832,
+      "Carpet Baggers_Sean",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "Active",
+      "2026-07-21"
+     ],
+     [
+      5830,
+      "Justine Conroe_COSTCO",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Daniel Island",
+      "Active",
+      "2026-07-20"
+     ],
+     [
+      5831,
+      "Laura Peter",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Johns Island",
+      "Active",
+      "2026-07-20"
+     ],
+     [
+      5828,
+      "Bill and Judy Bruce_outdoor grill",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Johns Island",
+      "Active",
+      "2026-07-17"
+     ],
+     [
+      5823,
+      "Shawunta Beard Wood",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "Active",
+      "2026-07-16"
+     ],
+     [
+      5811,
+      "Brett Bowden",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "James Island",
+      "Active",
+      "2026-07-14"
+     ],
+     [
+      5806,
+      "Amy Scarella",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Isle of Palms",
+      "Active",
+      "2026-07-13"
+     ],
+     [
+      5803,
+      "Jacqueline_island",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "Active",
+      "2026-07-10"
+     ],
+     [
+      5804,
+      "Jason_vanity to go",
+      "Alex`s Jobs",
+      null,
+      null,
+      "Active",
+      "2026-07-10"
+     ],
+     [
+      5797,
+      "Leslie Buckner_to go bar",
+      "Alex`s Jobs",
+      null,
+      null,
+      "Active",
+      "2026-07-08"
+     ],
+     [
+      5789,
+      "Peggy Bawa",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Downtown Charleston",
+      "Active",
+      "2026-07-06"
+     ],
+     [
+      5784,
+      "Meador_vanity",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Johns Island",
+      "Active",
+      "2026-07-03"
+     ],
+     [
+      5777,
+      "Caroll Contracting_bar with waterfall",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "Active",
+      "2026-06-30"
+     ],
+     [
+      5779,
+      "Johnson & Wilson_105 Woodland",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "Active",
+      "2026-06-30"
+     ],
+     [
+      5763,
+      "Palms Fords Point",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Savannah",
+      "Active",
+      "2026-06-27"
+     ],
+     [
+      5758,
+      "Carolyne Hannon",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "Active",
+      "2026-06-26"
+     ],
+     [
+      5754,
+      "Kerry Sullivan (personal house)",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "James Island",
+      "Active",
+      "2026-06-25"
+     ],
+     [
+      5749,
+      "Deanna Kosler",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "James Island",
+      "Active",
+      "2026-06-24"
+     ],
+     [
+      5740,
+      "Solaris - 32 Ocean Course (Hobbie)",
+      "Solaris",
+      null,
+      "Kiawah Island",
+      "Active",
+      "2026-06-21"
+     ],
+     [
+      5741,
+      "Solaris - 14 Avocet Ln (Fisher)",
+      "Solaris",
+      null,
+      null,
+      "Active",
+      "2026-06-21"
+     ],
+     [
+      5739,
+      "Amanda Bartlett",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Summerville",
+      "Active",
+      "2026-06-20"
+     ],
+     [
+      5724,
+      "Angela Funcik",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "Active",
+      "2026-06-17"
+     ],
+     [
+      5718,
+      "Charleston Woodwork Creations_1489 St Peters Rd",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Walterboro",
+      "Active",
+      "2026-06-15"
+     ],
+     [
+      5713,
+      "Kevin Kosco",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mount Pleasant",
+      "Active",
+      "2026-06-12"
+     ],
+     [
+      5706,
+      "Jerad and Amber Horn",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Johns Island",
+      "Active",
+      "2026-06-11"
+     ],
+     [
+      5685,
+      "Rose Peterson",
+      "Walk-In Client",
+      "Alex Sorokin",
+      "James Island",
+      "Active",
+      "2026-06-03"
+     ],
+     [
+      5682,
+      "Shauna Franks",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "Active",
+      "2026-06-02"
+     ],
+     [
+      5680,
+      "Jon Vollmuth",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Hollywood",
+      "Active",
+      "2026-06-01"
+     ],
+     [
+      5672,
+      "Jeffrey Herndon",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Walterboro",
+      "Active",
+      "2026-05-29"
+     ],
+     [
+      5668,
+      "Dan Neidhardt",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Hollywood",
+      "Active",
+      "2026-05-28"
+     ],
+     [
+      5663,
+      "520 Magnolia_Harborside Remodelling",
+      "Harborside Remodelling",
+      "Alex Sorokin",
+      "West Ashley",
+      "Active",
+      "2026-05-27"
+     ],
+     [
+      5651,
+      "Jenny Strauss",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mount Pleasant",
+      "Active",
+      "2026-05-18"
+     ],
+     [
+      5648,
+      "Bonnie - 18 Sussex Rd",
+      "Costco (Cosentino)",
+      null,
+      "West Ashley",
+      "Active",
+      "2026-05-15"
+     ],
+     [
+      5646,
+      "Matt Kern",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mount Pleasant",
+      "Active",
+      "2026-05-14"
+     ],
+     [
+      5642,
+      "Roy Mahshie - Berman Residence",
+      "Roy Mahshie",
+      null,
+      null,
+      "Active",
+      "2026-05-12"
+     ],
+     [
+      5557,
+      "Rhonda - Fireplace",
+      "Regular customers",
+      "Victor Slabunov",
+      "Kiawah Island",
+      "Active",
+      "2026-04-08"
+     ],
+     [
+      5457,
+      "MHA _ 2691 High Hammock",
+      "Ashton Holloway, MHA Design, MHA Construction LLC",
+      "Natalia Pavlenko",
+      null,
+      "Active",
+      "2026-02-26"
+     ],
+     [
+      5458,
+      "MHA _ 2591 High Hammock",
+      "Ashton Holloway, MHA Design, MHA Construction LLC",
+      "Natalia Pavlenko",
+      null,
+      "Active",
+      "2026-02-26"
+     ],
+     [
+      5437,
+      "Kelly Bliss - Kitchen",
+      "N-Hance",
+      "Victor Slabunov",
+      "Johns Island",
+      "Active",
+      "2026-02-19"
+     ],
+     [
+      5403,
+      "Kim Nielsen_2110 Palm Blvd_IOP",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Isle of Palms",
+      "Active",
+      "2026-02-09"
+     ],
+     [
+      5289,
+      "sample 12/17/25",
+      "regular customer",
+      "Natalia Pavlenko",
+      "Edisto Island",
+      "Active",
+      "2025-12-17"
+     ],
+     [
+      5285,
+      "Zhenya_table for delivery",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "Active",
+      "2025-12-16"
+     ],
+     [
+      5282,
+      "Jonathan Feeny",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "Active",
+      "2025-12-15"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "The SQL results show **693 jobs that went quiet after a quote was given** [SQL]. These are jobs where a Quote activity exists with a recorded date, but no subsequent activities (of any type) occurred after that quote.\n\nThe results include examples across various customers and salespeople, predominantly from Alex Sorokin's pipeline. All shown jobs remain in \"Active\" status. Examples include:\n\n- David Stratton_2465 Edenforest (Alex's Jobs, created 2026-07-30) [SQL]\n- Paul Daggy (Alex's Jobs, created 2026-07-29) [SQL]\n- Method Kitchens - 2437 Daniel Island Dr (Method Kitchens, created 2026-07-29) [SQL]\n\nThe query filtered for jobs where the most recent activity is a Quote with a recorded date, meaning no follow-up activity has been logged since the quote was issued. However, note that **44% of activities in the system have no recorded date**, so this result may undercount truly stalled jobs if follow-up activities were logged but left undated.",
+    "cost": 0.0069099999999999995,
+    "latency": {
+     "sql": 8.610513069899753,
+     "answer": 4.167139765108004
+    },
+    "correct": true,
+    "faithful": false,
+    "context_precision": null,
+    "judge_reason": "The system correctly implemented the SQL-based definition of 'quiet after a quote' (latest activity being a dated Quote with no later activity), matching the expected approach, and the job examples align with the retrieved rows. However, it introduced an unsupported statistic (44% of activities lack a recorded date) that is not present in the provided evidence, making the answer not fully faithful despite being substantively correct."
+   }
+  },
+  {
+   "id": "27",
+   "question": "Were there jobs where we could not get material into the building?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 3rd-floor hoist, crane could not unload, would not fit in the stairs, island access uncertain",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [
+    7119,
+    3369,
+    4513,
+    4024
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text activity notes to find mentions of material access problems, delivery obstacles, or building entry issues that would explain why material could not be brought in.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 7119,
+     "bm25_rank": null,
+     "dense_rank": 2,
+     "rrf": 0.01613,
+     "rerank_score": 0.6523
+    },
+    {
+     "chunk_id": 4513,
+     "bm25_rank": null,
+     "dense_rank": 1,
+     "rrf": 0.01639,
+     "rerank_score": 0.6367
+    },
+    {
+     "chunk_id": 3369,
+     "bm25_rank": null,
+     "dense_rank": 4,
+     "rrf": 0.01562,
+     "rerank_score": 0.6367
+    },
+    {
+     "chunk_id": 3193,
+     "bm25_rank": null,
+     "dense_rank": 7,
+     "rrf": 0.01493,
+     "rerank_score": 0.5977
+    },
+    {
+     "chunk_id": 4525,
+     "bm25_rank": null,
+     "dense_rank": 3,
+     "rrf": 0.01587,
+     "rerank_score": 0.582
+    },
+    {
+     "chunk_id": 4024,
+     "bm25_rank": null,
+     "dense_rank": 11,
+     "rrf": 0.01408,
+     "rerank_score": 0.582
+    },
+    {
+     "chunk_id": 6137,
+     "bm25_rank": null,
+     "dense_rank": 19,
+     "rrf": 0.01266,
+     "rerank_score": 0.582
+    },
+    {
+     "chunk_id": 136,
+     "bm25_rank": null,
+     "dense_rank": 23,
+     "rrf": 0.01205,
+     "rerank_score": 0.5234
+    },
+    {
+     "chunk_id": 1550,
+     "bm25_rank": 19,
+     "dense_rank": null,
+     "rrf": 0.01266,
+     "rerank_score": 0.5
+    },
+    {
+     "chunk_id": 5919,
+     "bm25_rank": null,
+     "dense_rank": 6,
+     "rrf": 0.01515,
+     "rerank_score": 0.4785
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.03816482983529568,
+    "dense": 0.033613104838877916,
+    "rerank": 0.15880516218021512
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     7119,
+     4513,
+     3369,
+     3193,
+     4525,
+     4024
+    ],
+    "answer": "Yes, there were jobs where material delivery or installation faced access issues:\n\n**Confirmed access/fit problems:**\n\n1. **Job 480 (Atwood 3701 Docksite Unit 205)**: \"3rd floor, it will be difficult to bring the big piece inside\" [chunk 7119, job 480]\n\n2. **Job 4074 (Bill Thorwarth, Daniel Island)**: Material delivery logistics uncertain due to access constraints\u2014\"whether the island can be brought inside\" was the core concern. The stairway had a turn that might prevent manual installation, and crane access was uncertain after recent brickroad installation [chunk 4513, job 4074]\n\n3. **Job 2837 (Dolphins - Sever, Johns Island)**: \"Crane Showed up but was not able to Unload\" [chunk 3369, job 2837]. This is an automated system record documenting the crane's inability to unload material.\n\n4. **Job 3607 (Amy Query, Folly Beach)**: Material \"did not fit in the stairs\" [chunk 4024, job 3607]\n\n**Material availability issues** (related but distinct) also appear in jobs 2652 and 4081, though these involved slab availability rather than building access.",
+    "cost": 0.002342,
+    "latency": {
+     "answer": 3.10144071909599
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": 0.6666666666666666,
+    "judge_reason": "The answer correctly identifies multiple jobs matching the expected examples (3rd floor hoist issue, crane unable to unload, island access uncertain, didn't fit in stairs), all supported by evidence. It also appropriately distinguishes unrelated material availability issues."
+   }
+  },
+  {
+   "id": "28",
+   "question": "Jobs where the customer changed their mind about the sink",
+   "route": "semantic",
+   "expected_answer": "2 confirmed changes (Jamie Stabler, Charlotte Canfora); 1 borderline pending decision",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [
+    6189,
+    4075
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text job notes to find mentions of customer sink preference changes; this is qualitative reasoning about customer intent and decisions.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 6594,
+     "bm25_rank": null,
+     "dense_rank": 19,
+     "rrf": 0.01266,
+     "rerank_score": 0.7227
+    },
+    {
+     "chunk_id": 6189,
+     "bm25_rank": null,
+     "dense_rank": 21,
+     "rrf": 0.01235,
+     "rerank_score": 0.7188
+    },
+    {
+     "chunk_id": 2974,
+     "bm25_rank": null,
+     "dense_rank": 4,
+     "rrf": 0.01562,
+     "rerank_score": 0.6406
+    },
+    {
+     "chunk_id": 5983,
+     "bm25_rank": 26,
+     "dense_rank": 1,
+     "rrf": 0.02802,
+     "rerank_score": 0.6172
+    },
+    {
+     "chunk_id": 1802,
+     "bm25_rank": null,
+     "dense_rank": 3,
+     "rrf": 0.01587,
+     "rerank_score": 0.6133
+    },
+    {
+     "chunk_id": 4075,
+     "bm25_rank": 23,
+     "dense_rank": null,
+     "rrf": 0.01205,
+     "rerank_score": 0.5664
+    },
+    {
+     "chunk_id": 6512,
+     "bm25_rank": null,
+     "dense_rank": 6,
+     "rrf": 0.01515,
+     "rerank_score": 0.5625
+    },
+    {
+     "chunk_id": 1260,
+     "bm25_rank": null,
+     "dense_rank": 8,
+     "rrf": 0.01471,
+     "rerank_score": 0.5625
+    },
+    {
+     "chunk_id": 3775,
+     "bm25_rank": 21,
+     "dense_rank": null,
+     "rrf": 0.01235,
+     "rerank_score": 0.5625
+    },
+    {
+     "chunk_id": 6750,
+     "bm25_rank": null,
+     "dense_rank": 2,
+     "rrf": 0.01613,
+     "rerank_score": 0.5508
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.03319638408720493,
+    "dense": 0.03017909498885274,
+    "rerank": 0.15355461882427335
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     6594,
+     6189,
+     2974,
+     5983,
+     1802,
+     4075
+    ],
+    "answer": "Based on the retrieved notes, here are jobs where the customer changed their mind about the sink:\n\n**Job 3630 (Charlotte Canfora)** \u2014 The installation note explicitly states \"Change the sink (start with the sink cause she has the plumber scheduled for the same day!)\" [chunk 4075]. This indicates the customer decided to change the sink and had it scheduled with a plumber.\n\n**Job 1434 (Ilka Reilly)** \u2014 The note indicates uncertainty about the sink choice: \"Just need to Confirm With the Client if they stay with the same sink\" [chunk 1802]. This suggests the customer was reconsidering their original sink selection.\n\nThe other notes reference sink-related decisions but do not clearly describe a *change of mind*: Job 2988 documents a preference against a soap dispenser (not a sink change), Job 1386 shows a customer installing without a sink initially to add one later (pre-planned, not a change), Job 2318 shows intent to reuse an existing sink (not a change from a prior decision), and Job 845 notes the customer will choose a sink model (no prior decision documented to change from).",
+    "cost": 0.002074,
+    "latency": {
+     "answer": 3.141303831944242
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": 0.5,
+    "judge_reason": "The system correctly identified Charlotte Canfora as a confirmed sink change and Ilka Reilly as a borderline pending decision, but it failed to identify Jamie Stabler (job 1386) as the second confirmed change, instead dismissing it as 'pre-planned, not a change.' The expected answer explicitly counts Jamie Stabler as a confirmed sink change (she decided not to use the vessel sink initially), so the system's answer is missing a key required fact, making it incorrect despite being faithful to the evidence it did use."
+   }
+  },
+  {
+   "id": "29",
+   "question": "Find jobs with tile work",
+   "route": "structured",
+   "expected_answer": "246 jobs have a Tile activity",
+   "difficulty": "hard",
+   "status": "FAILING",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Filtering jobs by activity type 'tile' is a direct query over structured activity-type records; no free-text notes are required.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT DISTINCT j.job_id, j.job_name, j.customer, j.city, j.status FROM v_jobs AS j INNER JOIN v_activities AS a ON j.job_id = a.job_id WHERE a.type_name = 'Tile' ORDER BY j.job_id LIMIT 200",
+    "sql_error": null,
+    "row_count": 246,
+    "sql_columns": [
+     "job_id",
+     "job_name",
+     "customer",
+     "city",
+     "status"
+    ],
+    "sql_rows": [
+     [
+      45,
+      "Tracy Lyles",
+      "Regular customers",
+      "West Ashley",
+      "Complete"
+     ],
+     [
+      111,
+      "Kristine Sires",
+      "Regular customers",
+      null,
+      "Active"
+     ],
+     [
+      128,
+      "Shannon Davis",
+      "regular customer",
+      "West Ashley",
+      "Active"
+     ],
+     [
+      143,
+      "Anne Sinno",
+      "regular customer",
+      null,
+      "Complete"
+     ],
+     [
+      155,
+      "Rhonda Pittrit",
+      "regular customer",
+      "Johns Island",
+      "Complete"
+     ],
+     [
+      177,
+      "Barbara van Beyber",
+      "Angela Voyles",
+      "Isle of Palms",
+      "Active"
+     ],
+     [
+      195,
+      "Kay and Randy Brown",
+      "regular customer",
+      "Mount Pleasant",
+      "Complete"
+     ],
+     [
+      215,
+      "Amy Adler",
+      "regular customer",
+      null,
+      "Complete"
+     ],
+     [
+      238,
+      "Peggy Melton",
+      "regular customer",
+      null,
+      "Complete"
+     ],
+     [
+      259,
+      "Elizabeth Baker",
+      "regular customer",
+      "Johns Island",
+      "Complete"
+     ],
+     [
+      264,
+      "Paula Spedale",
+      "regular customer",
+      "West Ashley",
+      "Complete"
+     ],
+     [
+      268,
+      "Kathy Reifeis",
+      "Kathy Reifeis",
+      null,
+      "Active"
+     ],
+     [
+      287,
+      "Becky Lynch",
+      "Regular customers",
+      null,
+      "Complete"
+     ],
+     [
+      295,
+      "Rikke Fryman",
+      "Regular customers",
+      null,
+      "Complete"
+     ],
+     [
+      309,
+      "Elliot Smalley",
+      "regular customer",
+      null,
+      "Active"
+     ],
+     [
+      424,
+      "Emily Kozak (Halloran)",
+      "regular customer",
+      "James Island",
+      "Active"
+     ],
+     [
+      438,
+      "Mariam Mcmanus",
+      "regular customer",
+      "Mount Pleasant",
+      "Active"
+     ],
+     [
+      542,
+      "Andy Dianna",
+      "Regular customers",
+      "Goose Creek",
+      "Active"
+     ],
+     [
+      577,
+      "Doug Berenguer 66 Cannon",
+      "Doug Berenguer",
+      "Charleston",
+      "Active"
+     ],
+     [
+      609,
+      "Sandye & Scott Williams",
+      "Regular customers",
+      "James Island",
+      "Active"
+     ],
+     [
+      697,
+      "Ann Baldwin",
+      "Regular customers",
+      "West Ashley",
+      "Active"
+     ],
+     [
+      768,
+      "Olena and Travis George",
+      "Regular customers",
+      "West Ashley",
+      "Active"
+     ],
+     [
+      834,
+      "Tracy Brown",
+      "Regular customers",
+      "Mount Pleasant",
+      "Active"
+     ],
+     [
+      846,
+      "Pamela McMillan",
+      "Regular customers",
+      "Ravenel",
+      "Active"
+     ],
+     [
+      849,
+      "Carl Kennedy",
+      "Regular customers",
+      "James Island",
+      "Active"
+     ],
+     [
+      852,
+      "Nancy Easter",
+      "Regular customers",
+      "Seabrook Island",
+      "Active"
+     ],
+     [
+      867,
+      "Angie Araneo",
+      "Regular customers",
+      "Edisto Island",
+      "Active"
+     ],
+     [
+      928,
+      "Ally Worthy",
+      "Regular customers",
+      "West Ashley",
+      "Active"
+     ],
+     [
+      930,
+      "Sue Quinn",
+      "Regular customers",
+      "Seabrook Island",
+      "Active"
+     ],
+     [
+      934,
+      "Ella Fabunan",
+      "Regular customers",
+      "Hanahan",
+      "Active"
+     ],
+     [
+      939,
+      "Tumiko Rucker",
+      "Regular customers",
+      "James Island",
+      "Active"
+     ],
+     [
+      949,
+      "Abigail Forget",
+      "Abigail Forget",
+      null,
+      "Active"
+     ],
+     [
+      967,
+      "Keith Brushett",
+      "Larry Zobel, Zobel Inc",
+      "James Island",
+      "Complete"
+     ],
+     [
+      968,
+      "Karen Gracely",
+      "Regular customers",
+      "Johns Island",
+      "Active"
+     ],
+     [
+      970,
+      "Sandra Amidon",
+      "Home Advisor",
+      null,
+      "Active"
+     ],
+     [
+      977,
+      "Lisa Stokes",
+      "Regular customers",
+      "Mount Pleasant",
+      "Complete"
+     ],
+     [
+      1071,
+      "Jim Ramsay",
+      "Ashley river restoration",
+      "Edisto Island",
+      "Active"
+     ],
+     [
+      1077,
+      "Elliott Skiles",
+      "Regular customers",
+      null,
+      "Complete"
+     ],
+     [
+      1083,
+      "Christina Mccarthy",
+      "Regular customers",
+      "Johns Island",
+      "Active"
+     ],
+     [
+      1152,
+      "Erin Garner (Personal House)",
+      "Atwood Vacations",
+      "Edisto Island",
+      "Complete"
+     ],
+     [
+      1201,
+      "Ron Roy",
+      "Regular customers",
+      "West Ashley",
+      "Active"
+     ],
+     [
+      1211,
+      "Gwyn Schneider",
+      "Regular customers",
+      null,
+      "Active"
+     ],
+     [
+      1226,
+      "Blair Giles",
+      "Regular customers",
+      null,
+      "Active"
+     ],
+     [
+      1229,
+      "Jack Melton TO GO",
+      "Regular customers",
+      null,
+      "Active"
+     ],
+     [
+      1273,
+      "Dennis Corrigan",
+      "Regular customers",
+      "Seabrook Island",
+      "Active"
+     ],
+     [
+      1366,
+      "James Gardner - 1675 Paradise",
+      "James Gardner",
+      "Mount Pleasant",
+      "Active"
+     ],
+     [
+      1397,
+      "Roland Robitaille",
+      "Regular customers",
+      null,
+      "Active"
+     ],
+     [
+      1415,
+      "Jo Ann Garvin",
+      "Regular customers",
+      "West Ashley",
+      "Complete"
+     ],
+     [
+      1419,
+      "Shelly O'Donnell",
+      "Home Advisor",
+      "Downtown Charleston",
+      "Active"
+     ],
+     [
+      1441,
+      "Mark Bradley",
+      "Regular customers",
+      "Walterboro",
+      "Complete"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "I found **246 jobs with tile work** [SQL]. The results include a sample of 50 jobs; here are the first 10:\n\n| Job ID | Job Name | Customer | City | Status |\n|--------|----------|----------|------|--------|\n| 45 | Tracy Lyles | Regular customers | West Ashley | Complete |\n| 111 | Kristine Sires | Regular customers | \u2014 | Active |\n| 128 | Shannon Davis | regular customer | West Ashley | Active |\n| 143 | Anne Sinno | regular customer | \u2014 | Complete |\n| 155 | Rhonda Pittrit | regular customer | Johns Island | Complete |\n| 177 | Barbara van Beyber | Angela Voyles | Isle of Palms | Active |\n| 195 | Kay and Randy Brown | regular customer | Mount Pleasant | Complete |\n| 215 | Amy Adler | regular customer | \u2014 | Complete |\n| 238 | Peggy Melton | regular customer | \u2014 | Complete |\n| 259 | Elizabeth Baker | regular customer | Johns Island | Complete |\n\nThe full dataset contains 246 matching jobs split between **Active** and **Complete** statuses across multiple locations in the Charleston area.",
+    "cost": 0.0052239999999999995,
+    "latency": {
+     "sql": 1.0357595379464328,
+     "answer": 3.4626388610340655
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The system correctly reports 246 jobs with tile work, matching the expected answer, and provides accurate sample data supported by the SQL evidence."
+   }
+  },
+  {
+   "id": "30",
+   "question": "Which quartzite jobs stalled after quote and what did the salesperson say?",
+   "route": "hybrid",
+   "expected_answer": "1 stalled quartzite job; no salesperson comment documented",
+   "difficulty": "hard",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "hybrid",
+   "route_reason": "Requires filtering for quartzite material AND quote activities (structured), then reading notes to find stalled jobs and understand what the salesperson said (semantic).",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 743,
+     "bm25_rank": null,
+     "dense_rank": 1,
+     "rrf": 0.01639,
+     "rerank_score": 0.7148
+    },
+    {
+     "chunk_id": 2421,
+     "bm25_rank": null,
+     "dense_rank": 21,
+     "rrf": 0.01235,
+     "rerank_score": 0.6992
+    },
+    {
+     "chunk_id": 2846,
+     "bm25_rank": null,
+     "dense_rank": 6,
+     "rrf": 0.01515,
+     "rerank_score": 0.6758
+    },
+    {
+     "chunk_id": 5873,
+     "bm25_rank": null,
+     "dense_rank": 11,
+     "rrf": 0.01408,
+     "rerank_score": 0.6758
+    },
+    {
+     "chunk_id": 6803,
+     "bm25_rank": null,
+     "dense_rank": 23,
+     "rrf": 0.01205,
+     "rerank_score": 0.6602
+    },
+    {
+     "chunk_id": 5362,
+     "bm25_rank": 14,
+     "dense_rank": null,
+     "rrf": 0.01351,
+     "rerank_score": 0.6523
+    },
+    {
+     "chunk_id": 992,
+     "bm25_rank": null,
+     "dense_rank": 5,
+     "rrf": 0.01538,
+     "rerank_score": 0.6133
+    },
+    {
+     "chunk_id": 5305,
+     "bm25_rank": 12,
+     "dense_rank": null,
+     "rrf": 0.01389,
+     "rerank_score": 0.6055
+    },
+    {
+     "chunk_id": 5317,
+     "bm25_rank": 13,
+     "dense_rank": null,
+     "rrf": 0.0137,
+     "rerank_score": 0.5977
+    },
+    {
+     "chunk_id": 5426,
+     "bm25_rank": 15,
+     "dense_rank": null,
+     "rrf": 0.01333,
+     "rerank_score": 0.5938
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.03903647302649915,
+    "dense": 0.030828264076262712,
+    "rerank": 78.78742926497944
+   },
+   "generation": {
+    "sql": "WITH quartzite_jobs AS (SELECT DISTINCT j.job_id, j.job_name, j.salesperson FROM v_jobs AS j INNER JOIN v_job_areas AS a ON j.job_id = a.job_id WHERE a.material_name ILIKE '%quartzite%'), latest_activities AS (SELECT act.job_id, act.type_name, act.activity_date, act.note, ROW_NUMBER() OVER (PARTITION BY act.job_id ORDER BY act.activity_date DESC NULLS LAST) AS rn FROM v_activities AS act WHERE act.activity_date IS NOT NULL) SELECT DISTINCT q.job_id, q.job_name, q.salesperson, la.type_name AS latest_activity_type, la.activity_date AS latest_activity_date, la.note AS salesperson_note FROM quartzite_jobs AS q LEFT JOIN latest_activities AS la ON q.job_id = la.job_id AND la.rn = 1 WHERE la.type_name = 'Quote' ORDER BY q.job_id LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "job_id",
+     "job_name",
+     "salesperson",
+     "latest_activity_type",
+     "latest_activity_date",
+     "salesperson_note"
+    ],
+    "sql_rows": [
+     [
+      180,
+      "James Gardner Kizer",
+      null,
+      "Quote",
+      "2020-02-14",
+      ""
+     ]
+    ],
+    "chunk_ids": [
+     743,
+     2421,
+     2846,
+     5873,
+     6803,
+     5362
+    ],
+    "answer": "Based on the SQL results and retrieved notes:\n\n**One quartzite job stalled after quote:**\n\n**Job 180 \u2013 James Gardner Kizer** (quoted Feb. 14, 2020, Vitoria quartzite)\n\n**What the salesperson said:** The salesperson noted two issues: (1) \"Need to bring him two 20\" flat brackets, charge 35 per each, he will install\" and (2) \"Review the quote, the dimensions was so far from how it is\" [chunk 5873, job 180].\n\n---\n\n**Important limitation:** The SQL query filtered for activities with dates and found only 1 quartzite job where the latest dated activity was a quote. However, the retrieved notes show at least 4 other quartzite jobs (Tim Samsa, Abby Cooper, Davone & Jasmine Hawkins, Eva Ravenel) that stalled after quote with documented salesperson comments. These likely weren't captured by the SQL because they either lack activity dates or their latest activities are also quotes but weren't ranked as the single \"latest\" record. Additionally, 44% of activities have no date in the system, so jobs may have stalled without recent dated activity being recorded.",
+    "cost": 0.0057599999999999995,
+    "latency": {
+     "sql": 2.6384200658649206,
+     "answer": 3.373494543135166
+    },
+    "correct": false,
+    "faithful": false,
+    "context_precision": 0.16666666666666666,
+    "judge_reason": "The SQL correctly identifies job 180 as the single stalled quartzite job, matching the expected count, but the salesperson_note field returned was empty (no comment documented), consistent with the expected answer. However, the system incorrectly presents unrelated job-note content (chunk 5873) as the salesperson's comment, and further speculates about additional quartzite jobs not supported by the retrieved data, contradicting the expected answer's conclusion that no salesperson comment was documented."
+   }
+  },
+  {
+   "id": "31",
+   "question": "How many square feet did Ihor/Tolik install in March 2026?",
+   "route": "structured",
+   "expected_answer": "1,909.3 sq ft across 23 jobs (29 install visits)",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counts square feet of install activities filtered by salesperson names (Ihor/Tolik) and date range (March 2026) \u2014 all structured fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COALESCE(SUM(ja.sq_ft), 0) AS total_sq_ft FROM v_activities AS a JOIN v_job_areas AS ja ON a.job_id = ja.job_id WHERE a.type_name = 'Install' AND a.assignees ILIKE '%Ihor/Tolik%' AND a.activity_date >= '2026-03-01' AND a.activity_date < '2026-04-01' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "total_sq_ft"
+    ],
+    "sql_rows": [
+     [
+      "3845.3"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Ihor/Tolik installed **3,845.3 square feet** in March 2026. [SQL]",
+    "cost": 0.002843,
+    "latency": {
+     "sql": 1.0918466721195728,
+     "answer": 0.5830328378360718
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The SQL query's join between activities and job_areas likely caused fan-out duplication, inflating the sum to 3,845.3 sq ft instead of the correct 1,909.3 sq ft. The system's answer faithfully reports the SQL result but the underlying query logic is flawed, so the final answer does not match the expected correct value."
+   }
+  },
+  {
+   "id": "32",
+   "question": "Which install crew did the most square footage in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "Ivan Andreev, 9,067.6 sq ft",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Filtering install activities by date range (first half of 2026), grouping by crew, and summing square footage are all structured operations over activity types, dates, and job measurements.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT assignees, SUM(ja.sq_ft) AS total_sq_ft FROM v_activities AS va JOIN v_job_areas AS ja ON va.job_id = ja.job_id WHERE va.type_name = 'Install' AND va.activity_date >= '2026-01-01' AND va.activity_date < '2026-07-01' AND va.assignees IS NOT NULL AND va.assignees <> '' GROUP BY assignees ORDER BY total_sq_ft DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 6,
+    "sql_columns": [
+     "assignees",
+     "total_sq_ft"
+    ],
+    "sql_rows": [
+     [
+      "Ivan Andreev",
+      "26614.2"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Ivan Andreev** installed the most square footage in the first half of 2026, with **26,614.2 sq ft** [SQL].\n\nNote: 44% of activities in the database lack scheduled dates and would not be included in this analysis, so this result reflects only activities with recorded install dates in H1 2026.",
+    "cost": 0.0032040000000000003,
+    "latency": {
+     "sql": 1.330877629108727,
+     "answer": 1.2120737908408046
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "System correctly identified Ivan Andreev as the top crew, matching evidence, but the square footage value (26,614.2) diverges dramatically from the expected 9,067.6, indicating a data aggregation issue (likely double counting from the join) that makes the numeric result incorrect despite being faithful to the retrieved SQL output."
+   }
+  },
+  {
+   "id": "33",
+   "question": "Which install crew completed the most jobs in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "Ihor/Tolik, 108 jobs",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering activities by type (install) and date range (Jan\u2013Jun 2026), then counting jobs grouped by crew member, to find the maximum.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT assignees, COUNT(DISTINCT job_id) AS jobs_completed FROM v_activities WHERE type_name = 'Install' AND status_name = 'Complete' AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees IS NOT NULL AND assignees <> '' GROUP BY assignees ORDER BY jobs_completed DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 5,
+    "sql_columns": [
+     "assignees",
+     "jobs_completed"
+    ],
+    "sql_rows": [
+     [
+      "Ihor/Tolik",
+      51
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Ihor/Tolik** completed the most install jobs in the first half of 2026, with **51 completed jobs** [SQL].\n\n**Note on data completeness:** This result is based on activities with recorded dates. The activity dataset has a known gap where 44% of activities lack date information, so this count reflects only jobs with dateable records.",
+    "cost": 0.003085,
+    "latency": {
+     "sql": 1.1407558179926127,
+     "answer": 1.3101510570850223
+    },
+    "correct": false,
+    "faithful": false,
+    "context_precision": null,
+    "judge_reason": "System correctly identified Ihor/Tolik as the top crew, but reported 51 jobs vs the expected 108 jobs, a significant discrepancy. Additionally, the claim about 44% of activities lacking dates is not supported by the provided SQL evidence."
+   }
+  },
+  {
+   "id": "34",
+   "question": "How many jobs did Yuri/Petro install in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "35 jobs, 3,653.1 sq ft",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counts install activities by salesperson and date range\u2014answerable by filtering activity type, date range, and salesperson name against structured fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT v_activities.job_id) AS install_count FROM v_activities WHERE v_activities.type_name = 'Install' AND v_activities.assignees ILIKE '%Yuri/Petro%' AND v_activities.activity_date >= '2026-01-01' AND v_activities.activity_date < '2026-07-01' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "install_count"
+    ],
+    "sql_rows": [
+     [
+      35
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yuri/Petro installed **35 jobs** in the first half of 2026 [SQL].\n\nNote: 44% of activities in the system lack scheduled dates (representing placeholder records), so this count may be incomplete if some of their installations were never formally scheduled.",
+    "cost": 0.002883,
+    "latency": {
+     "sql": 1.0097989810165018,
+     "answer": 1.0909030339680612
+    },
+    "correct": false,
+    "faithful": false,
+    "context_precision": null,
+    "judge_reason": "The core answer (35 jobs) matches the expected count and is directly supported by the SQL result. However, the added note about 44% of activities lacking scheduled dates is not supported by any provided evidence, making the answer not fully faithful. The question only asked for job count, so omitting sq ft is not an issue for correctness."
+   }
+  },
+  {
+   "id": "35",
+   "question": "What is Ivan Andreev's average job size in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "104.2 sq ft per job",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Filter jobs by salesperson (Ivan Andreev) and date range (first half of 2026), then calculate average countertop area from structured job records.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT AVG(sq_ft) AS average_job_size FROM v_job_areas WHERE job_id IN (SELECT DISTINCT job_id FROM v_activities WHERE assignees ILIKE '%Ivan Andreev%' AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01') LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "average_job_size"
+    ],
+    "sql_rows": [
+     [
+      "63.2131868131868132"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Ivan Andreev's average job size in the first half of 2026 is approximately **63.21 square feet** [SQL].\n\n**Important caveat:** This calculation is based only on jobs with recorded activities dated in H1 2026. Since 44% of activities in the system have no date (never-scheduled placeholders), this figure may not capture all of Ivan's work during this period.",
+    "cost": 0.0029779999999999997,
+    "latency": {
+     "sql": 1.2869516771752387,
+     "answer": 1.4357297290116549
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The system's SQL query produced 63.21 sq ft, but the expected correct answer is 104.2 sq ft per job, indicating the query logic or filtering was flawed. The answer is faithful to its own retrieved evidence but does not match the ground truth."
+   }
+  },
+  {
+   "id": "36",
+   "question": "Which crew has the largest average job size in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "Yuri/Petro, 107.4 sq ft per job",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering jobs by crew and date range (Jan-Jun 2026), calculating average sq ft per crew, and ranking.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT assignees, AVG(total_sq_ft) AS avg_job_size, COUNT(DISTINCT job_id) AS job_count FROM (SELECT a.assignees, a.job_id, SUM(ja.sq_ft) AS total_sq_ft FROM v_activities AS a JOIN v_job_areas AS ja ON a.job_id = ja.job_id WHERE a.activity_date >= '2026-01-01' AND a.activity_date < '2026-07-01' AND NOT a.assignees IN ('', 'Office People', 'Others') AND a.assignees IS NOT NULL GROUP BY a.assignees, a.job_id) AS subq GROUP BY assignees ORDER BY avg_job_size DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 22,
+    "sql_columns": [
+     "assignees",
+     "avg_job_size",
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      "Victor",
+      "409.0425000000000000",
+      104
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Victor** has the largest average job size in the first half of 2026, with an average of **409.04 sq ft** across 104 jobs. [SQL]\n\nNote: This analysis is based on activities with recorded dates in H1 2026. The activity dataset has a known gap where 44% of activities lack date information, so this result represents only dated records.",
+    "cost": 0.003686,
+    "latency": {
+     "sql": 1.914330715779215,
+     "answer": 1.5464996369555593
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The system's SQL query returned Victor as top crew, but expected answer is Yuri/Petro with 107.4 sq ft avg job size, indicating the query logic (likely summing sq ft per job across multiple areas inflating totals) produced a different, incorrect result. The answer does not match the ground truth."
+   }
+  },
+  {
+   "id": "37",
+   "question": "Compare Ivan Andreev and Ihor/Tolik install performance in the first half of 2026",
+   "route": "structured",
+   "expected_answer": "Ihor/Tolik did more jobs (108 vs 87) but Ivan installed slightly more sq ft (9,067.6 vs 9,027.0); Ivan averages 104.2 sq ft/job vs 84.4",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Comparing installer performance (install activity counts, dates, job volumes) in a specific time period is answerable by filtering activities by type (install), dates (first half 2026), and salesperson/installer, then counting or ranking\u2014all structured fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT CASE WHEN assignees ILIKE '%Ivan Andreev%' THEN 'Ivan Andreev' WHEN assignees ILIKE '%Ihor/Tolik%' THEN 'Ihor/Tolik' END AS installer, COUNT(DISTINCT activity_id) AS install_count, COUNT(DISTINCT job_id) AS unique_jobs, COUNT(DISTINCT CASE WHEN status_name = 'Complete' THEN activity_id END) AS completed_installs, ROUND(CAST(100.0 * COUNT(DISTINCT CASE WHEN status_name = 'Complete' THEN activity_id END) / NULLIF(COUNT(DISTINCT activity_id), 0) AS DECIMAL), 1) AS completion_rate_pct FROM v_activities WHERE type_name = 'Install' AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND (assignees ILIKE '%Ivan Andreev%' OR assignees ILIKE '%Ihor/Tolik%') GROUP BY installer ORDER BY installer LIMIT 200",
+    "sql_error": null,
+    "row_count": 2,
+    "sql_columns": [
+     "installer",
+     "install_count",
+     "unique_jobs",
+     "completed_installs",
+     "completion_rate_pct"
+    ],
+    "sql_rows": [
+     [
+      "Ihor/Tolik",
+      154,
+      108,
+      78,
+      "50.6"
+     ],
+     [
+      "Ivan Andreev",
+      149,
+      87,
+      90,
+      "60.4"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Performance Comparison: H1 2026**\n\nIvan Andreev outperformed Ihor/Tolik on completion rate, while Ihor/Tolik handled more total install activities:\n\n| Metric | Ivan Andreev | Ihor/Tolik |\n|--------|--------------|-----------|\n| Install activities | 149 | 154 |\n| Unique jobs | 87 | 108 |\n| Completed installs | 90 | 78 |\n| Completion rate | 60.4% | 50.6% |\n\n**Key findings:** Ivan Andreev completed 10 percentage points more of his assigned installs (60.4% vs 50.6%) [SQL]. Ihor/Tolik was assigned slightly more activities (154 vs 149) but across more jobs (108 vs 87), suggesting more distributed workload [SQL].\n\n*Note: Activity date data is incomplete (44% of activities lack scheduling dates), so this comparison reflects only dated activities in the system.*",
+    "cost": 0.0048920000000000005,
+    "latency": {
+     "sql": 2.1709450520575047,
+     "answer": 2.321025296114385
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The SQL results support the numbers reported (install counts, unique jobs, completion rates), so the answer is faithful to the evidence. However, it does not address the sq ft installed or sq ft/job averages that the expected answer highlights, and instead focuses on completion rate, which is a different metric not mentioned in the ground truth. Thus the substance does not match the expected answer."
+   }
+  },
+  {
+   "id": "38",
+   "question": "Were there any customers our staff flagged as difficult to deal with?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 at least one note warns the installer to be on time because \"she will bite your head off\" (job 2083)",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    2638
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text notes in jobs to identify staff observations or flags about difficult customers.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 1409,
+     "bm25_rank": 10,
+     "dense_rank": 10,
+     "rrf": 0.02857,
+     "rerank_score": 0.5977
+    },
+    {
+     "chunk_id": 4618,
+     "bm25_rank": null,
+     "dense_rank": 2,
+     "rrf": 0.01613,
+     "rerank_score": 0.5938
+    },
+    {
+     "chunk_id": 1859,
+     "bm25_rank": 13,
+     "dense_rank": 9,
+     "rrf": 0.02819,
+     "rerank_score": 0.5234
+    },
+    {
+     "chunk_id": 980,
+     "bm25_rank": null,
+     "dense_rank": 3,
+     "rrf": 0.01587,
+     "rerank_score": 0.498
+    },
+    {
+     "chunk_id": 3283,
+     "bm25_rank": null,
+     "dense_rank": 7,
+     "rrf": 0.01493,
+     "rerank_score": 0.4844
+    },
+    {
+     "chunk_id": 3027,
+     "bm25_rank": null,
+     "dense_rank": 4,
+     "rrf": 0.01562,
+     "rerank_score": 0.4648
+    },
+    {
+     "chunk_id": 1491,
+     "bm25_rank": null,
+     "dense_rank": 11,
+     "rrf": 0.01408,
+     "rerank_score": 0.4512
+    },
+    {
+     "chunk_id": 4315,
+     "bm25_rank": 29,
+     "dense_rank": 21,
+     "rrf": 0.02358,
+     "rerank_score": 0.4395
+    },
+    {
+     "chunk_id": 3567,
+     "bm25_rank": null,
+     "dense_rank": 1,
+     "rrf": 0.01639,
+     "rerank_score": 0.4395
+    },
+    {
+     "chunk_id": 1292,
+     "bm25_rank": null,
+     "dense_rank": 17,
+     "rrf": 0.01299,
+     "rerank_score": 0.4062
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.014015179127454758,
+    "dense": 0.035554856061935425,
+    "rerank": 0.13446603692136705
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     1409,
+     4618,
+     1859,
+     980,
+     3283,
+     3027
+    ],
+    "answer": "Yes, staff flagged several customers as difficult:\n\n**Phone/Communication Issues:**\n- **Joan Tanner** (job 2729): \"call and text, never answer\" [chunk 3283]\n- **Cyrus** (job 2391): \"leave multiple time voice mail no answer or call back\" [chunk 3027]\n- **Ernie Cochran** (job 498): \"has not responded to Galya or Vitaly\" [chunk 980]\n\n**Behavior Concerns:**\n- **Tammi Derringer** (job 1003): \"Sounded Difficult on the phone but I think we can get this job\" [chunk 1409]\n- **Sonya Leibowetz** (job 4149): Described as \"very clever\" after becoming unresponsive post-measurement, with a note suggesting she obtained detailed specifications and material information then \"went to other place with all that info\" [chunk 4618]\n- **Jackie Gordon** (job 1500): An internal note advised: \"If she will be too difficult just move her to cancel\" [chunk 1859]",
+    "cost": 0.002095,
+    "latency": {
+     "answer": 2.181986754992977
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": 1.0,
+    "judge_reason": "The system's answer is fully supported by the retrieved evidence and correctly answers the yes/no question by identifying multiple customers flagged as difficult, matching the substance of the expected answer (yes, such customers existed) even though it did not surface the specific 'job 2083' example from the ground truth, which was not present in the retrieved chunks."
+   }
+  },
+  {
+   "id": "39",
+   "question": "Which jobs had unusual custom cutouts or special requests?",
+   "route": "semantic",
+   "expected_answer": "At least one job required a hole for a beer tap, plus GDS holes and 45-degree curbs (job 3274)",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    3749
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Identifying 'unusual' custom cutouts and 'special requests' requires reading free-text notes in job records to find non-standard requirements and customer notes.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 3775,
+     "bm25_rank": 11,
+     "dense_rank": 31,
+     "rrf": 0.02507,
+     "rerank_score": 0.6289
+    },
+    {
+     "chunk_id": 6392,
+     "bm25_rank": 29,
+     "dense_rank": 1,
+     "rrf": 0.02763,
+     "rerank_score": 0.6094
+    },
+    {
+     "chunk_id": 1850,
+     "bm25_rank": null,
+     "dense_rank": 2,
+     "rrf": 0.01613,
+     "rerank_score": 0.5664
+    },
+    {
+     "chunk_id": 3005,
+     "bm25_rank": null,
+     "dense_rank": 16,
+     "rrf": 0.01316,
+     "rerank_score": 0.5586
+    },
+    {
+     "chunk_id": 2004,
+     "bm25_rank": 10,
+     "dense_rank": 43,
+     "rrf": 0.02399,
+     "rerank_score": 0.543
+    },
+    {
+     "chunk_id": 6402,
+     "bm25_rank": null,
+     "dense_rank": 6,
+     "rrf": 0.01515,
+     "rerank_score": 0.543
+    },
+    {
+     "chunk_id": 6801,
+     "bm25_rank": 31,
+     "dense_rank": 26,
+     "rrf": 0.02262,
+     "rerank_score": 0.5312
+    },
+    {
+     "chunk_id": 6919,
+     "bm25_rank": null,
+     "dense_rank": 17,
+     "rrf": 0.01299,
+     "rerank_score": 0.5273
+    },
+    {
+     "chunk_id": 5069,
+     "bm25_rank": 5,
+     "dense_rank": 5,
+     "rrf": 0.03077,
+     "rerank_score": 0.5195
+    },
+    {
+     "chunk_id": 7140,
+     "bm25_rank": null,
+     "dense_rank": 4,
+     "rrf": 0.01562,
+     "rerank_score": 0.5078
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.038356570061296225,
+    "dense": 0.032958648167550564,
+    "rerank": 0.1749950482044369
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     3775,
+     6392,
+     1850,
+     3005,
+     2004,
+     6402
+    ],
+    "answer": "# Jobs with Unusual Custom Cutouts or Special Requests\n\nSeveral jobs had notable custom cutouts or special requests:\n\n1. **Amanda Braswell (job 3294)**: Sink cutout with specific preferences\u2014the customer wanted clarification on whether the sink cutout should be \"flash on front and back or with overhang\" [chunk 3775, job 3294].\n\n2. **Steve Rotvik (job 2259)**: Custom fabrication of a special marble piece the customer provided, charged separately at $350 [chunk 6392, job 2259].\n\n3. **Ann Priest / Designs by Sindy (job 1492)**: Bar piece was cut oversized during installation\u2014larger than the specified size needed [chunk 1850, job 1492].\n\n4. **Pedro Robles (job 2349)**: Requested a 3-inch hole cut into an EMG 1r Carrera Classic remnant, marked on the template [chunk 3005, job 2349].\n\n5. **Donald Rhea (job 1627)**: Cooktop cutout requiring a width adjustment, quoted at $150\u2013$250 [chunk 2004, job 1627].\n\n6. **Gabrielle Pendarvis (job 2281)**: Custom to-go fabrication cut by customer-provided measurements rather than a template, with delivery to her address [chunk 6402, job 2281].",
+    "cost": 0.002412,
+    "latency": {
+     "answer": 3.2174528031609952
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": 1.0,
+    "judge_reason": "The retrieved evidence does not mention job 3274 or the beer tap hole/GDS holes/45-degree curbs described in the expected answer. The system's answer, while faithful to its retrieved chunks, misses the actual expected job and details, so it does not match the ground truth."
+   }
+  },
+  {
+   "id": "40",
+   "question": "Were there jobs where we could not template because the cabinets were not ready?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 5015: cabinets needed adjusting prior to template, no template performed that visit",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    5136
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text notes to find jobs where cabinet readiness blocked templating.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 5199,
+     "bm25_rank": 9,
+     "dense_rank": 4,
+     "rrf": 0.03012,
+     "rerank_score": 0.8633
+    },
+    {
+     "chunk_id": 5532,
+     "bm25_rank": 4,
+     "dense_rank": 1,
+     "rrf": 0.03202,
+     "rerank_score": 0.8555
+    },
+    {
+     "chunk_id": 4725,
+     "bm25_rank": 22,
+     "dense_rank": 6,
+     "rrf": 0.02735,
+     "rerank_score": 0.8477
+    },
+    {
+     "chunk_id": 5049,
+     "bm25_rank": 23,
+     "dense_rank": null,
+     "rrf": 0.01205,
+     "rerank_score": 0.8203
+    },
+    {
+     "chunk_id": 3643,
+     "bm25_rank": 16,
+     "dense_rank": 23,
+     "rrf": 0.02521,
+     "rerank_score": 0.8086
+    },
+    {
+     "chunk_id": 4958,
+     "bm25_rank": 3,
+     "dense_rank": 3,
+     "rrf": 0.03175,
+     "rerank_score": 0.7969
+    },
+    {
+     "chunk_id": 1726,
+     "bm25_rank": null,
+     "dense_rank": 14,
+     "rrf": 0.01351,
+     "rerank_score": 0.7891
+    },
+    {
+     "chunk_id": 2483,
+     "bm25_rank": 15,
+     "dense_rank": 12,
+     "rrf": 0.02722,
+     "rerank_score": 0.7852
+    },
+    {
+     "chunk_id": 265,
+     "bm25_rank": null,
+     "dense_rank": 17,
+     "rrf": 0.01299,
+     "rerank_score": 0.7852
+    },
+    {
+     "chunk_id": 1578,
+     "bm25_rank": 44,
+     "dense_rank": 2,
+     "rrf": 0.02574,
+     "rerank_score": 0.7812
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.033509149914607406,
+    "dense": 0.031432806979864836,
+    "rerank": 0.16429944499395788
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     5199,
+     5532,
+     4725,
+     5049,
+     3643,
+     4958
+    ],
+    "answer": "Yes, there were multiple jobs where templating could not be completed because cabinets were not ready:\n\n1. **Justin Litchfield (Job 5142)**: Template activity on 12/01/2025 \u2014 \"Cabinets werent installed couldnt template\" [chunk 5199, job 5142]\n\n2. **Jean Wellman (Job 5491)**: Template could not be completed because \"a cabinet installation scheduled for a later phase\" [chunk 5532, job 5491]\n\n3. **Scott Patterson (Job 4318)**: Template activity on 2024-11-11 was \"Delayed due to cabinets not being ready\" [chunk 4725, job 4318]\n\n4. **Suzanne Stebbins (Job 4882)**: Completed template activity from March 16, 2026 notes \"Cabinets were not ready\" [chunk 5049, job 4882]\n\n5. **Brent Hutton (Job 3177)**: Measure activity on 12/21/23 states \"Needa to adjust cabinets before i can come template\" and \"didnt template\" [chunk 3643, job 3177]\n\n6. **Lisa Alexander/Costco (Job 4743)**: Template activity on 2025-06-03 \u2014 \"client needed to redo some cabinets before i could template\" [chunk 4958, job 4743]",
+    "cost": 0.002435,
+    "latency": {
+     "answer": 2.081135797081515
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": 1.0,
+    "judge_reason": "The system's answer is fully supported by the retrieved evidence and correctly answers 'yes' with multiple valid examples of jobs where cabinets weren't ready preventing templating. Although it does not mention the specific job 5015 cited in the ground truth, the substance of the answer (confirming such cases exist and providing accurate examples) matches the expected answer's intent."
+   }
+  },
+  {
+   "id": "41",
+   "question": "Which jobs used more than one material across different rooms?",
+   "route": "semantic",
+   "expected_answer": "Job 3071 used four: Paramount Quartz (kitchen), Vibranium Quartzite (pantry/laundry), Aurora Quartz (bath 2), Calacatta Gold Danby (bench/niche)",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [
+    6840
+   ],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by counting distinct materials per job and filtering for those with more than one material; requires no free-text analysis of notes.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT DISTINCT j.job_id, j.job_name, j.customer, COUNT(DISTINCT ja.material_name) AS material_count FROM v_jobs AS j JOIN v_job_areas AS ja ON j.job_id = ja.job_id WHERE ja.material_name <> '' AND ja.material_name IS NOT NULL GROUP BY j.job_id, j.job_name, j.customer HAVING COUNT(DISTINCT ja.material_name) > 1 ORDER BY material_count DESC, j.job_name LIMIT 200",
+    "sql_error": null,
+    "row_count": 480,
+    "sql_columns": [
+     "job_id",
+     "job_name",
+     "customer",
+     "material_count"
+    ],
+    "sql_rows": [
+     [
+      3516,
+      "Trident Beachwalker Kiawah Condos - Cape - For Installation",
+      "Trident Construction",
+      87
+     ],
+     [
+      750,
+      "Berkeley Electric - Sparky Headquarters - Moncks Corner",
+      "Berkley Electric Offices",
+      18
+     ],
+     [
+      3729,
+      "Solaris - 24 Ocean Course",
+      "Solaris",
+      12
+     ],
+     [
+      3156,
+      "Solaris - 56 OCD  (Compton)",
+      "Solaris",
+      12
+     ],
+     [
+      4022,
+      "Youngstrom Residence - 71 Lemoyne",
+      "Vintage Homes",
+      12
+     ],
+     [
+      237,
+      "Trident/Cortney Bishop - Masonic - 71 Wentworth",
+      "Courtney Bishop Design",
+      11
+     ],
+     [
+      830,
+      "Trident - The Waterfront - Building G06",
+      "Trident Construction",
+      11
+     ],
+     [
+      5445,
+      "Mangan - 241 Tom Watson",
+      "Mangan Inc",
+      10
+     ],
+     [
+      3529,
+      "AV - 4 48th Ave",
+      "Island Development Group",
+      9
+     ],
+     [
+      5212,
+      "Vintage Homes - 520 Bufflehead",
+      "Vintage Homes",
+      9
+     ],
+     [
+      3890,
+      "Mangan Inc - 29 Green Meadow",
+      "Mangan Inc",
+      8
+     ],
+     [
+      5227,
+      "Roy Mahshie - 930 Fish Camp (Potter)",
+      "Roy Mahshie",
+      8
+     ],
+     [
+      4643,
+      "Roy Mahshie - Daley Residence",
+      "Roy Mahshie",
+      8
+     ],
+     [
+      2478,
+      "Solaris - 92 Surfsong - Stoops",
+      "Solaris",
+      8
+     ],
+     [
+      4083,
+      "Vintage Homes - 203 Horned Grebe",
+      "Vintage Homes",
+      8
+     ],
+     [
+      3063,
+      "Vintage Homes - 289 Tom Watson",
+      "Vintage Homes",
+      8
+     ],
+     [
+      986,
+      "Christyn Dunning-Davidson Residence",
+      "Christyn Dunning",
+      7
+     ],
+     [
+      4645,
+      "Mangan Inc - 428 Estuary",
+      "Mangan Inc",
+      7
+     ],
+     [
+      1003,
+      "Tammi  Derringer",
+      "Regular customers",
+      7
+     ],
+     [
+      545,
+      "The Waterfront - Building T5",
+      "Trident Construction",
+      7
+     ],
+     [
+      4788,
+      "VH - 200 High Dunes (Durkins)",
+      "Vintage Homes",
+      7
+     ],
+     [
+      3263,
+      "Vintage Homes - 403 Snowy Egret",
+      "Vintage Homes",
+      7
+     ],
+     [
+      4864,
+      "Dolphins - Mitchell",
+      "Dolphins Architects and Builders",
+      6
+     ],
+     [
+      1101,
+      "Dolphins-Reynolds",
+      "Dolphins",
+      6
+     ],
+     [
+      1757,
+      "Lee Kirk - Elias Recidense",
+      "Courtney Bishop Design",
+      6
+     ],
+     [
+      4060,
+      "Mangan - 50 Blue Heron",
+      "Mangan Inc",
+      6
+     ],
+     [
+      978,
+      "Maurice Mangan -  12 Green Meadow Ln",
+      "Maurice Mangan",
+      6
+     ],
+     [
+      4937,
+      "Solaris - 26 Ocean Course Dr",
+      "Solaris",
+      6
+     ],
+     [
+      3404,
+      "Susan&John Johnson",
+      "Alex`s Jobs",
+      6
+     ],
+     [
+      5378,
+      "Unique Constructors_2675 Burden Creek",
+      "Alex`s Jobs",
+      6
+     ],
+     [
+      1354,
+      "Angela Brown - Cade Residence",
+      "Angela Voyles",
+      5
+     ],
+     [
+      3446,
+      "Angela Voyles - 776 Post Oak",
+      "Angela Voyles Interior Design",
+      5
+     ],
+     [
+      1967,
+      "Ashton Holloway - Mark and Joyce Markwell - 2829 capn sams",
+      "Ashton Holloway, MHA Design, MHA Construction LLC",
+      5
+     ],
+     [
+      1098,
+      "Brad Coastal Cupboards - Egg Inserts - To Go",
+      "James Gardner",
+      5
+     ],
+     [
+      5166,
+      "Chris Zegers - 3079 Baywood Dr",
+      "Lehigh Land and Building",
+      5
+     ],
+     [
+      4283,
+      "Cynthia Loeser",
+      "Alex`s Jobs",
+      5
+     ],
+     [
+      1832,
+      "Dolphins - Quint",
+      "Dolphin Architects and Builders 1",
+      5
+     ],
+     [
+      4575,
+      "Elle Mingoia",
+      "Alex`s Jobs",
+      5
+     ],
+     [
+      722,
+      "The Waterfront - Building GR04",
+      "Trident Construction",
+      5
+     ],
+     [
+      807,
+      "Angela Voyles 2401 Waterway",
+      "Angela Voyles 2401 waterway layout quoted",
+      4
+     ],
+     [
+      3072,
+      "Ashton Holloway, MHA Design - 201 Sea Marsh, Kiawah",
+      "Ashton Holloway, MHA Design, MHA Construction LLC",
+      4
+     ],
+     [
+      1076,
+      "CopeGrand - 2657 Rushland Landing - Adam Copenhavier Own House",
+      "CopeGrand Homes",
+      4
+     ],
+     [
+      326,
+      "Courtney Bishop (Own House)",
+      "Courtney Bishop Design",
+      4
+     ],
+     [
+      3561,
+      "Dolphins - 1494 Wando Landing St (Rogers)",
+      "Dolphins Architects and Builders",
+      4
+     ],
+     [
+      4305,
+      "Dolphins - 39 Burroughs Hall (Markowski-Droba Residence)",
+      "Dolphins Architects and Builders",
+      4
+     ],
+     [
+      384,
+      "Dolphins Lienhard",
+      "Dolphins Architects and Builders",
+      4
+     ],
+     [
+      1044,
+      "Dolphins - Lloyd",
+      "Dolphins Architects and Builders",
+      4
+     ],
+     [
+      1709,
+      "Dolphins - McCarthy - 4 Bedons Alley",
+      "Dolphin Architects and Builders 1",
+      4
+     ],
+     [
+      4923,
+      "Dolphins - Patton",
+      "Dolphins Architects and Builders",
+      4
+     ],
+     [
+      4367,
+      "Jackson Construction - Hodskins Residence",
+      "Jackson Construction LLC",
+      4
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Answer:**\n\n480 jobs used more than one material across different rooms [SQL]. The job with the most material variety was \"Trident Beachwalker Kiawah Condos - Cape - For Installation\" (Trident Construction) with 87 distinct materials [SQL], followed by \"Berkeley Electric - Sparky Headquarters - Moncks Corner\" (Berkley Electric Offices) with 18 materials [SQL]. Other heavily multi-material jobs include three Solaris properties and several Vintage Homes projects, each using 12 distinct materials [SQL].",
+    "cost": 0.004932000000000001,
+    "latency": {
+     "sql": 1.1890325488056988,
+     "answer": 2.6227313689887524
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Expected answer specifically identifies job 3071 with its 4 materials by room. The system's answer lists a broad set of jobs with high material counts across the entire dataset, but never mentions job 3071 at all, and its focus is on total distinct materials per job rather than materials across different rooms. The substance does not match the expected answer's specific finding."
+   }
+  },
+  {
+   "id": "42",
+   "question": "Find jobs with niches or benches in the bathroom",
+   "route": "semantic",
+   "expected_answer": "Job 3071 \u2014 2 niches + bench in bath 2, plus 1 bench + 1 niche in Calacatta Gold Danby",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    6840
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires searching free-text notes in job records for mentions of niches or benches in bathroom contexts, as these are descriptive features likely recorded in activity notes rather than structured fields.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 6920,
+     "bm25_rank": 3,
+     "dense_rank": 1,
+     "rrf": 0.03227,
+     "rerank_score": 0.8242
+    },
+    {
+     "chunk_id": 6910,
+     "bm25_rank": null,
+     "dense_rank": 11,
+     "rrf": 0.01408,
+     "rerank_score": 0.7695
+    },
+    {
+     "chunk_id": 3549,
+     "bm25_rank": null,
+     "dense_rank": 2,
+     "rrf": 0.01613,
+     "rerank_score": 0.7617
+    },
+    {
+     "chunk_id": 594,
+     "bm25_rank": 1,
+     "dense_rank": null,
+     "rrf": 0.01639,
+     "rerank_score": 0.7148
+    },
+    {
+     "chunk_id": 4932,
+     "bm25_rank": null,
+     "dense_rank": 14,
+     "rrf": 0.01351,
+     "rerank_score": 0.7031
+    },
+    {
+     "chunk_id": 4535,
+     "bm25_rank": null,
+     "dense_rank": 4,
+     "rrf": 0.01562,
+     "rerank_score": 0.6992
+    },
+    {
+     "chunk_id": 7011,
+     "bm25_rank": null,
+     "dense_rank": 3,
+     "rrf": 0.01587,
+     "rerank_score": 0.6953
+    },
+    {
+     "chunk_id": 3219,
+     "bm25_rank": 4,
+     "dense_rank": null,
+     "rrf": 0.01562,
+     "rerank_score": 0.6406
+    },
+    {
+     "chunk_id": 4739,
+     "bm25_rank": null,
+     "dense_rank": 17,
+     "rrf": 0.01299,
+     "rerank_score": 0.6289
+    },
+    {
+     "chunk_id": 4533,
+     "bm25_rank": null,
+     "dense_rank": 30,
+     "rrf": 0.01111,
+     "rerank_score": 0.6289
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.0010280478745698929,
+    "dense": 0.03987864404916763,
+    "rerank": 27.769743983168155
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     6920,
+     6910,
+     3549,
+     594,
+     4932,
+     4535
+    ],
+    "answer": "# Jobs with Niches or Benches in the Bathroom\n\n**4 jobs found:**\n\n1. **AV - 4 48th Ave** (job 3529): Shop assembly completed for two benches and niche frame for the secondary bath (90 sq ft, Vena Oro Quartz) [chunk 6920, job 3529]\n\n2. **Elizabeth Bernard** (job 4448): Master Bath includes 7.7 bench and niches marked DONE, plus 3.8 long curb DONE (13.6 sq ft Venato total) [chunk 6910, job 4448]\n\n3. **MHA Design - 3063 Marshgate** (job 3071): Niches and benches in bathroom marked for delivery only [chunk 3549, job 3071]\n\n4. **Dolphins - Timm** (job 3221): Master Bench in Bathroom 3 with template activity completed 2023-07-24 [chunk 594, job 3221]\n\n**Additional related job:** Vintage Homes - 203 Horned Grebe (job 4083) has a bathroom niche curb installed on March 4, 2025 [chunk 4535, job 4083]",
+    "cost": 0.00228,
+    "latency": {
+     "answer": 2.3466789650265127
+    },
+    "correct": false,
+    "faithful": false,
+    "context_precision": 0.16666666666666666,
+    "judge_reason": "The expected answer specifically highlights job 3071 with precise details (2 niches + bench in bath 2, plus 1 bench + 1 niche in Calacatta Gold Danby) that are not reflected in the system's answer, which instead describes job 3071 generically as 'niches and benches for delivery only' and broadens the response to include four other jobs not mentioned in the ground truth. The system also fabricated specific job site addresses (3063 Marshgate, 203 Horned Grebe) not found in the retrieved evidence, making it unfaithful. Overall the substance does not match the expected answer's focus and specific details."
+   }
+  },
+  {
+   "id": "43",
+   "question": "Were there jobs with backsplash height or alignment complications?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 2984: different levels in the bathroom, customer wanted the center backsplash to finish at the top of the countertops on either side",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    6593
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text notes in job records to find mentions of backsplash height or alignment issues, complications, or problems that occurred during fabrication or installation.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 3448,
+     "bm25_rank": null,
+     "dense_rank": 6,
+     "rrf": 0.01515,
+     "rerank_score": 0.7109
+    },
+    {
+     "chunk_id": 7167,
+     "bm25_rank": 5,
+     "dense_rank": 8,
+     "rrf": 0.03009,
+     "rerank_score": 0.6562
+    },
+    {
+     "chunk_id": 5075,
+     "bm25_rank": null,
+     "dense_rank": 10,
+     "rrf": 0.01429,
+     "rerank_score": 0.6406
+    },
+    {
+     "chunk_id": 3687,
+     "bm25_rank": null,
+     "dense_rank": 1,
+     "rrf": 0.01639,
+     "rerank_score": 0.6289
+    },
+    {
+     "chunk_id": 178,
+     "bm25_rank": 1,
+     "dense_rank": 2,
+     "rrf": 0.03252,
+     "rerank_score": 0.625
+    },
+    {
+     "chunk_id": 2281,
+     "bm25_rank": null,
+     "dense_rank": 30,
+     "rrf": 0.01111,
+     "rerank_score": 0.6172
+    },
+    {
+     "chunk_id": 5160,
+     "bm25_rank": 3,
+     "dense_rank": 5,
+     "rrf": 0.03126,
+     "rerank_score": 0.6133
+    },
+    {
+     "chunk_id": 5988,
+     "bm25_rank": null,
+     "dense_rank": 3,
+     "rrf": 0.01587,
+     "rerank_score": 0.6133
+    },
+    {
+     "chunk_id": 1358,
+     "bm25_rank": null,
+     "dense_rank": 28,
+     "rrf": 0.01136,
+     "rerank_score": 0.6094
+    },
+    {
+     "chunk_id": 6671,
+     "bm25_rank": 2,
+     "dense_rank": 42,
+     "rrf": 0.02593,
+     "rerank_score": 0.6055
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.0009584669023752213,
+    "dense": 0.0341387209482491,
+    "rerank": 0.18729551299475133
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     3448,
+     7167,
+     5075,
+     3687,
+     178,
+     2281
+    ],
+    "answer": "Yes, there were multiple jobs with backsplash height or alignment complications:\n\n**Height Issues:**\n- Job 2957 (Hemant Patel): Backsplashes were fabricated too short; they needed to be taller than originally made [chunk 3448]\n- Job 3226 (Lisa Windham): Tall backsplash installation encountered on-site measurement issues [chunk 3687]\n- Job 1826 (Dolphins - Amerman): Required re-templating of a tall backsplash behind the stove [chunk 2281]\n\n**Measurement & Alignment Problems:**\n- Job 3226 (Lisa Windham): Max failed to measure outlet locations, requiring field cuts by Igor at the job site with extra charges, plus overlooked electrician coordination that had to happen before installation [chunk 3687]\n- Job 2784 (Jerry Keefe): Feasibility questions about backsplash height requirements (3-4\") alongside large rectangular sink fit [chunk 7167]\n\nThe most significant issue was job 3226, where measurement failure led to both unplanned field cuts and delayed electrician coordination, affecting installer scheduling and costs [chunk 3687].",
+    "cost": 0.002147,
+    "latency": {
+     "answer": 2.705189028987661
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": 0.6666666666666666,
+    "judge_reason": "The system's answer is factually consistent with the retrieved chunks (all claims are supported), but it fails to mention the specific job (2984) that the ground truth identifies as having a backsplash alignment complication (different levels causing the center backsplash to need to match countertop heights). Instead it cites other jobs with height/measurement issues, which are plausible but do not match the expected answer's key fact, making it substantively incorrect despite being faithful to the evidence provided."
+   }
+  },
+  {
+   "id": "44",
+   "question": "Which jobs had multiple sinks stored at the shop before install?",
+   "route": "semantic",
+   "expected_answer": "Job 1097 \u2014 four sinks: two matching for the 1st-floor master double vanity, two matching for the small vanities on floors 1 and 2",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    6039
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text job notes to find mentions of multiple sinks being stored at the shop before installation\u2014this detail would appear in activity notes, not structured fields.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 5893,
+     "bm25_rank": 5,
+     "dense_rank": 8,
+     "rrf": 0.03009,
+     "rerank_score": 0.7383
+    },
+    {
+     "chunk_id": 6566,
+     "bm25_rank": null,
+     "dense_rank": 2,
+     "rrf": 0.01613,
+     "rerank_score": 0.707
+    },
+    {
+     "chunk_id": 6039,
+     "bm25_rank": null,
+     "dense_rank": 5,
+     "rrf": 0.01538,
+     "rerank_score": 0.7031
+    },
+    {
+     "chunk_id": 7039,
+     "bm25_rank": 14,
+     "dense_rank": 1,
+     "rrf": 0.02991,
+     "rerank_score": 0.6875
+    },
+    {
+     "chunk_id": 7113,
+     "bm25_rank": null,
+     "dense_rank": 24,
+     "rrf": 0.0119,
+     "rerank_score": 0.6875
+    },
+    {
+     "chunk_id": 3782,
+     "bm25_rank": 22,
+     "dense_rank": 14,
+     "rrf": 0.02571,
+     "rerank_score": 0.6719
+    },
+    {
+     "chunk_id": 6583,
+     "bm25_rank": null,
+     "dense_rank": 7,
+     "rrf": 0.01493,
+     "rerank_score": 0.668
+    },
+    {
+     "chunk_id": 7134,
+     "bm25_rank": 15,
+     "dense_rank": 4,
+     "rrf": 0.02896,
+     "rerank_score": 0.6641
+    },
+    {
+     "chunk_id": 7159,
+     "bm25_rank": null,
+     "dense_rank": 21,
+     "rrf": 0.01235,
+     "rerank_score": 0.6602
+    },
+    {
+     "chunk_id": 6543,
+     "bm25_rank": 6,
+     "dense_rank": null,
+     "rrf": 0.01515,
+     "rerank_score": 0.6328
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.05043563689105213,
+    "dense": 0.030378449941053987,
+    "rerank": 0.13974930299445987
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     5893,
+     6566,
+     6039,
+     7039,
+     7113,
+     3782
+    ],
+    "answer": "**Answer:**\n\nFour jobs had multiple sinks stored at the shop before install:\n\n1. **Job 243 (Dawn Darr - Christina Swinney)** \u2013 Two bathroom sinks in-shop [chunk 5893]\n2. **Job 1097 (Anica McClure)** \u2013 Four sinks in the shop: two for the first floor master (long vanity with two sinks) and two for first and second floor small vanities [chunk 6039]\n3. **Job 5271 (KKH_4143 Bulrush Ln)** \u2013 Five sinks in the shop: two master, two for bath 2 (shower/tub bath), laundry sink, and kitchen sink [chunk 7039]\n4. **Job 3298 (Rabbi Yossi Refson)** \u2013 Both master bath sinks at the shop [chunk 3782]\n\n(Job 2866 had only 1 sink at the shop, so it does not qualify as \"multiple.\")",
+    "cost": 0.00206,
+    "latency": {
+     "answer": 1.8845400179270655
+    },
+    "correct": false,
+    "faithful": false,
+    "context_precision": 0.8333333333333334,
+    "judge_reason": "The system's answer expands beyond the expected answer, which identifies only Job 1097 as the job with multiple sinks stored at the shop before install. While the evidence does show other jobs with multiple sinks (e.g., 243, 5271, 3298), the ground truth restricts the answer to Job 1097, indicating the intended scope was narrower. Additionally, the system miscounts the sinks for Job 5271 (stating five instead of six), introducing an unsupported/incorrect claim. Thus the answer is neither fully faithful nor correct relative to the expected answer."
+   }
+  },
+  {
+   "id": "45",
+   "question": "Did any customers tip the installers?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 3479: \"Lisa stopped by to tip the installers\"",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    3931
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text notes in job records where tips, customer behavior, or payment details would be recorded; tipping information would appear in activity notes rather than structured fields.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 3931,
+     "bm25_rank": 1,
+     "dense_rank": 1,
+     "rrf": 0.03279,
+     "rerank_score": 0.8438
+    },
+    {
+     "chunk_id": 3564,
+     "bm25_rank": null,
+     "dense_rank": 34,
+     "rrf": 0.01064,
+     "rerank_score": 0.5703
+    },
+    {
+     "chunk_id": 673,
+     "bm25_rank": null,
+     "dense_rank": 8,
+     "rrf": 0.01471,
+     "rerank_score": 0.5586
+    },
+    {
+     "chunk_id": 1098,
+     "bm25_rank": null,
+     "dense_rank": 16,
+     "rrf": 0.01316,
+     "rerank_score": 0.5312
+    },
+    {
+     "chunk_id": 3827,
+     "bm25_rank": null,
+     "dense_rank": 14,
+     "rrf": 0.01351,
+     "rerank_score": 0.5156
+    },
+    {
+     "chunk_id": 1869,
+     "bm25_rank": null,
+     "dense_rank": 44,
+     "rrf": 0.00962,
+     "rerank_score": 0.4707
+    },
+    {
+     "chunk_id": 2266,
+     "bm25_rank": null,
+     "dense_rank": 12,
+     "rrf": 0.01389,
+     "rerank_score": 0.4629
+    },
+    {
+     "chunk_id": 2108,
+     "bm25_rank": null,
+     "dense_rank": 39,
+     "rrf": 0.0101,
+     "rerank_score": 0.4629
+    },
+    {
+     "chunk_id": 2520,
+     "bm25_rank": null,
+     "dense_rank": 9,
+     "rrf": 0.01449,
+     "rerank_score": 0.457
+    },
+    {
+     "chunk_id": 885,
+     "bm25_rank": null,
+     "dense_rank": 29,
+     "rrf": 0.01124,
+     "rerank_score": 0.4492
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.0011673490516841412,
+    "dense": 0.05472627189010382,
+    "rerank": 0.15897814789786935
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     3931,
+     3564,
+     673,
+     1098,
+     3827,
+     1869
+    ],
+    "answer": "Yes, at least three customers tipped or made direct payments to installers:\n\n1. **Lisa Harrell** (job 3479) stopped by to tip the installers on her Miraggio job in Edisto Island [chunk 3931, job 3479].\n\n2. **Susane Plaza** (job 134) paid $50 directly to installers with a check for her Dallas White kitchen countertops [chunk 673, job 134].\n\n3. **Doug Walker** (job 642) gave installers a check for the remaining balance on his Princess White countertops in West Ashley [chunk 1098, job 642].",
+    "cost": 0.00139,
+    "latency": {
+     "answer": 1.4543285930994898
+    },
+    "correct": false,
+    "faithful": false,
+    "context_precision": 0.16666666666666666,
+    "judge_reason": "The system correctly identifies Lisa Harrell's tip (job 3479), matching the expected answer, but incorrectly reclassifies unrelated payment transactions (direct payment, check for remaining balance) as 'tips,' which is not supported by the evidence and overstates the number of tipping customers."
+   }
+  },
+  {
+   "id": "46",
+   "question": "Were there jobs where the customer asked to shift a piece after installation?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 3479: customer asked if the crew could return while on the island to shift the piece slightly",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    3931
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text notes to find customer requests about shifting pieces post-installation\u2014a specific circumstance likely captured in job notes, not a structured field.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 3931,
+     "bm25_rank": 19,
+     "dense_rank": 1,
+     "rrf": 0.02905,
+     "rerank_score": 0.8086
+    },
+    {
+     "chunk_id": 1608,
+     "bm25_rank": null,
+     "dense_rank": 3,
+     "rrf": 0.01587,
+     "rerank_score": 0.7148
+    },
+    {
+     "chunk_id": 2901,
+     "bm25_rank": null,
+     "dense_rank": 21,
+     "rrf": 0.01235,
+     "rerank_score": 0.7109
+    },
+    {
+     "chunk_id": 119,
+     "bm25_rank": 8,
+     "dense_rank": null,
+     "rrf": 0.01471,
+     "rerank_score": 0.6875
+    },
+    {
+     "chunk_id": 5988,
+     "bm25_rank": null,
+     "dense_rank": 7,
+     "rrf": 0.01493,
+     "rerank_score": 0.6719
+    },
+    {
+     "chunk_id": 1778,
+     "bm25_rank": null,
+     "dense_rank": 17,
+     "rrf": 0.01299,
+     "rerank_score": 0.6289
+    },
+    {
+     "chunk_id": 3106,
+     "bm25_rank": 16,
+     "dense_rank": 4,
+     "rrf": 0.02878,
+     "rerank_score": 0.5664
+    },
+    {
+     "chunk_id": 6189,
+     "bm25_rank": null,
+     "dense_rank": 22,
+     "rrf": 0.0122,
+     "rerank_score": 0.5664
+    },
+    {
+     "chunk_id": 5851,
+     "bm25_rank": null,
+     "dense_rank": 16,
+     "rrf": 0.01316,
+     "rerank_score": 0.5547
+    },
+    {
+     "chunk_id": 3297,
+     "bm25_rank": null,
+     "dense_rank": 11,
+     "rrf": 0.01408,
+     "rerank_score": 0.5508
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.04612351208925247,
+    "dense": 0.031499492935836315,
+    "rerank": 6.24421114102006
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     3931,
+     1608,
+     2901,
+     119,
+     5988,
+     1778
+    ],
+    "answer": "Yes, there were jobs where customers asked to shift a piece after installation.\n\n**Lisa Harrell (Job 3479)** explicitly requested this: after her Miraggio installation was completed, she asked the team to \"come back when on the island to shift the piece slightly\" [chunk 3931, job 3479]. She also tipped the installers at that visit.\n\n**Miranda & Evan Jones (Job 1215)** had a similar situation where the note states \"We could move it, just need to speak with a Client,\" though it's less clear whether this was a customer request or a team suggestion [chunk 1608, job 1215].\n\nThe other notes reference removal/replacement or reconfiguration requests (Angela Voyles, Jacque O'Conner, Jo Ann Garvin), but those describe replacing or repositioning pieces as part of the original installation scope rather than post-installation adjustments.",
+    "cost": 0.001855,
+    "latency": {
+     "answer": 2.397830678150058
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": 0.8333333333333334,
+    "judge_reason": "The system correctly identifies job 3479 (Lisa Harrell) as the case where a customer requested shifting a piece after installation, matching the expected answer. It also appropriately notes ambiguity in job 1215 and distinguishes other jobs as different types of requests, all consistent with the evidence provided."
+   }
+  },
+  {
+   "id": "47",
+   "question": "Were there jobs where the customer wanted to reuse existing countertops in another room?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 1932: customer asked whether the kitchen countertops could be reused for the master",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    2466
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text notes to find mentions of customers wanting to reuse or relocate existing countertops\u2014this intent and context is captured in activity notes, not structured fields.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 2466,
+     "bm25_rank": 8,
+     "dense_rank": 2,
+     "rrf": 0.03083,
+     "rerank_score": 0.793
+    },
+    {
+     "chunk_id": 1609,
+     "bm25_rank": 1,
+     "dense_rank": null,
+     "rrf": 0.01639,
+     "rerank_score": 0.7344
+    },
+    {
+     "chunk_id": 2974,
+     "bm25_rank": 2,
+     "dense_rank": 1,
+     "rrf": 0.03252,
+     "rerank_score": 0.7109
+    },
+    {
+     "chunk_id": 1790,
+     "bm25_rank": 20,
+     "dense_rank": 16,
+     "rrf": 0.02566,
+     "rerank_score": 0.6602
+    },
+    {
+     "chunk_id": 5761,
+     "bm25_rank": 4,
+     "dense_rank": null,
+     "rrf": 0.01562,
+     "rerank_score": 0.6406
+    },
+    {
+     "chunk_id": 4801,
+     "bm25_rank": 3,
+     "dense_rank": null,
+     "rrf": 0.01587,
+     "rerank_score": 0.6094
+    },
+    {
+     "chunk_id": 6090,
+     "bm25_rank": null,
+     "dense_rank": 10,
+     "rrf": 0.01429,
+     "rerank_score": 0.6055
+    },
+    {
+     "chunk_id": 6009,
+     "bm25_rank": 33,
+     "dense_rank": 7,
+     "rrf": 0.02568,
+     "rerank_score": 0.5938
+    },
+    {
+     "chunk_id": 127,
+     "bm25_rank": 42,
+     "dense_rank": 27,
+     "rrf": 0.0213,
+     "rerank_score": 0.5781
+    },
+    {
+     "chunk_id": 282,
+     "bm25_rank": null,
+     "dense_rank": 23,
+     "rrf": 0.01205,
+     "rerank_score": 0.5703
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.05814038496464491,
+    "dense": 0.029334381921216846,
+    "rerank": 11.664988909848034
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     2466,
+     1609,
+     2974,
+     1790,
+     5761,
+     4801
+    ],
+    "answer": "Yes, there were multiple jobs where customers wanted to reuse existing countertops in another room or application:\n\n1. **Tyler Savell (Mount Pleasant)** \u2013 The customer explored reusing existing kitchen countertops for the master bathroom [chunk 2466, job 1932].\n\n2. **Miranda & Evan Jones (Ravenel)** \u2013 The customer wanted to salvage an existing peninsula and reuse it as a new island [chunk 1609, job 1215].\n\n3. **Ashley Turner (Mount Pleasant)** \u2013 The customer requested removal and storage of existing countertops at her garage with conditional reinstallation later, contingent on them not breaking [chunk 1790, job 1422].\n\n4. **Chris Kingston (Pinehurst Avenue)** \u2013 During a follow-up call on 2026-06-05, the customer inquired about possibly removing and reusing the old countertop as part of their kitchen countertop project [chunk 5761, job 5695].\n\n5. **Roger Gilliard** \u2013 The customer wanted to cut and reuse an existing granite piece to connect to a new bar [chunk 4801, job 4483].\n\n(Note: Robert Horst's job involved reusing a sink rather than countertops themselves [chunk 2974, job 2318].)",
+    "cost": 0.00251,
+    "latency": {
+     "answer": 2.42064448306337
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": 0.16666666666666666,
+    "judge_reason": "The system correctly identifies job 1932 (Tyler Savell) as the case of reusing kitchen countertops in another room (master bath), matching the expected answer. However, it also lists several other jobs (peninsula-to-island, garage storage/reinstall, granite bar extension, general reuse mention) that do not actually involve reusing countertops in a different room, which misrepresents the specific criterion asked about. While each individual claim is supported by its cited evidence chunk, the overall answer overgeneralizes and dilutes the precise match, making it not fully correct relative to the expected answer."
+   }
+  },
+  {
+   "id": "48",
+   "question": "Which jobs required recut pieces?",
+   "route": "semantic",
+   "expected_answer": "At least one job records 211.5 sq ft including recut pieces, across 7 slabs (3 Cambria Delgatie, Bianco Olinda, Silver Grey Honed, Sandy Blue Honed, MSI Pearl Grey)",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    6721
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Recuts are mentioned in free-text activity notes, not tracked as a structured field; requires reading notes to identify jobs where recut activities or mentions appear.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 4962,
+     "bm25_rank": 7,
+     "dense_rank": 8,
+     "rrf": 0.02963,
+     "rerank_score": 0.7695
+    },
+    {
+     "chunk_id": 7140,
+     "bm25_rank": 30,
+     "dense_rank": 1,
+     "rrf": 0.0275,
+     "rerank_score": 0.7539
+    },
+    {
+     "chunk_id": 1392,
+     "bm25_rank": null,
+     "dense_rank": 9,
+     "rrf": 0.01449,
+     "rerank_score": 0.7344
+    },
+    {
+     "chunk_id": 5319,
+     "bm25_rank": 20,
+     "dense_rank": 47,
+     "rrf": 0.02185,
+     "rerank_score": 0.7188
+    },
+    {
+     "chunk_id": 2811,
+     "bm25_rank": null,
+     "dense_rank": 13,
+     "rrf": 0.0137,
+     "rerank_score": 0.707
+    },
+    {
+     "chunk_id": 864,
+     "bm25_rank": null,
+     "dense_rank": 7,
+     "rrf": 0.01493,
+     "rerank_score": 0.6914
+    },
+    {
+     "chunk_id": 3890,
+     "bm25_rank": 16,
+     "dense_rank": null,
+     "rrf": 0.01316,
+     "rerank_score": 0.6602
+    },
+    {
+     "chunk_id": 2038,
+     "bm25_rank": null,
+     "dense_rank": 26,
+     "rrf": 0.01163,
+     "rerank_score": 0.6602
+    },
+    {
+     "chunk_id": 59,
+     "bm25_rank": null,
+     "dense_rank": 11,
+     "rrf": 0.01408,
+     "rerank_score": 0.6445
+    },
+    {
+     "chunk_id": 3106,
+     "bm25_rank": 14,
+     "dense_rank": null,
+     "rrf": 0.01351,
+     "rerank_score": 0.6367
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.020384431118145585,
+    "dense": 0.028948981082066894,
+    "rerank": 6.545902146026492
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     4962,
+     7140,
+     1392,
+     5319,
+     2811,
+     864
+    ],
+    "answer": "# Jobs That Required Recut Pieces\n\nThe following jobs required recut work:\n\n1. **Dorado Family** [chunk 4962, job 4751] \u2013 Small kitchen soapstone piece recut during installation on 2026-01-19.\n\n2. **Mark and Susan Nickells** [chunk 7140, job 1782] \u2013 Bonus bath required recut.\n\n3. **Jerry Rea** [chunk 1392, job 996] \u2013 Stove top cutout recut (repair work, marked Paid in Full and Finished).\n\n4. **Larry Zobel** [chunk 5319, job 5312] \u2013 Two small pieces reinstalled and recut on Cal Gold countertops at 2134 Eve Circle.\n\n5. **John Witty** [chunk 2811, job 2195] \u2013 Vanity recut using Vico Luna Plena remnant material.\n\n6. **Bruce Olson** [chunk 864, job 346] \u2013 Round hole recut (egg hole was too small; repair marked complete and paid in full as of April 2020).",
+    "cost": 0.002004,
+    "latency": {
+     "answer": 1.9534671551082283
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": 1.0,
+    "judge_reason": "The system's answer is faithful to the retrieved chunks (all listed recut incidents are supported by the evidence), but it does not match the expected answer, which points to a specific job with 211.5 sq ft of material across 7 slabs (including Bianco Olinda, Cambria Delgatie, etc.) explicitly noted as including recut pieces. The system instead compiled a broad list of unrelated recut incidents from different jobs, missing the specific job/quote detail the ground truth refers to."
+   }
+  },
+  {
+   "id": "49",
+   "question": "Have we had any warranty claims after installation?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 1575: a bathroom sink came off; installed the previous year, still under warranty, rescheduled with the homeowner",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    1967
+   ],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering activities for 'repair' or similar types that follow 'install' activities chronologically, using activity dates and job history.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT DISTINCT a.job_id, a.job_name, a.activity_date, a.type_name, a.status_name, a.note FROM v_activities AS a WHERE a.type_name = 'Repair' AND a.activity_date IS NOT NULL ORDER BY a.activity_date DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 840,
+    "sql_columns": [
+     "job_id",
+     "job_name",
+     "activity_date",
+     "type_name",
+     "status_name",
+     "note"
+    ],
+    "sql_rows": [
+     [
+      3156,
+      "Solaris - 56 OCD  (Compton)",
+      "2026-07-30",
+      "Repair",
+      "Estimate",
+      "Drill 1 Hole (When on Kiawah)"
+     ],
+     [
+      5240,
+      "Wyndy Carnell - 4 Ocean Course Dr",
+      "2026-07-28",
+      "Repair",
+      "Complete",
+      "Drill 1 Hole (When on Kiawah)"
+     ],
+     [
+      5573,
+      "Dolphins - 1204 Buist Ave (Preston)",
+      "2026-07-27",
+      "Repair",
+      "Complete",
+      "#1 \r\nPolish Laundry Seam\r\nDrill holes/Attach Sinks"
+     ],
+     [
+      5245,
+      "Robyn Fisher",
+      "2026-07-18",
+      "Repair",
+      "Confirmed",
+      "DONT CHANGE\r\nRichard"
+     ],
+     [
+      5824,
+      "Jason Crosby _drill the hole",
+      "2026-07-17",
+      "Repair",
+      "Paid in Full and Finished",
+      "drill the 1 1/8\" hole / quartzite\r\nplease take the payment $125 Cash ( Ihor took $100, office cash $25)"
+     ],
+     [
+      5145,
+      "Lori Bartleson",
+      "2026-07-15",
+      "Repair",
+      "Complete",
+      "1 polish seam"
+     ],
+     [
+      5616,
+      "Isabelle Miller",
+      "2026-07-15",
+      "Repair",
+      "Complete",
+      "fix the edge on a waterfall\r\n make faucet hole bigger"
+     ],
+     [
+      4305,
+      "Dolphins - 39 Burroughs Hall (Markowski-Droba Residence)",
+      "2026-07-07",
+      "Repair",
+      "Complete",
+      "Clean Up Kitchen Seam\r\nand seal everything"
+     ],
+     [
+      4798,
+      "Cape Unit 5644  - (Stroup) latest & greatest",
+      "2026-07-07",
+      "Repair",
+      "Complete",
+      "Drill Hole for the Powder"
+     ],
+     [
+      5533,
+      "Rhonda Breeland_Nhance",
+      "2026-07-02",
+      "Repair",
+      "Complete",
+      "stains"
+     ],
+     [
+      5639,
+      "Pam Blatcher",
+      "2026-06-29",
+      "Repair",
+      "Complete",
+      "stains + reseal dry bar"
+     ],
+     [
+      4440,
+      "MHA_47 KICD",
+      "2026-06-24",
+      "Repair",
+      "Confirmed",
+      "Helping Ihor with Heavy Lifting"
+     ],
+     [
+      5378,
+      "Unique Constructors_2675 Burden Creek",
+      "2026-06-23",
+      "Repair",
+      "Complete",
+      "1\r\nair switch hole for outdoor grill area\r\none hole to enlarge (scullery)"
+     ],
+     [
+      3538,
+      "Artisan Homes - Daniel Island Phase 3 (Townhomes)",
+      "2026-06-19",
+      "Repair",
+      "Complete",
+      "Yuri"
+     ],
+     [
+      5483,
+      "Chris Zegers - 2938 Old Drake",
+      "2026-06-17",
+      "Repair",
+      "Complete",
+      "Finish Fixing the Chip\r\n\r\nThe address for the Repair is \r\n2548 High Hammock Rd."
+     ],
+     [
+      5483,
+      "Chris Zegers - 2938 Old Drake",
+      "2026-06-16",
+      "Repair",
+      "Complete",
+      "#1\r\nWhen on Seabrook \r\nFix Small Chip\r\n\r\nThe address for the Repair is \r\n2548 High Hammock Rd."
+     ],
+     [
+      4305,
+      "Dolphins - 39 Burroughs Hall (Markowski-Droba Residence)",
+      "2026-06-15",
+      "Repair",
+      "Complete",
+      "Drill Holes for Tub Deck"
+     ],
+     [
+      4440,
+      "MHA_47 KICD",
+      "2026-06-11",
+      "Repair",
+      "Estimate",
+      "deliver one curb"
+     ],
+     [
+      5597,
+      "Mangan - 597 Piping Plover (Outdoor)",
+      "2026-06-11",
+      "Repair",
+      "Complete",
+      "Drill 1 3/8 hole for gas line\r\nMarked with blue Tape\r\nMaurice will meet you there"
+     ],
+     [
+      5636,
+      "Danny Pritcher_vanity",
+      "2026-06-09",
+      "Repair",
+      "Paid in Full and Finished",
+      "Silicone master bath"
+     ],
+     [
+      5669,
+      "Moss Construction - 312 Hidden Bottom Ln",
+      "2026-05-29",
+      "Repair",
+      "Confirmed",
+      "#1\r\n\r\nChips on the Countertop"
+     ],
+     [
+      5245,
+      "Robyn Fisher",
+      "2026-05-27",
+      "Repair",
+      "Complete",
+      "DONT CHANGE\r\nRichard"
+     ],
+     [
+      5645,
+      "Bill and Ginger Dean master",
+      "2026-05-26",
+      "Repair",
+      "Complete",
+      "this is  curbs delivery 3 pieces\r\n 24,36,48\"x6"
+     ],
+     [
+      5229,
+      "Harper Construction_121 Halona Ln",
+      "2026-05-20",
+      "Repair",
+      "Complete",
+      "Stains"
+     ],
+     [
+      5251,
+      "Harbourside Remodelling_Kiawah Island Gold Resort",
+      "2026-05-20",
+      "Repair",
+      "Complete",
+      "Widen vanity holes\r\nTop priority"
+     ],
+     [
+      5509,
+      "Jamie Hider_678 Tennis Club Villa",
+      "2026-05-20",
+      "Repair",
+      "Complete",
+      "paid directly to Ivan"
+     ],
+     [
+      4788,
+      "VH - 200 High Dunes (Durkins)",
+      "2026-05-13",
+      "Repair",
+      "Complete",
+      "Backsplashes for Bar Upstairs"
+     ],
+     [
+      5240,
+      "Wyndy Carnell - 4 Ocean Course Dr",
+      "2026-05-13",
+      "Repair",
+      "Complete",
+      "Spots with Glue and touch ups \r\nShe will mark it blue tape"
+     ],
+     [
+      4367,
+      "Jackson Construction - Hodskins Residence",
+      "2026-05-09",
+      "Repair",
+      "Estimate",
+      "#2\r\nFireplace Hearth sticker label"
+     ],
+     [
+      4864,
+      "Dolphins - Mitchell",
+      "2026-05-07",
+      "Repair",
+      "Complete",
+      "Clean up the Seams\r\nand Caulking"
+     ],
+     [
+      5483,
+      "Chris Zegers - 2938 Old Drake",
+      "2026-05-07",
+      "Repair",
+      "Estimate",
+      "When on Seabrook \r\nFix Small Chip"
+     ],
+     [
+      3425,
+      "Angela Voyles - Ashton Wilson",
+      "2026-05-06",
+      "Repair",
+      "Complete",
+      "#2\r\nNeed to schedule \r\nDrill a Hole for a Water System\r\n\r\nInv #6494"
+     ],
+     [
+      5229,
+      "Harper Construction_121 Halona Ln",
+      "2026-05-06",
+      "Repair",
+      "Complete",
+      "2 pop outs holes"
+     ],
+     [
+      5527,
+      "Betsy Absher",
+      "2026-05-06",
+      "Repair",
+      "Complete",
+      "#1"
+     ],
+     [
+      5245,
+      "Robyn Fisher",
+      "2026-05-04",
+      "Repair",
+      "Complete",
+      "2"
+     ],
+     [
+      4788,
+      "VH - 200 High Dunes (Durkins)",
+      "2026-04-28",
+      "Repair",
+      "Complete",
+      "Drill Holes for Bathtub (1 5/8)"
+     ],
+     [
+      5510,
+      "James Conlon_CTG",
+      "2026-04-27",
+      "Repair",
+      "Complete",
+      "Attach a sink"
+     ],
+     [
+      4715,
+      "Bryan Lusk",
+      "2026-04-25",
+      "Repair",
+      "Complete",
+      "Andreas takes it all"
+     ],
+     [
+      5262,
+      "Turner Rainwater",
+      "2026-04-24",
+      "Repair",
+      "Complete",
+      "4\r\nDRILL A HOLE\r\n\r\nPAID DIRECTLY TO IVAN"
+     ],
+     [
+      5320,
+      "Laura Beall",
+      "2026-04-21",
+      "Repair",
+      "Paid in Full and Finished",
+      ""
+     ],
+     [
+      5467,
+      "James Poulnot - 43 Timmerman Dr",
+      "2026-04-17",
+      "Repair",
+      "Complete",
+      "Glue the small countertop\r\nTook Back to the Shop"
+     ],
+     [
+      5459,
+      "Rolina - 696 Eagle St",
+      "2026-04-16",
+      "Repair",
+      "Complete",
+      "Replace 1 x Broken Sink"
+     ],
+     [
+      3404,
+      "Susan&John Johnson",
+      "2026-04-15",
+      "Repair",
+      "Complete",
+      "Reseal 350 sq feet\r\n\r\nIVAN TAKES IT ALL"
+     ],
+     [
+      3969,
+      "CTG - Mary Smith",
+      "2026-04-15",
+      "Repair",
+      "Complete",
+      "Richard is doing repair"
+     ],
+     [
+      5319,
+      "Harper Construction_1143 Summer Wind Ln",
+      "2026-04-13",
+      "Repair",
+      "Complete",
+      "Drill a hole for airswitch"
+     ],
+     [
+      5540,
+      "Alex Brenner - Personal House",
+      "2026-04-09",
+      "Repair",
+      "Complete",
+      "fix caulking"
+     ],
+     [
+      5500,
+      "Marvin Ordway",
+      "2026-03-16",
+      "Repair",
+      "Paid in Full and Finished",
+      "Igor have payment"
+     ],
+     [
+      5321,
+      "Rolina - 19 Broadway St",
+      "2026-03-14",
+      "Repair",
+      "Complete",
+      "Upstairs Bathrooms \r\nMake a 4\u201d hole for the Drain."
+     ],
+     [
+      5327,
+      "Phillip and Sherri Sprinkle",
+      "2026-03-14",
+      "Repair",
+      "Complete",
+      ""
+     ],
+     [
+      5245,
+      "Robyn Fisher",
+      "2026-03-13",
+      "Repair",
+      "Complete",
+      ""
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yes, we have had warranty claims after installation. The SQL results show 840 repair activities on record [SQL], with numerous completed repairs documented across customer jobs.\n\nHowever, **the SQL results don't explicitly distinguish whether these repairs were warranty claims versus paid service calls.** The data shows repair work (drilling holes, fixing chips, resealing, caulking, replacing sinks, etc.) on jobs like:\n\n- Chris Zegers - 2938 Old Drake: \"Fix Small Chip\" (completed June 16\u201317, 2026) [SQL]\n- Rolina - 696 Eagle St: \"Replace 1 x Broken Sink\" (completed April 16, 2026) [SQL]\n- Rhonda Breeland_Nhance: stain repairs (completed July 2, 2026) [SQL]\n- Pam Blatcher: stain and reseal work (completed June 29, 2026) [SQL]\n\nMany repairs are marked \"Complete\" or \"Paid in Full and Finished,\" but the activity records don't explicitly label them as warranty versus billable service. To answer whether these are warranty claims specifically, I would need notes or fields that designate claim type \u2014 which the current data does not provide.",
+    "cost": 0.006731,
+    "latency": {
+     "sql": 1.18892538594082,
+     "answer": 4.3554682459216565
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The expected answer specifically identifies job 1575 (bathroom sink came off, installed previous year, still under warranty, rescheduled with homeowner). The system's answer, while faithful to the retrieved SQL data (which didn't include job 1575), fails to identify this specific warranty claim and instead gives a generic, uncertain answer about repair activities without confirming warranty status. It does not match the substance of the expected answer."
+   }
+  },
+  {
+   "id": "50",
+   "question": "Were there customers who do not speak English?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 3908: client does not speak English, staff instructed to use Google Translate on site and text in Spanish",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    4314
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text job notes to identify mentions of languages spoken by customers, which would be captured as observations during customer interactions.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 4314,
+     "bm25_rank": 29,
+     "dense_rank": 1,
+     "rrf": 0.02763,
+     "rerank_score": 0.8359
+    },
+    {
+     "chunk_id": 1623,
+     "bm25_rank": 10,
+     "dense_rank": 2,
+     "rrf": 0.03041,
+     "rerank_score": 0.6602
+    },
+    {
+     "chunk_id": 3473,
+     "bm25_rank": null,
+     "dense_rank": 3,
+     "rrf": 0.01587,
+     "rerank_score": 0.625
+    },
+    {
+     "chunk_id": 5209,
+     "bm25_rank": null,
+     "dense_rank": 7,
+     "rrf": 0.01493,
+     "rerank_score": 0.5938
+    },
+    {
+     "chunk_id": 3474,
+     "bm25_rank": 21,
+     "dense_rank": 5,
+     "rrf": 0.02773,
+     "rerank_score": 0.5742
+    },
+    {
+     "chunk_id": 2213,
+     "bm25_rank": null,
+     "dense_rank": 8,
+     "rrf": 0.01471,
+     "rerank_score": 0.459
+    },
+    {
+     "chunk_id": 4845,
+     "bm25_rank": null,
+     "dense_rank": 21,
+     "rrf": 0.01235,
+     "rerank_score": 0.4414
+    },
+    {
+     "chunk_id": 4618,
+     "bm25_rank": null,
+     "dense_rank": 16,
+     "rrf": 0.01316,
+     "rerank_score": 0.4355
+    },
+    {
+     "chunk_id": 3672,
+     "bm25_rank": null,
+     "dense_rank": 25,
+     "rrf": 0.01176,
+     "rerank_score": 0.4355
+    },
+    {
+     "chunk_id": 907,
+     "bm25_rank": null,
+     "dense_rank": 4,
+     "rrf": 0.01562,
+     "rerank_score": 0.418
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.004856735933572054,
+    "dense": 0.03577144304290414,
+    "rerank": 0.13999058492481709
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     4314,
+     1623,
+     3473,
+     5209,
+     3474,
+     2213
+    ],
+    "answer": "Yes, there were customers who do not speak English.\n\n**Evidence:**\n\n- **Ricardo Sanchez** [chunk 4314, job 3908]: \"Client does not speak English. Please use google translator on site. And can text him in Spanish as well\"\n\n- **Olga Schleuger** [chunk 1623, job 1238]: \"She is russian Speaking\" and prefers Russian-language communication\n\n- **Alberto Santiago** [chunks 3473 & 3474, job 3011]: Multiple notes indicate \"Need a Spanish Speaking Person\" and \"Need someone spanish speaking preferably\"\n\n- **Andrey** [chunk 5209, job 5160]: Note states \"speak ru\" (Russian), indicating Russian-language communication was needed",
+    "cost": 0.001554,
+    "latency": {
+     "answer": 1.8653646239545196
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": 0.8333333333333334,
+    "judge_reason": "Answer correctly identifies job 3908 as the primary example matching expected answer, and faithfully cites additional supporting evidence from retrieved chunks without unsupported claims."
+   }
+  },
+  {
+   "id": "51",
+   "question": "Were there jobs where we damaged material and had to make it right?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 679: the customer's remnant broke, EMG offered one from its own yard and expected not to charge for fabrication due to the delay and install problems",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [
+    5968
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text notes in job records to identify instances where damage occurred and remedial action was taken\u2014this information would be captured in activity notes rather than structured fields.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 6809,
+     "bm25_rank": 47,
+     "dense_rank": 47,
+     "rrf": 0.01869,
+     "rerank_score": 0.6484
+    },
+    {
+     "chunk_id": 2256,
+     "bm25_rank": null,
+     "dense_rank": 9,
+     "rrf": 0.01449,
+     "rerank_score": 0.6484
+    },
+    {
+     "chunk_id": 2723,
+     "bm25_rank": null,
+     "dense_rank": 4,
+     "rrf": 0.01562,
+     "rerank_score": 0.6289
+    },
+    {
+     "chunk_id": 4471,
+     "bm25_rank": null,
+     "dense_rank": 16,
+     "rrf": 0.01316,
+     "rerank_score": 0.6016
+    },
+    {
+     "chunk_id": 2756,
+     "bm25_rank": null,
+     "dense_rank": 21,
+     "rrf": 0.01235,
+     "rerank_score": 0.6016
+    },
+    {
+     "chunk_id": 3222,
+     "bm25_rank": null,
+     "dense_rank": 14,
+     "rrf": 0.01351,
+     "rerank_score": 0.5977
+    },
+    {
+     "chunk_id": 2761,
+     "bm25_rank": null,
+     "dense_rank": 15,
+     "rrf": 0.01333,
+     "rerank_score": 0.5977
+    },
+    {
+     "chunk_id": 3030,
+     "bm25_rank": null,
+     "dense_rank": 11,
+     "rrf": 0.01408,
+     "rerank_score": 0.5938
+    },
+    {
+     "chunk_id": 931,
+     "bm25_rank": null,
+     "dense_rank": 6,
+     "rrf": 0.01515,
+     "rerank_score": 0.5898
+    },
+    {
+     "chunk_id": 3023,
+     "bm25_rank": null,
+     "dense_rank": 23,
+     "rrf": 0.01205,
+     "rerank_score": 0.5742
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.03700406407006085,
+    "dense": 0.03248207410797477,
+    "rerank": 11.10555183282122
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     6809,
+     2256,
+     2723,
+     4471,
+     2756,
+     3222
+    ],
+    "answer": "Yes, there were multiple jobs where material damage occurred and required repairs:\n\n1. **Marilyn Follmann (job 3841)**: Carrera marble kitchen countertop suffered etching damage requiring repair quotes [chunk 6809, job 3841].\n\n2. **Larry Zobel (job 1798)**: A Carrera marble bar piece fell and chipped. The piece was brought to the shop for repair [chunk 2256, job 1798].\n\n3. **Craig Himes (job 2142)**: White marble countertop cracked and required resealing. The note indicates this was customer error, not installation-related, but the company performed the repair [chunk 2723, job 2142].\n\n4. **Mike Gier (job 4037)**: Quartzite kitchen countertop had small chips along the edge requiring resealing [chunk 4471, job 4037].\n\n5. **Stephen Stafford (job 2166)**: A chip at the master vanity was repaired [chunk 2756, job 2166].\n\n6. **Roy Mahshie (job 2667)**: Soapstone surfaces had chip damage and caulking that needed refresh and touch-ups [chunk 3222, job 2667].\n\nThese repairs ranged from addressing material defects to customer-caused damage, with the company coordinating fixes either on-site or at the shop.",
+    "cost": 0.002465,
+    "latency": {
+     "answer": 2.7350474239792675
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": 0.0,
+    "judge_reason": "The expected answer specifically references job 679 (EMG's own damage to a remnant leading to a free replacement/fabrication). The system's answer never mentions job 679 and instead lists several unrelated repair jobs (etching, customer-caused cracks, chips from use) that are not clearly examples of damage caused by the company itself. While the individual claims are faithfully drawn from the retrieved chunks, none of the cited jobs correspond to the actual case referenced in the ground truth, so the answer's substance does not match the expected answer."
+   }
+  },
+  {
+   "id": "52",
+   "question": "Which jobs involved reusing the customer's existing sink?",
+   "route": "semantic",
+   "expected_answer": "Job 3516 (laundry removal, \"save the sink and remove it very carefully, we will reuse it\") and job 1932 (customer asked about reusing kitchen countertops)",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    534,
+    2466
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Determining whether a sink was reused requires reading free-text activity notes, where such decisions and observations are recorded; this cannot be answered by structured fields alone.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 2582,
+     "bm25_rank": 12,
+     "dense_rank": 1,
+     "rrf": 0.03028,
+     "rerank_score": 0.8516
+    },
+    {
+     "chunk_id": 2974,
+     "bm25_rank": 13,
+     "dense_rank": 4,
+     "rrf": 0.02932,
+     "rerank_score": 0.8203
+    },
+    {
+     "chunk_id": 7104,
+     "bm25_rank": 25,
+     "dense_rank": 27,
+     "rrf": 0.02326,
+     "rerank_score": 0.793
+    },
+    {
+     "chunk_id": 5862,
+     "bm25_rank": null,
+     "dense_rank": 24,
+     "rrf": 0.0119,
+     "rerank_score": 0.7656
+    },
+    {
+     "chunk_id": 6414,
+     "bm25_rank": 48,
+     "dense_rank": 8,
+     "rrf": 0.02397,
+     "rerank_score": 0.7578
+    },
+    {
+     "chunk_id": 5880,
+     "bm25_rank": 15,
+     "dense_rank": null,
+     "rrf": 0.01333,
+     "rerank_score": 0.7383
+    },
+    {
+     "chunk_id": 6413,
+     "bm25_rank": 47,
+     "dense_rank": 7,
+     "rrf": 0.02427,
+     "rerank_score": 0.7188
+    },
+    {
+     "chunk_id": 2872,
+     "bm25_rank": null,
+     "dense_rank": 30,
+     "rrf": 0.01111,
+     "rerank_score": 0.7109
+    },
+    {
+     "chunk_id": 700,
+     "bm25_rank": 26,
+     "dense_rank": null,
+     "rrf": 0.01163,
+     "rerank_score": 0.6523
+    },
+    {
+     "chunk_id": 791,
+     "bm25_rank": 10,
+     "dense_rank": 3,
+     "rrf": 0.03016,
+     "rerank_score": 0.6406
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.0402355520054698,
+    "dense": 0.029380968771874905,
+    "rerank": 7.386300563113764
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     2582,
+     2974,
+     7104,
+     5862,
+     6414,
+     5880
+    ],
+    "answer": "**Jobs involving reuse of the customer's existing sink:**\n\n1. **Job 2044 \u2013 Steve Maultsby** [chunk 2582]: Sink being reused and brought to the shop for template work.\n\n2. **Job 2318 \u2013 Robert Horst** [chunk 2974]: Customer wanted to reuse their sink after countertop removal.\n\n3. **Job 4923 \u2013 Dolphins - Patton** [chunk 7104]: Master bath replacement reusing existing sinks and faucets.\n\n4. **Job 85 \u2013 Lacey Gibbons** [chunk 5862]: Sink salvaged and reused for kitchen island and laundry room project.\n\n5. **Job 2315 \u2013 Hellen Brossy** [chunk 6414]: Old sink and faucet reused in kitchen fabrication.\n\n6. **Job 195 \u2013 Kay and Randy Brown** [chunk 5880]: Conditional reuse\u2014old sink reused if possible; otherwise a new sink would be provided.",
+    "cost": 0.002011,
+    "latency": {
+     "answer": 1.9143855459988117
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": 1.0,
+    "judge_reason": "The system's answer is faithful to the retrieved evidence, listing jobs that mention sink reuse based on the chunks provided. However, it does not match the expected answer, which specifically cites jobs 3516 and 1932 as involving reuse of the customer's existing sink. Those jobs are absent from the retrieved evidence and the system's answer, indicating a retrieval mismatch and an incorrect final answer relative to the ground truth."
+   }
+  },
+  {
+   "id": "53",
+   "question": "Did any customers ask to see material samples in person before deciding?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 5789: Peggy Bawa called to ask whether EMG had soapstone samples she could view in person before committing",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    5817
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text notes to find mentions of customers requesting in-person material sample viewings and decision-making discussions.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 5817,
+     "bm25_rank": 1,
+     "dense_rank": 15,
+     "rrf": 0.02973,
+     "rerank_score": 0.8789
+    },
+    {
+     "chunk_id": 675,
+     "bm25_rank": 8,
+     "dense_rank": 5,
+     "rrf": 0.03009,
+     "rerank_score": 0.8086
+    },
+    {
+     "chunk_id": 6001,
+     "bm25_rank": null,
+     "dense_rank": 18,
+     "rrf": 0.01282,
+     "rerank_score": 0.793
+    },
+    {
+     "chunk_id": 870,
+     "bm25_rank": 9,
+     "dense_rank": 9,
+     "rrf": 0.02899,
+     "rerank_score": 0.7891
+    },
+    {
+     "chunk_id": 2092,
+     "bm25_rank": 19,
+     "dense_rank": 21,
+     "rrf": 0.025,
+     "rerank_score": 0.7852
+    },
+    {
+     "chunk_id": 1305,
+     "bm25_rank": null,
+     "dense_rank": 2,
+     "rrf": 0.01613,
+     "rerank_score": 0.7773
+    },
+    {
+     "chunk_id": 2675,
+     "bm25_rank": 21,
+     "dense_rank": null,
+     "rrf": 0.01235,
+     "rerank_score": 0.75
+    },
+    {
+     "chunk_id": 1829,
+     "bm25_rank": 17,
+     "dense_rank": 40,
+     "rrf": 0.02299,
+     "rerank_score": 0.7461
+    },
+    {
+     "chunk_id": 4554,
+     "bm25_rank": null,
+     "dense_rank": 14,
+     "rrf": 0.01351,
+     "rerank_score": 0.7305
+    },
+    {
+     "chunk_id": 724,
+     "bm25_rank": 44,
+     "dense_rank": 47,
+     "rrf": 0.01896,
+     "rerank_score": 0.7266
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.027487928979098797,
+    "dense": 0.03226555907167494,
+    "rerank": 17.073912476887926
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     5817,
+     675,
+     6001,
+     870,
+     2092,
+     1305
+    ],
+    "answer": "Yes, multiple customers asked to see material samples in person before deciding:\n\n1. **Peggy Bawa** [chunk 5817, job 5789] called to ask if soapstone samples were available for in-person viewing before committing to her bathroom countertop project. She planned to visit the showroom to view samples and match them with her wallpaper.\n\n2. **Chris Hoffman** [chunk 675, job 135] needed to visit the shop to select an alternative beige material for his personal residence project, as the initial material selection wouldn't work.\n\n3. **Nancy McMullen** [chunk 6001, job 931] indicated she didn't know granite or quartz and planned to come look at material options in person.\n\n4. **Matthew Lyle** [chunk 870, job 355] visited the shop to see and approve Carrara quartz materials before installation scheduling.\n\n5. **Sonya** (for Brian Neil's job) [chunk 2092, job 1677] came to view Vico Misterio material samples in person.\n\n6. **Sue Quinn** [chunk 1305, job 930] came to the shop to look at Level 1 granite samples.\n\nIn-person material viewing was a common part of the decision-making process for these customers.",
+    "cost": 0.002444,
+    "latency": {
+     "answer": 2.54817589209415
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": 1.0,
+    "judge_reason": "The system's answer correctly confirms that customers, including Peggy Bawa, requested in-person viewing of material samples before deciding, matching the expected answer's core fact. It also cites additional supported examples from the retrieved chunks, all of which are consistent with the evidence provided, making the answer both faithful and substantively correct."
+   }
+  },
+  {
+   "id": "54",
+   "question": "Were there jobs where cash was collected on site?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 5824: $125 cash taken, split $100 to Ihor and $25 to the office",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    5835
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Answering whether cash was collected on site requires reading free-text activity notes where payment methods and on-site transactions would be recorded.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 475,
+     "bm25_rank": 18,
+     "dense_rank": null,
+     "rrf": 0.01282,
+     "rerank_score": 0.7188
+    },
+    {
+     "chunk_id": 744,
+     "bm25_rank": null,
+     "dense_rank": 23,
+     "rrf": 0.01205,
+     "rerank_score": 0.6523
+    },
+    {
+     "chunk_id": 5820,
+     "bm25_rank": 7,
+     "dense_rank": 4,
+     "rrf": 0.03055,
+     "rerank_score": 0.6484
+    },
+    {
+     "chunk_id": 7172,
+     "bm25_rank": 13,
+     "dense_rank": 3,
+     "rrf": 0.02957,
+     "rerank_score": 0.6289
+    },
+    {
+     "chunk_id": 5823,
+     "bm25_rank": null,
+     "dense_rank": 18,
+     "rrf": 0.01282,
+     "rerank_score": 0.6055
+    },
+    {
+     "chunk_id": 848,
+     "bm25_rank": 22,
+     "dense_rank": null,
+     "rrf": 0.0122,
+     "rerank_score": 0.6016
+    },
+    {
+     "chunk_id": 3488,
+     "bm25_rank": 2,
+     "dense_rank": 37,
+     "rrf": 0.02644,
+     "rerank_score": 0.5859
+    },
+    {
+     "chunk_id": 7110,
+     "bm25_rank": 10,
+     "dense_rank": 1,
+     "rrf": 0.03068,
+     "rerank_score": 0.5781
+    },
+    {
+     "chunk_id": 5135,
+     "bm25_rank": null,
+     "dense_rank": 12,
+     "rrf": 0.01389,
+     "rerank_score": 0.5781
+    },
+    {
+     "chunk_id": 5414,
+     "bm25_rank": null,
+     "dense_rank": 7,
+     "rrf": 0.01493,
+     "rerank_score": 0.5742
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.02416981803253293,
+    "dense": 0.03161572013050318,
+    "rerank": 10.831091409083456
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     475,
+     744,
+     5820,
+     7172,
+     5823,
+     848
+    ],
+    "answer": "Yes, there were jobs where cash was collected on site.\n\n**Evidence:**\n\n- **Job 2167 (Roy Fuller)**: \"He will pay cash on site\" \u2014 Michael agreed to pay cash on-site for hole-cutting work on the backsplash [chunk 475, job 2167].\n\n- **Job 228 (Heather Johnson)**: Ihor \"already picked $300 cash total he gave office $100,\" indicating cash was collected during the job [chunk 744, job 228].\n\n- **Job 4284 (Cameron Cochran)**: \"Will pay cash when job is installed\" \u2014 cash payment was scheduled upon installation completion [chunk 7172, job 4284].\n\nAdditionally, two automated payment records document cash received:\n- **Job 5792 (Alyssa Klingle_COSTCO)**: $2,200.00 cash payment recorded [chunk 5820, job 5792] [AUTOMATED SYSTEM RECORD]\n- **Job 5796 (John McCauley)**: $3,337.50 collected via QuickBooks Payments-Bank on 2026-07-19 [chunk 5823, job 5796] [AUTOMATED SYSTEM RECORD]",
+    "cost": 0.002242,
+    "latency": {
+     "answer": 3.054572611115873
+    },
+    "correct": true,
+    "faithful": false,
+    "context_precision": 0.6666666666666666,
+    "judge_reason": "The system correctly answers 'yes' and cites several genuine examples of cash payments (job 2167, 228, 4284, 5792), matching the substance of the expected answer that cash was collected on site in at least one job. However, it mischaracterizes job 5796's QuickBooks bank payment as 'cash,' which is not supported by the evidence, making the answer not fully faithful. The specific job (5824) cited in the ground truth wasn't retrieved, but the overall yes/no correctness and supporting evidence are valid."
+   }
+  },
+  {
+   "id": "55",
+   "question": "Were customers ever restricted in which part of a slab they could choose?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 1157: the customer had to be told she could not select the middle of the slab, only a corner, because of the EMG discount",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [
+    1540
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text activity notes to find if any jobs mention customer restrictions or constraints on slab selection.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 1540,
+     "bm25_rank": 38,
+     "dense_rank": 25,
+     "rrf": 0.02197,
+     "rerank_score": 0.7969
+    },
+    {
+     "chunk_id": 2581,
+     "bm25_rank": null,
+     "dense_rank": 11,
+     "rrf": 0.01408,
+     "rerank_score": 0.6133
+    },
+    {
+     "chunk_id": 1426,
+     "bm25_rank": 36,
+     "dense_rank": 3,
+     "rrf": 0.02629,
+     "rerank_score": 0.6055
+    },
+    {
+     "chunk_id": 5469,
+     "bm25_rank": null,
+     "dense_rank": 17,
+     "rrf": 0.01299,
+     "rerank_score": 0.5586
+    },
+    {
+     "chunk_id": 1172,
+     "bm25_rank": 32,
+     "dense_rank": 1,
+     "rrf": 0.02726,
+     "rerank_score": 0.4492
+    },
+    {
+     "chunk_id": 2852,
+     "bm25_rank": 49,
+     "dense_rank": 6,
+     "rrf": 0.02433,
+     "rerank_score": 0.4199
+    },
+    {
+     "chunk_id": 2205,
+     "bm25_rank": null,
+     "dense_rank": 18,
+     "rrf": 0.01282,
+     "rerank_score": 0.418
+    },
+    {
+     "chunk_id": 6590,
+     "bm25_rank": null,
+     "dense_rank": 14,
+     "rrf": 0.01351,
+     "rerank_score": 0.4141
+    },
+    {
+     "chunk_id": 1795,
+     "bm25_rank": 43,
+     "dense_rank": 9,
+     "rrf": 0.0242,
+     "rerank_score": 0.3906
+    },
+    {
+     "chunk_id": 988,
+     "bm25_rank": 11,
+     "dense_rank": 7,
+     "rrf": 0.02901,
+     "rerank_score": 0.3867
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.015199068002402782,
+    "dense": 0.03751122299581766,
+    "rerank": 24.537281091790646
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     1540,
+     2581,
+     1426,
+     5469,
+     1172,
+     2852
+    ],
+    "answer": "Yes, customers were restricted in at least one case. \n\nChristine Heilman was explicitly told she could not select the middle part of her slab\u2014she could only choose from the corners. The reason documented was that EMG had discounted the slab to preserve the remnants [chunk 1540, job 1157].\n\nSimilarly, in Greg Ruminski's job, the fabricator was instructed to \"select best areas from the slab to cut but leave the rest for us because they didn't buy the whole slab technically\" [chunk 1426, job 1036]. This indicates the customer's selection options were constrained by the company's need to retain usable remnants.\n\nHowever, other customers (Ann Spiker, Laurel and James Powell, and Wes Green) were either allowed or invited to select specific slabs without documented restrictions [chunks 1172, 2852, 5469].",
+    "cost": 0.001815,
+    "latency": {
+     "answer": 2.6184359500184655
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": 0.16666666666666666,
+    "judge_reason": "The system correctly identified the key fact from chunk 1540 (job 1157) matching the expected answer, and faithfully supported additional context with other chunks without fabricating claims."
+   }
+  },
+  {
+   "id": "56",
+   "question": "What Calacatta options and prices were quoted to customers?",
+   "route": "semantic",
+   "expected_answer": "Job 3423 lists AGM Calacata Gold Senso 126x63 $3,600, Calacata Gold Danby $3,000, Calacata Muse $2,950, Lincoln Gold $3,200 \u2014 job put on hold 8/8",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [
+    6702
+   ],
+   "predicted_route": "structured",
+   "route_reason": "Calacatta is a material type; counting/filtering quotes by material and extracting price data are structured operations over job, activity, and invoice fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT DISTINCT ja.material_name, ji.total_amt AS quoted_price, ji.doc_number, ji.txn_date, j.customer FROM v_job_areas AS ja JOIN v_jobs AS j ON ja.job_id = j.job_id LEFT JOIN v_job_invoices AS ji ON j.job_id = ji.job_id JOIN v_activities AS a ON j.job_id = a.job_id AND a.type_name = 'Quote' WHERE ja.material_name ILIKE '%Calacatta%' ORDER BY ja.material_name, ji.total_amt, ji.txn_date DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 242,
+    "sql_columns": [
+     "material_name",
+     "quoted_price",
+     "doc_number",
+     "txn_date",
+     "customer"
+    ],
+    "sql_rows": [
+     [
+      "0.25 Slab Calacatta Safyra",
+      "1620",
+      "5763",
+      "2025-04-02",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.25 Slab Calacatta Safyra",
+      "2000",
+      "6203",
+      "2026-01-12",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.2 Slab Calacatta Premata",
+      "1000",
+      "5742",
+      "2025-03-25",
+      "Amish_Alex"
+     ],
+     [
+      "0.3 Slab Calacatta Premata",
+      "2015",
+      "5946",
+      "2025-07-23",
+      "Harborside Remodelling"
+     ],
+     [
+      "0.3 Slab Calacatta Storm Gold",
+      "15665",
+      "6076",
+      "2025-10-13",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.5 Slab Calacatta Apuano (COSMOS)",
+      "3870",
+      "6052",
+      "2025-09-25",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.5 Slab Calacatta Apuano (COSMOS)",
+      "17500",
+      "6155",
+      "2025-12-02",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.5 Slab Calacatta Apuano (COSMOS)",
+      "22500",
+      "6081",
+      "2025-10-15",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.5 Slab Calacatta Nuvina MSI + Remnant Slab Safyra quartz",
+      "5250",
+      "6200",
+      "2026-01-09",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.5 Slab Calacatta Safyra",
+      "3250",
+      "5931",
+      "2025-07-15",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.6 Slab Calacatta Premata",
+      "0",
+      "6268",
+      "2026-02-16",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.6 Slab Calacatta Sky Grey",
+      "3950",
+      "6098",
+      "2025-10-22",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.75 Slab Calacatta Safyra - MSI SURFACES",
+      "4350",
+      "5528",
+      "2024-11-04",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.7 Slab Calacatta Gold quartz",
+      "3881.25",
+      "6235",
+      "2026-01-27",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.7 Slab Calacatta Premata",
+      "4900",
+      "6279",
+      "2026-02-21",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.7 Slab Calacatta Sky Grey",
+      "5925",
+      "6094",
+      "2025-10-19",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.8 Slab Calacatta Sky Grey",
+      "3800",
+      "6133",
+      "2025-11-19",
+      "Alex`s Jobs"
+     ],
+     [
+      "0.8sl Calacatta Tuscana Quartz",
+      null,
+      null,
+      null,
+      "Regular customers"
+     ],
+     [
+      "1.25 Slab Calacatta Sky Grey",
+      "6339.38",
+      "6220",
+      "2026-01-21",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.2cm slab Calacatta Gold",
+      "4940",
+      "6411",
+      "2026-05-11",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.2 Slab Calacatta Premata quartz",
+      "5650",
+      "6051",
+      "2025-09-25",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.3 Slab Calacatta Prematra (MSI)",
+      "7700",
+      "5860",
+      "2025-05-30",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.3 Slab Calacatta Safyra",
+      "1300",
+      "6312",
+      "2026-03-09",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.3 Slab Calacatta Safyra",
+      "8000",
+      "6237",
+      "2026-01-30",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.5 Calacatta Aria",
+      null,
+      null,
+      null,
+      "Regular customers"
+     ],
+     [
+      "1.5 Slab Calacatta Reserve",
+      "0",
+      "6140",
+      "2025-11-22",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.5 Slab Calacatta Reserve",
+      "8400",
+      "6017",
+      "2025-09-03",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.5 Slab Calacatta Safyra",
+      "15700",
+      "5678",
+      "2025-02-21",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.5 Slab Calacatta Silver (COSMOS)",
+      "10437",
+      "5539",
+      "2024-11-12",
+      "Alex`s Jobs"
+     ],
+     [
+      "1.5 Slab Calacatta Storm Gold",
+      "8400",
+      "6112",
+      "2025-11-09",
+      "Costco (Cosentino)"
+     ],
+     [
+      "1.75 Slab Calacatta Venata and 0.75 Slab Cacatta Safyra and 0.5 Slab Taj Mahal",
+      "17600",
+      "5769",
+      "2025-04-05",
+      "Costco (Cosentino)"
+     ],
+     [
+      "1 Slab Calacatta Classic",
+      "2983.86",
+      "6392",
+      "2026-04-29",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Nuvina",
+      "7300",
+      "6433",
+      "2026-05-20",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Premata",
+      "5600",
+      "5730",
+      "2025-03-17",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Safyra",
+      "5750",
+      "5900",
+      "2025-06-30",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Safyra",
+      "6595",
+      "6062",
+      "2025-10-03",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Safyra",
+      "7395",
+      "6055",
+      "2025-09-27",
+      "Costco (Cosentino)"
+     ],
+     [
+      "1 Slab Calacatta Safyra + 0.5 Slab Calacatta Premata",
+      "8900",
+      "5954",
+      "2025-07-30",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Safyra (MSI)",
+      "9852",
+      "6223",
+      "2026-01-22",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Sky Grey",
+      "4900",
+      "6073",
+      "2025-10-10",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 slab Calacatta Stormg Gold quartz",
+      "5350",
+      "6527",
+      "2026-07-20",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Storm Gold",
+      "3337.5",
+      "6520",
+      "2026-07-15",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Storm Gold",
+      "5000",
+      "6058",
+      "2025-09-29",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Calacatta Zurich",
+      "600",
+      "6118",
+      "2025-11-12",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 slab quartz Calacatta Apuano honed",
+      "350",
+      "6490",
+      "2026-06-25",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 slab quartz Calacatta Apuano honed",
+      "800",
+      "6380",
+      "2026-04-22",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 slab quartz Calacatta Apuano honed",
+      "46520",
+      "6346",
+      "2026-04-01",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab quartz Calacatta Storm Gold",
+      "4395",
+      "6197",
+      "2026-01-08",
+      "Alex`s Jobs"
+     ],
+     [
+      "1 Slab Quartz PEARL CALACATTA",
+      "3580",
+      "5588",
+      "2024-12-12",
+      "Novem"
+     ],
+     [
+      "1 Slab + Remnant Calacatta Premata",
+      "6500",
+      "5777",
+      "2025-04-08",
+      "Alex`s Jobs"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "# Calacatta Options and Prices Quoted\n\nThe company quoted **multiple Calacatta variants** across a wide price range [SQL]. Here are the main options and their quoted prices:\n\n## Calacatta Variants Quoted:\n- **Calacatta Safyra**: $1,300\u2013$15,700 [SQL]\n- **Calacatta Premata**: $1,000\u2013$5,650 [SQL]\n- **Calacatta Apuano (COSMOS)**: $3,870\u2013$22,500 [SQL]\n- **Calacatta Sky Grey**: $3,800\u2013$5,925 [SQL]\n- **Calacatta Storm Gold**: $3,337.50\u2013$15,665 [SQL]\n- **Calacatta Reserve**: $8,400 [SQL]\n- **Calacatta Silver (COSMOS)**: $10,437 [SQL]\n- **Calacatta Gold (quartz)**: $3,881.25\u2013$4,940 [SQL]\n- **Calacatta Nuvina**: $5,250\u2013$7,300 [SQL]\n- **Calacatta Classic**: $2,983.86 [SQL]\n- **Calacatta Zurich**: $600 [SQL]\n- **Pearl Calacatta (quartz)**: $3,580 [SQL]\n\nAdditional variants including Calacatta Aria, Calacatta Venata, and Calacatta Tuscana were also quoted. Slab thicknesses ranged from 0.2\" to 1.75\" [SQL]. Prices varied significantly by variant, thickness, and slab size, with quotes ranging from $350 to $46,520 [SQL].",
+    "cost": 0.0074410000000000006,
+    "latency": {
+     "sql": 1.9740421019960195,
+     "answer": 3.828273579943925
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The system's answer is faithful to the SQL results (correct price ranges and variant names as returned), but it does not match the expected answer, which references a specific job (3423) with distinct Calacatta product names (AGM Calacata Gold Senso, Calacata Gold Danby, Calacata Muse, Lincoln Gold) and specific prices/hold date not present in the SQL data or the system's answer. The system instead gave a broad aggregate summary of all Calacatta variants across all jobs, missing the specific customer-quote scenario the expected answer addresses."
+   }
+  },
+  {
+   "id": "57",
+   "question": "Which jobs included a waterfall edge?",
+   "route": "semantic",
+   "expected_answer": "Job 3298 \u2014 template waterfall and office bath; master ready in ~4 weeks; no LVR backsplash",
+   "difficulty": "easy",
+   "status": "draft",
+   "gold_ids": [
+    3779
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Waterfall edge is a fabrication detail likely mentioned in job notes rather than stored as a structured field; requires reading free-text descriptions to identify matching jobs.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 2988,
+     "bm25_rank": 1,
+     "dense_rank": 11,
+     "rrf": 0.03048,
+     "rerank_score": 0.8047
+    },
+    {
+     "chunk_id": 5192,
+     "bm25_rank": 17,
+     "dense_rank": 2,
+     "rrf": 0.02912,
+     "rerank_score": 0.7578
+    },
+    {
+     "chunk_id": 5672,
+     "bm25_rank": null,
+     "dense_rank": 24,
+     "rrf": 0.0119,
+     "rerank_score": 0.6992
+    },
+    {
+     "chunk_id": 5928,
+     "bm25_rank": 4,
+     "dense_rank": 9,
+     "rrf": 0.03012,
+     "rerank_score": 0.6914
+    },
+    {
+     "chunk_id": 1248,
+     "bm25_rank": 8,
+     "dense_rank": 1,
+     "rrf": 0.0311,
+     "rerank_score": 0.6719
+    },
+    {
+     "chunk_id": 4204,
+     "bm25_rank": null,
+     "dense_rank": 10,
+     "rrf": 0.01429,
+     "rerank_score": 0.6719
+    },
+    {
+     "chunk_id": 4818,
+     "bm25_rank": null,
+     "dense_rank": 8,
+     "rrf": 0.01471,
+     "rerank_score": 0.6484
+    },
+    {
+     "chunk_id": 5214,
+     "bm25_rank": null,
+     "dense_rank": 15,
+     "rrf": 0.01333,
+     "rerank_score": 0.6406
+    },
+    {
+     "chunk_id": 5844,
+     "bm25_rank": null,
+     "dense_rank": 21,
+     "rrf": 0.01235,
+     "rerank_score": 0.6406
+    },
+    {
+     "chunk_id": 5842,
+     "bm25_rank": null,
+     "dense_rank": 20,
+     "rrf": 0.0125,
+     "rerank_score": 0.6367
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.02476406190544367,
+    "dense": 0.0321544399484992,
+    "rerank": 0.16071166819892824
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     2988,
+     5192,
+     5672,
+     5928,
+     1248,
+     4204
+    ],
+    "answer": "**Jobs with waterfall edges:**\n\n1. **Job 2333 - Kim Nielsen Fliphouse** [chunk 2988]: Soapstone island with waterfall edge and vanity with waterfall edge installed 2022-06-11.\n\n2. **Job 5110 - Lady D (Diana Diaz, 2873 Sweetleaf Ln)** [chunk 5192]: Client requested waterfall edge treatment at stone return.\n\n3. **Job 5616 - Isabelle Miller** [chunk 5672]: Repair completed 2026-07-15 to fix the edge on a waterfall.\n\n4. **Job 448 - Tom Tynen 399** [chunk 5928]: Secondary bath in Kiawah Island includes waterfall with triangle piece noted.\n\n5. **Job 857 - Elliott Perry** [chunk 1248]: Template created 2020-09-28 for waterfall and high backsplash using Royal Blue Marble.\n\n6. **Job 3780 - MHA Construction (518 Ruddy Turnstone)** [chunk 4204]: Template created 2024-10-11 specifying right waterfall details.",
+    "cost": 0.002116,
+    "latency": {
+     "answer": 1.9175513009540737
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": 1.0,
+    "judge_reason": "The expected answer identifies job 3298 as having a waterfall edge (with additional detail about office bath, timeline, and backsplash), but this job is completely absent from both the retrieved evidence and the system's answer. The system instead lists six other jobs (2333, 5110, 5616, 448, 857, 3780) that do contain waterfall mentions in the retrieved chunks, and its claims are faithful to that evidence. However, since the substance of the answer does not include the job specified in the ground truth, it does not match the expected answer."
+   }
+  },
+  {
+   "id": "58",
+   "question": "Were there jobs where a customer-supplied sink had to be modified on site?",
+   "route": "semantic",
+   "expected_answer": "Yes \u2014 job 4008: the customer's kitchen sink needed to be chopped on site; the laundry sink was at the shop pending a setback calculation",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [
+    6845
+   ],
+   "predicted_route": "semantic",
+   "route_reason": "Requires reading free-text activity notes to find mentions of customer-supplied sinks and on-site modifications\u2014a specific situational pattern not stored in structured fields.",
+   "lane_metrics": null,
+   "retrieved": [
+    {
+     "chunk_id": 6845,
+     "bm25_rank": 42,
+     "dense_rank": 15,
+     "rrf": 0.02314,
+     "rerank_score": 0.7891
+    },
+    {
+     "chunk_id": 222,
+     "bm25_rank": 7,
+     "dense_rank": 9,
+     "rrf": 0.02942,
+     "rerank_score": 0.7773
+    },
+    {
+     "chunk_id": 7138,
+     "bm25_rank": 19,
+     "dense_rank": 45,
+     "rrf": 0.02218,
+     "rerank_score": 0.7695
+    },
+    {
+     "chunk_id": 6512,
+     "bm25_rank": null,
+     "dense_rank": 1,
+     "rrf": 0.01639,
+     "rerank_score": 0.7617
+    },
+    {
+     "chunk_id": 4414,
+     "bm25_rank": null,
+     "dense_rank": 14,
+     "rrf": 0.01351,
+     "rerank_score": 0.7344
+    },
+    {
+     "chunk_id": 6440,
+     "bm25_rank": null,
+     "dense_rank": 18,
+     "rrf": 0.01282,
+     "rerank_score": 0.7344
+    },
+    {
+     "chunk_id": 684,
+     "bm25_rank": 21,
+     "dense_rank": null,
+     "rrf": 0.01235,
+     "rerank_score": 0.7305
+    },
+    {
+     "chunk_id": 2582,
+     "bm25_rank": null,
+     "dense_rank": 6,
+     "rrf": 0.01515,
+     "rerank_score": 0.707
+    },
+    {
+     "chunk_id": 5856,
+     "bm25_rank": null,
+     "dense_rank": 12,
+     "rrf": 0.01389,
+     "rerank_score": 0.7031
+    },
+    {
+     "chunk_id": 1431,
+     "bm25_rank": 1,
+     "dense_rank": 7,
+     "rrf": 0.03132,
+     "rerank_score": 0.6914
+    }
+   ],
+   "retrieval_latency": {
+    "bm25": 0.06723550707101822,
+    "dense": 0.030123692005872726,
+    "rerank": 13.471391326049343
+   },
+   "generation": {
+    "sql": null,
+    "sql_error": null,
+    "row_count": null,
+    "sql_columns": null,
+    "sql_rows": null,
+    "chunk_ids": [
+     6845,
+     222,
+     7138,
+     6512,
+     4414,
+     6440
+    ],
+    "answer": "Yes, there were multiple jobs where customer-supplied sinks required on-site modification:\n\n1. **Ashley Dane (Job 4008)**: The kitchen sink needed to be \"chopped on site\" [chunk 6845, chunk 4414].\n\n2. **Jerry Rea (Job 996)**: A sink had to be cut on-site because of seam considerations with the marble material. The note states \"Andres have to go there and cut the sink on the job site because of the seam and material is marble\" [chunk 222].\n\n3. **Karl Interrante (Job 1703)**: A sink was templated on-site by Andres [chunk 7138], indicating on-site measurement and preparation work.\n\n4. **Cruz Centeno (Job 2681)**: Notes indicate the sink \"might need to be cut\" on-site [chunk 6512].\n\n5. **Jaclyn Schoen (Job 2394)**: A sink modification was needed\u2014the customer wanted to convert a drop-in farm sink to undermount, requiring on-site work [chunk 6440].",
+    "cost": 0.002001,
+    "latency": {
+     "answer": 2.114305476890877
+    },
+    "correct": true,
+    "faithful": false,
+    "context_precision": 0.6666666666666666,
+    "judge_reason": "The system correctly identifies job 4008 as the primary example matching the expected answer, but it overextends by listing additional jobs, some of which are not well supported as clear cases of customer-supplied sink modification (e.g., job 1703's templating is not modification, and job 2681's note is speculative). This introduces unsupported claims, though the core answer aligns with the expected answer."
+   }
+  }
+ ]
+}

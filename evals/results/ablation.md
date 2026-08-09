@@ -1,4 +1,4 @@
-# Retrieval ablation (2026-08-08 21:33:58, commit 64126b6, n=23)
+# Retrieval ablation (2026-08-09 16:54:05, commit 677aa6c, n=23)
 
 | config | recall@5 | recall@10 | recall@20 | mrr | ndcg@10 |
 |---|---|---|---|---|---|

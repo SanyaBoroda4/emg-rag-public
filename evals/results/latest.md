@@ -1,15 +1,15 @@
-# Eval run 2026-08-08 21:07:09
+# Eval run 2026-08-09 16:29:11
 
-commit `64126b6` · answer=claude-haiku-4-5 · sql=claude-sonnet-5 · judge=claude-sonnet-5 · rerank=voyage
+commit `2eef921` · answer=claude-haiku-4-5 · sql=claude-haiku-4-5 · judge=claude-sonnet-5 · rerank=voyage
 
 ## Tier 1 — routing
 
-Accuracy: **94.8%**
+Accuracy: **96.6%**
 
 ```
 expected \ predicted    structured    semantic      hybrid      refuse
-structured                      29           1           0           1
-semantic                         1          22           0           0
+structured                      31           0           0           0
+semantic                         2          21           0           0
 hybrid                           0           0           1           0
 refuse                           0           0           0           3
 ```
@@ -25,11 +25,11 @@ refuse                           0           0           0           3
 
 ## Tier 3 — generation
 
-- correct: **28/58 (48.3%)**
-- faithfulness: 65.5%
-- context precision: 48.6%
+- correct: **35/58 (60.3%)**
+- faithfulness: 76.4%
+- context precision: 53.8%
 - generator: claude-haiku-4-5 · judge: claude-sonnet-5 (never the same model)
-- tier-3 cost: $0.69
+- tier-3 cost: $0.57
 
-Known-FAILING: Q26 still failing, Q29 still failing
-New failures (verified rows): Q5, Q10, Q11, Q12, Q16, Q20, Q21, Q28, Q30
+Known-FAILING: Q16 PASSES(!), Q20 PASSES(!), Q21 PASSES(!), Q26 PASSES(!), Q29 still failing
+New failures (verified rows): Q28, Q30

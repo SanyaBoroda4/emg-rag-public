@@ -1,3 +1,4 @@
+
 # EMG RAG — Project Handoff / Status
 
 > Purpose of this file: bring a brand-new collaborator (human or AI chat with no
@@ -70,9 +71,9 @@ private repo is mirrored (sanitized) to a public repo.
 | 4 | Retrieval stack | BM25 (Postgres FTS, `sql/004`), dense (exact scan, no ANN — 7k vectors), RRF fusion (k=60, provenance kept), reranker w/ memory gate, text-to-SQL over `v_*` views (`sql/005`, sqlglot validation: single SELECT, view/column whitelist, forced LIMIT 200, RO role), Haiku router (structured/semantic/hybrid/refuse), grounded answers with [chunk/job] citations + honest refusal + date caveat, `scripts/query.py` CLI. 7 test queries pass |
 | 5 | City normalization | 294 raw spellings → 68 canonical areas via `data/city_map_final.csv` + ZIP rules + address map (`sql/006`, `ingest/normalize_cities.py`). West Ashley is the real largest market (603 jobs); "Charleston" collapsed 749→81. `jobs.city` NEVER modified (raw-first). 2,909 chunks re-contextualized ($0.74). Gate: `scripts/verify_cities.py` |
 | 6 | Eval harness | 58-question golden set (Alex-authored). Tier 1 routing (confusion matrix), Tier 2 retrieval (recall@k/MRR/NDCG per lane), Tier 3 LLM-judged generation (judge ≠ generator, recorded). Ablation + Haiku-vs-Sonnet benchmark (`evals/`). CI (`.github/workflows/eval.yml`): synthetic fixture (option b) in ephemeral pgvector container; Tier 1 runs on real questions (DB-free) with baseline gates. Baseline: routing 94.8%, reranked R@10 0.522/MRR 0.441, generation 48.3%, faithfulness 65.5%. Found 9 new failures among "verified" rows + confirmed known bugs Q26/Q29 |
-| 7 | **IN PROGRESS** — fix bugs, re-measure | See below |
+| 7 | Fix eval-found bugs, re-measure | **COMPLETE.** All five known-failing questions (Q16/Q20/Q21/Q26/Q29) now pass. Generation 48.3%→**60.3%**, faithfulness 65.5%→**81.8%**, precision 48.6%→64.3%, routing/retrieval held. Three measured rounds; regressions from schema enumeration found and fixed mid-WO. Deliverable: `evals/results/before_after.md`. Cost ≈$2.60 |
 
-## WO7 state (the in-flight work)
+## WO7 detail (complete — kept for context)
 
 Decisions applied: `SQL_MODEL`→Haiku (measured: 18/31 vs 17/31 at 42% cost);
 Q12=152 (job-level substring count); Q20=1,779 (golden was wrong). The
@@ -105,11 +106,12 @@ Q29 still failed (right SQL now, but LIMIT truncated 246→200 — round-2 windo
 count targets it); generation 29/58 (50.0%), faithfulness 78.2% (+12.7),
 routing 93.1% (−1.7: Q50 regression, fixed in round 2).
 
-**Currently running on the server:** round-2 full re-measurement
-(`/tmp/wo7_runs3.log`, tiers 1–3 + ablation, ~1–1.5 h). Remaining after it:
-`evals/results/before_after.md` (the WO7 deliverable), update
-`evals/baseline.json` only where improved, commit results, sync mirror,
-final report. Costs so far ≈ $1.4 of the $5 WO7 budget.
+Round 2 fixed the enumeration side effects (35/58). Round 3 added a
+deterministic un-LIMITed COUNT in the SQL lane — Q29 finally correct (246).
+Final numbers in `evals/results/before_after.md`. Remaining reds: Q28/Q30
+(genuine near-misses, judged strictly on purpose); golden-status flips for
+the now-passing FAILING rows are **Alex's call**. Nothing in flight —
+project is between work orders.
 
 ## Key files map
 
