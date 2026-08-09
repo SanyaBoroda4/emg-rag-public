@@ -161,12 +161,29 @@ def validate_sql(sql: str) -> str:
 
 
 def execute_sql(sql: str):
-    """Run validated SQL as rag_reader. Returns (columns, rows)."""
+    """Run validated SQL as rag_reader. Returns (columns, rows, total_count).
+
+    total_count is the TRUE row count with the forced LIMIT stripped —
+    computed deterministically here because a truncated list otherwise
+    becomes a confidently wrong total ("200 jobs" when 246 match; WO7 Q29).
+    Falls back to len(rows) if the count query fails or times out.
+    """
     with get_ro_conn() as conn, conn.cursor() as cur:
         cur.execute(sql)
         columns = [d.name for d in cur.description]
         rows = cur.fetchall()
-    return columns, rows
+        total_count = len(rows)
+        try:
+            tree = sqlglot.parse_one(sql, dialect="postgres")
+            limited = tree.args.pop("limit", None)
+            if limited is not None and len(rows) > 0:
+                count_sql = (f"SELECT COUNT(*) FROM "
+                             f"({tree.sql(dialect='postgres')}) AS _t")
+                cur.execute(count_sql)
+                total_count = cur.fetchone()[0]
+        except Exception:
+            pass  # keep the fallback; never fail the lane over the count
+    return columns, rows, total_count
 
 
 def repair_sql(question: str, bad_sql: str, error: str, hybrid: bool,
@@ -211,6 +228,7 @@ def run_structured(question: str, hybrid: bool = False,
                                      model=model)
         usages.append(usage2)
         safe_sql = validate_sql(raw_sql)  # second failure propagates
-    columns, rows = execute_sql(safe_sql)
+    columns, rows, total_count = execute_sql(safe_sql)
     return {"sql": safe_sql, "columns": columns, "rows": rows,
-            "row_count": len(rows), "usages": usages}
+            "row_count": total_count, "rows_shown": len(rows),
+            "usages": usages}

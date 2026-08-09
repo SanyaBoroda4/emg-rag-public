@@ -68,12 +68,16 @@ def generate_answer(question: str, chunk_rows=None, sql_result=None,
     if sql_result is not None:
         rows_disp = "\n".join(
             str(tuple(r)) for r in sql_result["rows"][:50])
-        more = ("" if sql_result["row_count"] <= 50
-                else f"\n... ({sql_result['row_count'] - 50} more rows)")
+        shown = min(50, len(sql_result["rows"]))
+        more = ("" if sql_result["row_count"] <= shown
+                else f"\n... ({shown} of {sql_result['row_count']} total "
+                     f"matching rows shown — the TRUE total is "
+                     f"{sql_result['row_count']})")
         evidence.append(
             f"SQL executed:\n{sql_result['sql']}\n"
             f"columns: {sql_result['columns']}\n"
-            f"rows ({sql_result['row_count']}):\n{rows_disp}{more}")
+            f"rows (true total {sql_result['row_count']}):\n"
+            f"{rows_disp}{more}")
     if chunk_rows:
         evidence.append("Retrieved notes:\n\n" + _format_chunks(chunk_rows))
     if not evidence:
