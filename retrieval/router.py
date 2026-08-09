@@ -30,7 +30,7 @@ Classify the question into exactly one route:
 - "structured": answerable by counting, summing, filtering, or ranking over structured fields (job counts, sq ft, invoice totals, dates, materials, salespeople, activity types/dates/sequence).
 - "semantic": needs reading free-text notes — why something happened, what was said, find-similar-situations.
 - "hybrid": needs a structured filter first (material, amount, date, status) AND then reading the matching jobs' notes.
-- "refuse": not answerable from this company's data at all (general knowledge, weather, other companies). Never refuse merely because a word like "quotes" also has an everyday meaning.
+- "refuse": not answerable from this company's data at all (general knowledge, weather, other companies). Never refuse merely because a word like "quotes" also has an everyday meaning. Never refuse on the assumption that a detail is not tracked: job notes capture arbitrary observations (languages spoken, tips, complaints, damage, personal circumstances) — if it could plausibly appear in a job note, route "semantic".
 
 A bare name, invoice number, address fragment, or material with no other words is a LOOKUP — the user wants everything the data has about it. Route it to "semantic" (it searches notes; identifiers are matched by the keyword lane). Never refuse a bare identifier.
 

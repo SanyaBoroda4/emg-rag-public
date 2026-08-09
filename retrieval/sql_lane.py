@@ -59,6 +59,8 @@ ALLOWED_VIEWS = {
 SCHEMA_DDL = """
 v_jobs(job_id, job_name, customer, salesperson, city, process_name, status, creation_date date, city_raw)
   -- one row per job. job_name is usually the customer name.
+  -- salesperson = who SOLD the job, EXACTLY one of: Alex Sorokin, Denis Trofimov, Diana Diaz, Eugene Konikov, Galya Gornishka, Max Konikov, Natalia Pavlenko, Other, Sasha Nosova, Victor Slabunov, Vlad Gorshchynskiy. ("How many jobs did X sell" -> count v_jobs by salesperson. Who PERFORMED work is v_activities.assignees — crews, not salespeople.)
+  -- The company calls its geographic markets "areas": "which area do we work in most" means city, not countertop areas.
   -- city holds EXACTLY one of these canonical area names; ALWAYS filter it with = or IN, NEVER ILIKE/substring ('Charleston', 'North Charleston' and 'Downtown Charleston' are three DIFFERENT areas). NULL = no city recorded. Values:
   --   Adams Run, Awendaw, Beaufort, Bluffton, Blythewood, Charleston, Cottageville, Daniel Island, Dewees Island, Downtown Charleston, Edisto Island, Elloree, Eutawville, Fairfax, Fayeheville, Georgetown, Goose Creek, Green Pond, Greensboro, Hanahan, Harleyville, Hilton Head Island, Hollywood, Huger, Islandton, Isle of Palms, Islington, James Island, Jamestown, Johns Island, Kiawah Island, Ladson, Mcclellanville, Meggett, Moncks Corner, Mount Pleasant, Myrtle Beach, North Charleston, Oak Island, Okatie, Orangeburg, Pawleys Island, Pineville, Ravenel, Reevesville, Ridgeville, Round O, Ruffin, Savannah, Seabrook Island, Smoaks, Southbury, Spring Island, St Helena Island, St Stephen, Sullivan's Island, Sullivan S Island, Summerville, Sumter, Ulmer, Vance, Varnville, Wadmalaw Island, Walterboro, Wando, West Ashley, Yamasee, Yonges Island
   -- status: exactly 'Active' or 'Complete'. process_name: Canceled, Done, Hold, Job, Lead, Leads with Layouts, Measurement (exact match).
@@ -68,7 +70,7 @@ v_job_areas(job_id, job_name, area_name, room_type, sq_ft numeric, material_name
   -- room_type values (exact): Kitchen, Secondary Bath, Entire Project, Master Bath, Outdoor Kitchen, Other, Fireplace, Laundry, Curbs, Bar, Table top, Island, Desk, Bck, Pantry, Bench, Kitchen and Fireplace, Closet, Pool, Wall.
   -- material_name is UNPARSED free text ('3sl Calacatta Gold Honed', '(1.5)Calcatta Liberty') — the ONE column where ILIKE '%...%' substring matching is correct.
 v_invoices(doc_number, customer_name, txn_date date, total_amt numeric, balance numeric, status)
-  -- QuickBooks invoices. doc_number is text.
+  -- QuickBooks invoices. doc_number is text. status is EXACTLY one of: Paid, Partially Paid, Open. Revenue/invoiced-amount questions: sum total_amt with NO status filter unless the question asks about payment state.
 v_job_invoices(job_id, job_name, doc_number, txn_date date, total_amt numeric, balance numeric, status)
   -- job <-> invoice links (a job can have several invoices).
 v_activities(activity_id, job_id, job_name, type_name, status_name, activity_date date, phase, assignees, note)
@@ -91,6 +93,9 @@ Rules:
 - Kinds of work (quote, template, measure, install, removal, fabrication, repair, tile) are activity types: count/filter them via v_activities.type_name.
 - Year filters: use date ranges, e.g. creation_date >= '2025-01-01' AND creation_date < '2026-01-01'.
 - If the question is about jobs, prefer counting DISTINCT job_id when joins could duplicate rows.
+- Missing text values are EMPTY STRINGS, not NULL: "no X recorded" means (x = '' OR x IS NULL).
+- When listing entities, also select COUNT(*) OVER () AS total_count — the forced LIMIT must not hide the true total.
+- Definition: a job "went quiet" / "stalled after quote" = its most recent dated activity is a Quote with no later activity of any type.
 - activity_date is NULL for ~44% of activities; when filtering on it, that silently excludes undated rows (acceptable, but do not pretend the data is complete).
 """
 
