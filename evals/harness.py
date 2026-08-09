@@ -112,6 +112,7 @@ def run_generation(cur, row, retrieval, predicted_route,
     quietly corrected by the gold label.
     """
     record = {"sql": None, "sql_error": None, "row_count": None,
+              "sql_columns": None, "sql_rows": None,
               "chunk_ids": [], "answer": None, "cost": 0.0, "latency": {}}
     route = predicted_route
     sql_result = None
@@ -130,6 +131,8 @@ def run_generation(cur, row, retrieval, predicted_route,
                                         model=sql_model)
             record["sql"] = sql_result["sql"]
             record["row_count"] = sql_result["row_count"]
+            record["sql_columns"] = sql_result["columns"]
+            record["sql_rows"] = [tuple(r) for r in sql_result["rows"][:50]]
             for u in sql_result["usages"]:
                 record["cost"] += cost_of(sql_model or SQL_MODEL, u)
         except Exception as e:
@@ -181,10 +184,17 @@ def judge_answer(row, record, chunk_rows, judge_model):
     """One judge call scoring faithfulness, correctness, context precision,
     and refusal. Returns (verdict_dict, cost)."""
     client = anthropic.Anthropic()
+    # The judge must see the same SQL evidence the generator saw — a row
+    # COUNT alone made it brand row-derived claims as fabrications (WO7).
     ev = []
     if record["sql"]:
+        rows_disp = "\n".join(str(r) for r in (record.get("sql_rows") or []))
+        more = ("" if not record["row_count"]
+                or record["row_count"] <= len(record.get("sql_rows") or [])
+                else f"\n... ({record['row_count']} rows total)")
         ev.append(f"SQL executed:\n{record['sql']}\n"
-                  f"(returned {record['row_count']} rows)")
+                  f"columns: {record.get('sql_columns')}\n"
+                  f"rows:\n{rows_disp}{more}")
     for cid, jid, jname, ctx, raw, is_bot in chunk_rows:
         tag = " [AUTOMATED SYSTEM RECORD]" if is_bot else ""
         ev.append(f"[chunk {cid}, job {jid}]{tag}\n{ctx}\n{raw[:400]}")
