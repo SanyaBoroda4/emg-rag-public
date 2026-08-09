@@ -84,6 +84,7 @@ v_activities(activity_id, job_id, job_name, type_name, status_name, activity_dat
 v_quote_conversion_monthly(quote_month date, quoted_jobs, moved_forward, conversion_pct)
   -- Quote -> moved-forward conversion by monthly cohort (locked business definition: quoted = job's first DATED Quote; moved forward = dated Install OR dated Removal OR a chatbot payment-confirmation note; quotes <7 days old excluded unless already moved). USE THIS VIEW for any conversion / close-rate / "moved forward after quote" question — do not re-derive.
   -- An invoice NUMBER on a job does NOT imply the customer moved forward (invoices can be created before commitment); only dated Install/Removal or a payment note counts.
+  -- Multi-month/yearly rates: aggregate the COUNTS (SUM(moved_forward)/SUM(quoted_jobs)) — NEVER average conversion_pct across months (unweighted month-averaging is wrong).
 """
 
 SYSTEM_PROMPT = f"""You translate questions about a countertop fabrication company's data into a single PostgreSQL SELECT statement.
