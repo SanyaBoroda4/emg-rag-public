@@ -32,23 +32,27 @@ Rules:
 - Ground every claim: cite note evidence as [chunk <id>, job <id>] and numeric/tabular claims as [SQL]. No uncited claims.
 - If the evidence does not answer the question, say exactly that — briefly, stating what WAS found instead. NEVER invent names, numbers, dates, or events.
 - The activity data has a known gap: 44% of activities have no date (never-scheduled placeholders). If your answer filters or reasons on activity dates, add one sentence noting date data is incomplete.
+- Notes marked [AUTOMATED SYSTEM RECORD] were written by bots (payment logging, stale-job reminders), not people. They are legitimate records, but describe them as automated system records — never present bot boilerplate as something a person observed or said.
 - Be concise: answer first, evidence after."""
 
 
 def _format_chunks(chunk_rows):
     parts = []
-    for cid, jid, jname, ctx, raw in chunk_rows:
-        parts.append(f"[chunk {cid}, job {jid} \"{jname}\"]\n"
+    for cid, jid, jname, ctx, raw, is_bot in chunk_rows:
+        tag = " [AUTOMATED SYSTEM RECORD]" if is_bot else ""
+        parts.append(f"[chunk {cid}, job {jid} \"{jname}\"]{tag}\n"
                      f"context: {ctx}\nnote: {raw}")
     return "\n\n".join(parts)
 
 
 def load_chunk_rows(cur, chunk_ids):
-    """Fetch display rows for the cited chunks, preserving input order."""
+    """Fetch display rows for the cited chunks, preserving input order.
+    Rows are (chunk_id, job_id, job_name, context, raw, is_bot_generated)."""
     if not chunk_ids:
         return []
     cur.execute("""
-        SELECT c.chunk_id, c.job_id, j.job_name, c.context_text, c.raw_text
+        SELECT c.chunk_id, c.job_id, j.job_name, c.context_text, c.raw_text,
+               c.is_bot_generated
         FROM chunks c JOIN jobs j ON j.job_id = c.job_id
         WHERE c.chunk_id = ANY(%s)
     """, (list(chunk_ids),))

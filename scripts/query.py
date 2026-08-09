@@ -55,10 +55,11 @@ def print_candidates(cur, top):
     if not top:
         print("  (no chunks retrieved)")
         return
-    cur.execute("SELECT chunk_id, job_id, left(raw_text, 90) FROM chunks "
-                "WHERE chunk_id = ANY(%s)",
+    cur.execute("SELECT chunk_id, job_id, left(raw_text, 90), "
+                "is_bot_generated FROM chunks WHERE chunk_id = ANY(%s)",
                 ([c["chunk_id"] for c in top],))
-    preview = {r[0]: (r[1], r[2]) for r in cur.fetchall()}
+    preview = {r[0]: (r[1], r[2] + (" [BOT]" if r[3] else ""))
+               for r in cur.fetchall()}
     for c in top:
         jid, txt = preview.get(c["chunk_id"], ("?", ""))
         prov = (f"bm25#{c['bm25_rank']}" if c["bm25_rank"] else "") + \

@@ -185,8 +185,9 @@ def judge_answer(row, record, chunk_rows, judge_model):
     if record["sql"]:
         ev.append(f"SQL executed:\n{record['sql']}\n"
                   f"(returned {record['row_count']} rows)")
-    for cid, jid, jname, ctx, raw in chunk_rows:
-        ev.append(f"[chunk {cid}, job {jid}]\n{ctx}\n{raw[:400]}")
+    for cid, jid, jname, ctx, raw, is_bot in chunk_rows:
+        tag = " [AUTOMATED SYSTEM RECORD]" if is_bot else ""
+        ev.append(f"[chunk {cid}, job {jid}]{tag}\n{ctx}\n{raw[:400]}")
     prompt = (f"Question: {row['question']}\n\n"
               f"Expected answer (ground truth): {row['expected_answer']}\n\n"
               f"Evidence retrieved:\n\n" + ("\n\n".join(ev) or "(none)") +
