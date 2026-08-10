@@ -2,9 +2,9 @@
 # EMG RAG — Project Handoff / Status
 
 > Purpose of this file: bring a brand-new collaborator (human or AI chat with no
-> prior context) fully up to speed. Last updated: 2026-08-09, mid-WO7.
-> Read `CLAUDE.md` first for the hard operating rules; this file is the story
-> and the current state.
+> prior context) fully up to speed. Last updated: 2026-08-09, after WO7 and the
+> quote-conversion work order. Read `CLAUDE.md` first for the hard operating
+> rules; this file is the story and the current state.
 
 ## What this project is
 
@@ -72,6 +72,7 @@ private repo is mirrored (sanitized) to a public repo.
 | 5 | City normalization | 294 raw spellings → 68 canonical areas via `data/city_map_final.csv` + ZIP rules + address map (`sql/006`, `ingest/normalize_cities.py`). West Ashley is the real largest market (603 jobs); "Charleston" collapsed 749→81. `jobs.city` NEVER modified (raw-first). 2,909 chunks re-contextualized ($0.74). Gate: `scripts/verify_cities.py` |
 | 6 | Eval harness | 58-question golden set (Alex-authored). Tier 1 routing (confusion matrix), Tier 2 retrieval (recall@k/MRR/NDCG per lane), Tier 3 LLM-judged generation (judge ≠ generator, recorded). Ablation + Haiku-vs-Sonnet benchmark (`evals/`). CI (`.github/workflows/eval.yml`): synthetic fixture (option b) in ephemeral pgvector container; Tier 1 runs on real questions (DB-free) with baseline gates. Baseline: routing 94.8%, reranked R@10 0.522/MRR 0.441, generation 48.3%, faithfulness 65.5%. Found 9 new failures among "verified" rows + confirmed known bugs Q26/Q29 |
 | 7 | Fix eval-found bugs, re-measure | **COMPLETE.** All five known-failing questions (Q16/Q20/Q21/Q26/Q29) now pass. Generation 48.3%→**60.3%**, faithfulness 65.5%→**81.8%**, precision 48.6%→64.3%, routing/retrieval held. Three measured rounds; regressions from schema enumeration found and fixed mid-WO. Deliverable: `evals/results/before_after.md`. Cost ≈$2.60 |
+| QCONV | Quote → moved-forward conversion | **COMPLETE (definition v3).** `v_quote_conversion_monthly` (`sql/008` v2, `sql/009` v3), wired into the SQL lane. Locked definition: quoted = job's first DATED Quote, OR measure-proxy (undated Quote + dated Measure ⇒ quote happened unlogged, cohort = first Measure date); re-quotes = ONE job; moved = dated Install OR dated Removal (future dates count) OR chatbot payment note (`Payment received/recorded —` / `check-bot`, 85 activities — human "asked for payment" excluded); invoice numbers do NOT count; 7-day freshness rule; as-of hardcoded 2026-07-30 (TODO CURRENT_DATE). **Overall 65.9%** (2,523/3,830); yearly: 2020 64.7 → 2023 peak 85.2 → 2024 61.1 → 2025 54.3 → 2026 47.6. Sanity jobs verified (483 proxy, 5693 future-Removal, 5022 payment-only, 377 invoiced-not-moved, 5840 fresh-excluded). Golden candidates Q59–63 added (draft, v3 numbers). Visibility stats: 111 invoiced-but-not-moved; 279 dated-Measure-but-no-Quote-activity (excluded, awaiting Alex's call) |
 
 ## WO7 detail (complete — kept for context)
 
@@ -109,9 +110,24 @@ routing 93.1% (−1.7: Q50 regression, fixed in round 2).
 Round 2 fixed the enumeration side effects (35/58). Round 3 added a
 deterministic un-LIMITed COUNT in the SQL lane — Q29 finally correct (246).
 Final numbers in `evals/results/before_after.md`. Remaining reds: Q28/Q30
-(genuine near-misses, judged strictly on purpose); golden-status flips for
-the now-passing FAILING rows are **Alex's call**. Nothing in flight —
-project is between work orders.
+(genuine near-misses, judged strictly on purpose).
+
+## Decisions waiting on Alex
+
+1. Golden set: flip now-passing FAILING rows (Q16/20/21/26/29) to verified;
+   sign off draft rows incl. quote-conversion Q59–63 (v3 numbers).
+2. Quote-conversion edge: 279 jobs have a dated Measure but NO Quote
+   activity at all — currently excluded; count them? (would be a v4).
+3. The 111 invoiced-but-not-moved jobs: strict rule keeps them out; many
+   predate the payment bot (bot notes start 2026), so history has a
+   payment-signal blind spot.
+4. Voyage payment method (would cut hour-long embed/eval runs to ~1 min).
+5. GitHub Actions secrets for CI not yet verified end-to-end.
+
+Nothing in flight — project is between work orders. Likely next: material
+parser WO (3,671 unparsed material values; now has measured eval impact),
+freshness pipeline (un-hardcode the as-of date), conversion by
+salesperson/city/quote-size on top of the v3 view.
 
 ## Key files map
 
