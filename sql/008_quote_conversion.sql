@@ -2,6 +2,8 @@
 -- Definition LOCKED per Alex (2026-08-09), v2:
 --   * Quoted: job has >=1 Quote activity with a non-NULL date (status
 --     ignored). Cohort month = month of the job's FIRST dated Quote.
+--     Multiple quotes on one job (223 jobs have 2-8 re-quote attempts) are
+--     ONE quoted job — the unit is the job, never the quote activity.
 --   * Moved forward: dated Install activity (any date, past or future
 --     counts — future = scheduled commitment), OR dated Removal (same), OR
 --     a chatbot note confirming payment ("Payment received —" /
