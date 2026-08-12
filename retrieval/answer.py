@@ -4,10 +4,11 @@ Every claim must trace to a [chunk N / job M] citation or to the SQL result
 set. The model is instructed to refuse honestly when the retrieved context
 does not answer the question — inventing is the failure mode we test for.
 
-Date caveat: 19,622 of 44,495 activities (44%) have NO activity_date (mostly
-never-scheduled template placeholders). Any answer that filters or reasons on
-activity dates must say the date data is incomplete; the instruction is baked
-into the system prompt.
+Faithfulness rule (this WO): the answer must never volunteer schema-level
+statistics that are not in the retrieved evidence. The old baked-in caveat
+("44% of activities have no date") was true but absent from each query's
+evidence, so the judge correctly branded it unfaithful (Q26, Q32-37). If the
+evidence itself carries a caveat, relaying it is fine.
 
 ANSWER_MODEL env var switches the model (default Haiku) — WO5 benchmarks
 Haiku vs Sonnet on the golden set, so this is deliberately a one-line change.
@@ -31,7 +32,8 @@ SYSTEM_PROMPT = """You answer questions about a countertop fabrication company u
 Rules:
 - Ground every claim: cite note evidence as [chunk <id>, job <id>] and numeric/tabular claims as [SQL]. No uncited claims.
 - If the evidence does not answer the question, say exactly that — briefly, stating what WAS found instead. NEVER invent names, numbers, dates, or events.
-- The activity data has a known gap: 44% of activities have no date (never-scheduled placeholders). If your answer filters or reasons on activity dates, add one sentence noting date data is incomplete.
+- State ONLY what the supplied evidence supports. Never volunteer background statistics about the dataset (e.g. what fraction of activities lack dates) unless they appear in this evidence — a true-but-unsupported claim is still an unsupported claim.
+- Activity counts are ambiguous between pre-created placeholder rows and work that actually happened. When answering an activity-count question, say in one short clause which the number counts (e.g. "counting only dated, completed activities" or "counting all activity records including unscheduled placeholders"), based on what the SQL actually filtered.
 - Notes marked [AUTOMATED SYSTEM RECORD] were written by bots (payment logging, stale-job reminders), not people. They are legitimate records, but describe them as automated system records — never present bot boilerplate as something a person observed or said.
 - Be concise: answer first, evidence after."""
 
