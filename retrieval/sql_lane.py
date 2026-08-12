@@ -2,7 +2,7 @@
 
 Generation uses Sonnet (not Haiku) deliberately: a wrong join returns a
 confident wrong number with no error, which is the expensive failure mode
-here. The model sees only the five whitelisted views.
+here. The model sees only the whitelisted views.
 
 Defence in depth, all mandatory before execution:
   1. sqlglot parse: exactly one statement, and it must be a SELECT
@@ -48,7 +48,8 @@ ALLOWED_VIEWS = {
                        "total_amt", "balance", "status"],
     "v_activities": ["activity_id", "job_id", "job_name", "type_name",
                      "status_name", "activity_date", "phase", "assignees",
-                     "note"],
+                     "note", "happened", "is_scheduled_future"],
+    "v_job_sqft": ["job_id", "total_sq_ft", "area_count"],
     "v_quote_conversion_monthly": ["quote_month", "quoted_jobs",
                                    "moved_forward", "conversion_pct"],
 }
@@ -75,12 +76,19 @@ v_invoices(doc_number, customer_name, txn_date date, total_amt numeric, balance 
   -- QuickBooks invoices. doc_number is text. status is EXACTLY one of: Paid, Partially Paid, Open. Revenue/invoiced-amount questions: sum total_amt with NO status filter unless the question asks about payment state.
 v_job_invoices(job_id, job_name, doc_number, txn_date date, total_amt numeric, balance numeric, status)
   -- job <-> invoice links (a job can have several invoices).
-v_activities(activity_id, job_id, job_name, type_name, status_name, activity_date date, phase, assignees, note)
+v_activities(activity_id, job_id, job_name, type_name, status_name, activity_date date, phase, assignees, note, happened boolean, is_scheduled_future boolean)
   -- Moraware activities — the record of WORK: quotes, templates, installs, tile work etc. are activities, found HERE by type_name, not in material or note text.
+  -- CRITICAL — a row is NOT an event. Activities are pre-created on every job as placeholders; only a DATED row represents something real. Three states:
+  --   | state                        | meaning                   | counts as                       |
+  --   | activity_date IS NULL        | placeholder, never happened | never count                   |
+  --   | dated, <= as-of snapshot     | happened                  | "did / completed / have we"     |
+  --   | dated, > as-of snapshot      | scheduled, not yet done   | "scheduled / upcoming" only     |
+  -- The booleans encode this: happened = dated and on/before the data snapshot date; is_scheduled_future = dated after it. Business-event counting questions ("how many quotes have we issued", "how many installs did we do") must count only rows WHERE happened. Undated activities are pre-created placeholders and must never be counted as events. Only count is_scheduled_future rows when the question asks about scheduled/upcoming work. "Completed" means happened — NOT status_name = 'Complete' (statuses are unreliable).
   -- type_name is EXACTLY one of (use =): Contract, Email, Fabrication, Follow Up, Follow Up After Install, Install, Invoice, Measure, Meeting, Paid if Full, Phone call, Phone, Email, Plumbing, Quote, Removal, Repair, Template, Tile.
   -- status_name is EXACTLY one of: Estimate, Complete, Paid in Full and Finished, Confirmed, RTF, In Progress.
   -- assignees is a comma-joined list drawn from: Alex, Diana, Eugene, Fabricators, Francisco, Ihor/Tolik, Installers, Ivan Andreev, Ivan Tile, Leo, Max, Max Tile, Measuring Specialist (Heidi), Measuring Specialist (Jack), Murilo, Natalia, Office People, Others, Sasha, Thiago, Tile Guys, Victor, Walter, Wes, Yuri/Petro — match with ILIKE '%name%' (it is a joined list).
-  -- CAUTION: activity_date IS NULL for ~44% of activities (never-scheduled placeholders).
+v_job_sqft(job_id, total_sq_ft numeric, area_count)
+  -- pre-aggregated square footage per job (SUM of the job's area rows). For ANY square-footage-by-crew/salesperson/date question, join THIS view by job_id (deduplicate job_ids first when a job can appear in several activities). NEVER join v_activities to v_job_areas directly for aggregation — every activity row multiplies by every area row of the same job and inflates SUM/AVG.
 v_quote_conversion_monthly(quote_month date, quoted_jobs, moved_forward, conversion_pct)
   -- Quote -> moved-forward conversion by monthly cohort (locked business definition v3: quoted = job's first DATED Quote, OR — measure-proxy — a job whose Quote activity is undated but has a dated Measure (quote happened, wasn't logged; cohort = first Measure date); a job with several re-quote attempts counts as ONE quoted job; moved forward = dated Install OR dated Removal OR a chatbot payment-confirmation note; quotes <7 days old excluded unless already moved). USE THIS VIEW for any conversion / close-rate / "moved forward after quote" question — do not re-derive.
   -- An invoice NUMBER on a job does NOT imply the customer moved forward (invoices can be created before commitment); only dated Install/Removal or a payment note counts.
@@ -102,7 +110,8 @@ Rules:
 - Missing text values are EMPTY STRINGS, not NULL: "no X recorded" means (x = '' OR x IS NULL).
 - When listing entities, also select COUNT(*) OVER () AS total_count — the forced LIMIT must not hide the true total.
 - Definition: a job "went quiet" / "stalled after quote" = its most recent dated activity is a Quote with no later activity of any type.
-- activity_date is NULL for ~44% of activities; when filtering on it, that silently excludes undated rows (acceptable, but do not pretend the data is complete).
+- Counting business events: filter WHERE happened (see v_activities three-state rule). Row counts without that filter include placeholders and overstate reality.
+- When aggregating anything per job across a join (sq ft, invoice totals), aggregate per job in a subquery first, then join — never aggregate across a raw many-to-many join.
 """
 
 
