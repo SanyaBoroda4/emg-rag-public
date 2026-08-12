@@ -72,6 +72,7 @@ private repo is mirrored (sanitized) to a public repo.
 | 5 | City normalization | 294 raw spellings → 68 canonical areas via `data/city_map_final.csv` + ZIP rules + address map (`sql/006`, `ingest/normalize_cities.py`). West Ashley is the real largest market (603 jobs); "Charleston" collapsed 749→81. `jobs.city` NEVER modified (raw-first). 2,909 chunks re-contextualized ($0.74). Gate: `scripts/verify_cities.py` |
 | 6 | Eval harness | 58-question golden set (Alex-authored). Tier 1 routing (confusion matrix), Tier 2 retrieval (recall@k/MRR/NDCG per lane), Tier 3 LLM-judged generation (judge ≠ generator, recorded). Ablation + Haiku-vs-Sonnet benchmark (`evals/`). CI (`.github/workflows/eval.yml`): synthetic fixture (option b) in ephemeral pgvector container; Tier 1 runs on real questions (DB-free) with baseline gates. Baseline: routing 94.8%, reranked R@10 0.522/MRR 0.441, generation 48.3%, faithfulness 65.5%. Found 9 new failures among "verified" rows + confirmed known bugs Q26/Q29 |
 | 7 | Fix eval-found bugs, re-measure | **COMPLETE.** All five known-failing questions (Q16/Q20/Q21/Q26/Q29) now pass. Generation 48.3%→**60.3%**, faithfulness 65.5%→**81.8%**, precision 48.6%→64.3%, routing/retrieval held. Three measured rounds; regressions from schema enumeration found and fixed mid-WO. Deliverable: `evals/results/before_after.md`. Cost ≈$2.60 |
+| AREAL | Activity reality + JOIN fan-out | **COMPLETE.** `sql/011`: `v_activities.happened`/`is_scheduled_future` (three-state rule: placeholder / happened / scheduled-future; ~44% of rows are pre-created placeholders — 5,315 Quote rows but only 3,154 real), `v_job_sqft` per-job pre-aggregation (LEFT JOIN pattern; fixes activity×area fan-out AND repeat-visit double-count). Schema-prompt rules + answerer stops volunteering unsupported schema stats. Generation 60.3%→**69.8%**, faithfulness 81.8%→**90.0%**. Q31–37 crew block + Q59–62 all produce verified numbers. 4 measured rounds, 3 mid-WO regressions (Q22/Q2/Q33) found+fixed. Deliverable: `evals/results/wo_activity_reality.md`. Cost ≈$2.95 |
 | QCONV | Quote → moved-forward conversion | **COMPLETE (definition v3).** `v_quote_conversion_monthly` (`sql/008` v2, `sql/009` v3), wired into the SQL lane. Locked definition: quoted = job's first DATED Quote, OR measure-proxy (undated Quote + dated Measure ⇒ quote happened unlogged, cohort = first Measure date); re-quotes = ONE job; moved = dated Install OR dated Removal (future dates count) OR chatbot payment note (`Payment received/recorded —` / `check-bot`, 85 activities — human "asked for payment" excluded); invoice numbers do NOT count; 7-day freshness rule; as-of hardcoded 2026-07-30 (TODO CURRENT_DATE). **Overall 65.9%** (2,523/3,830); yearly: 2020 64.7 → 2023 peak 85.2 → 2024 61.1 → 2025 54.3 → 2026 47.6. Sanity jobs verified (483 proxy, 5693 future-Removal, 5022 payment-only, 377 invoiced-not-moved, 5840 fresh-excluded). Golden candidates Q59–63 added (draft, v3 numbers). Visibility stats: 111 invoiced-but-not-moved; 279 dated-Measure-but-no-Quote-activity (excluded, awaiting Alex's call) |
 
 ## WO7 detail (complete — kept for context)
@@ -114,6 +115,12 @@ Final numbers in `evals/results/before_after.md`. Remaining reds: Q28/Q30
 
 ## Decisions waiting on Alex
 
+0. **Placeholder-inflated golden keys** (AREAL WO, from the A1 diagnostic in
+   `evals/results/wo_activity_reality.md`): Q16 5,315 → real quotes issued
+   **3,154**; Q14 Install 7,758 → 5,652 dated; Q15 Repair 846 → 840; Q29
+   246 (any Tile row) → 236 (happened only). Also Q31's "(29 install
+   visits)" third number keeps it red despite exact sq ft + job count.
+   Q32–37 now produce the verified numbers and can flip draft→verified.
 1. Golden set: flip now-passing FAILING rows (Q16/20/21/26/29) to verified;
    sign off draft rows incl. quote-conversion Q59–63 (v3 numbers).
 2. Quote-conversion edge: 279 jobs have a dated Measure but NO Quote
