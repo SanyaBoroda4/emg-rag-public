@@ -90,14 +90,14 @@ v_activities(activity_id, job_id, job_name, type_name, status_name, activity_dat
 v_job_sqft(job_id, total_sq_ft numeric, area_count)
   -- pre-aggregated square footage per job (SUM of the job's area rows). Use THIS view for ANY square-footage-by-crew/salesperson/date question. NEVER join v_activities to v_job_areas directly for aggregation — every activity row multiplies by every area row of the same job and inflates SUM/AVG.
   -- v_job_sqft holds ONE row per job, so it must only ever be joined to DISTINCT job_ids. A job with several qualifying activities (repeat install visits) would otherwise be summed once per visit. MANDATORY pattern:
-  --   SELECT SUM(s.total_sq_ft) FROM (SELECT DISTINCT job_id FROM v_activities WHERE <your filters>) d JOIN v_job_sqft s USING (job_id)
+  --   SELECT SUM(s.total_sq_ft) AS sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id FROM v_activities WHERE <your filters>) d JOIN v_job_sqft s USING (job_id)
   -- Grouping by crew (or any activity attribute): put that column INSIDE the DISTINCT subquery —
-  --   SELECT d.assignees, SUM(s.total_sq_ft) FROM (SELECT DISTINCT job_id, assignees FROM v_activities WHERE <filters>) d JOIN v_job_sqft s USING (job_id) GROUP BY d.assignees
+  --   SELECT d.assignees, SUM(s.total_sq_ft) AS sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id, assignees FROM v_activities WHERE <filters>) d JOIN v_job_sqft s USING (job_id) GROUP BY d.assignees
   -- Joining v_job_sqft directly onto v_activities rows, or re-joining v_activities AFTER the DISTINCT subquery, is ALWAYS wrong — both count a job once per visit instead of once.
 v_quote_conversion_monthly(quote_month date, quoted_jobs, moved_forward, conversion_pct)
   -- Quote -> moved-forward conversion by monthly cohort (locked business definition v3: quoted = job's first DATED Quote, OR — measure-proxy — a job whose Quote activity is undated but has a dated Measure (quote happened, wasn't logged; cohort = first Measure date); a job with several re-quote attempts counts as ONE quoted job; moved forward = dated Install OR dated Removal OR a chatbot payment-confirmation note; quotes <7 days old excluded unless already moved). USE THIS VIEW for any conversion / close-rate / "moved forward after quote" question — do not re-derive.
   -- An invoice NUMBER on a job does NOT imply the customer moved forward (invoices can be created before commitment); only dated Install/Removal or a payment note counts.
-  -- Multi-month/yearly rates: aggregate the COUNTS (SUM(moved_forward)/SUM(quoted_jobs)) — NEVER average conversion_pct across months (unweighted month-averaging is wrong).
+  -- Multi-month/yearly rates: aggregate the COUNTS (SUM(moved_forward)/SUM(quoted_jobs)) — NEVER average conversion_pct across months (unweighted month-averaging is wrong). Always SELECT the two sums alongside the computed rate so the answer can report "X% (M of Q)".
 """
 
 SYSTEM_PROMPT = f"""You translate questions about a countertop fabrication company's data into a single PostgreSQL SELECT statement.
@@ -116,6 +116,8 @@ Rules:
 - When listing entities, also select COUNT(*) OVER () AS total_count — the forced LIMIT must not hide the true total.
 - Definition: a job "went quiet" / "stalled after quote" = its most recent dated activity is a Quote with no later activity of any type.
 - Counting business events: filter WHERE happened (see v_activities three-state rule). Row counts without that filter include placeholders and overstate reality.
+- The happened rule is for ACTIVITY rows only. Counting JOBS ("how many jobs did we do in Kiawah Island / in 2024") counts v_jobs rows matching the filters — NEVER add a status or process_name filter unless the question asks about job status (status is a lifecycle field, not an event marker).
+- Aggregate answers need their supporting counts: when summing or averaging (sq ft, revenue, rates), also SELECT the underlying count (e.g. COUNT(*) AS jobs alongside SUM(s.total_sq_ft)) in the same query.
 - Crew workload/performance questions ("most square footage", "average job size", "jobs completed" by a crew) are about Install activities unless the question names another activity type. A crew's jobs = DISTINCT jobs where it has a happened Install; average job size = AVG(total_sq_ft) over exactly those jobs.
 - When aggregating anything per job across a join (sq ft, invoice totals), aggregate per job in a subquery first, then join — never aggregate across a raw many-to-many join.
 """
