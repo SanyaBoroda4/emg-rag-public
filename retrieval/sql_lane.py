@@ -118,7 +118,8 @@ Rules:
 - Counting business events: filter WHERE happened (see v_activities three-state rule). Row counts without that filter include placeholders and overstate reality.
 - The happened rule is for ACTIVITY rows only. Counting JOBS ("how many jobs did we do in Kiawah Island / in 2024") counts v_jobs rows matching the filters — NEVER add a status or process_name filter unless the question asks about job status (status is a lifecycle field, not an event marker).
 - Aggregate answers need their supporting counts: when summing or averaging (sq ft, revenue, rates), also SELECT the underlying count (e.g. COUNT(*) AS jobs alongside SUM(s.total_sq_ft)) in the same query.
-- Crew workload/performance questions ("most square footage", "average job size", "jobs completed" by a crew) are about Install activities unless the question names another activity type. A crew's jobs = DISTINCT jobs where it has a happened Install; average job size = AVG(total_sq_ft) over exactly those jobs.
+- Crew workload/performance questions ("most square footage", "average job size", "jobs completed" by a crew) are about Install activities unless the question names another activity type. A crew's jobs = DISTINCT jobs where it has a happened Install; average job size = AVG(total_sq_ft) over exactly those jobs. Always report a crew's workload as BOTH numbers — use the v_job_sqft pattern selecting COUNT(*) AS jobs and SUM(s.total_sq_ft), even when the question asks for only one of them.
+- When ranking or grouping by a text field (salesperson, city, assignees...), exclude blank group keys — add WHERE x <> '' AND x IS NOT NULL — unless the question asks about missing data.
 - When aggregating anything per job across a join (sq ft, invoice totals), aggregate per job in a subquery first, then join — never aggregate across a raw many-to-many join.
 """
 
