@@ -31,7 +31,12 @@
 --                                     before it is judged; the old 7-day
 --                                     QCONV freshness rule is RETIRED)
 
-CREATE OR REPLACE VIEW v_job_pipeline_status AS
+-- DROP + CREATE (not CREATE OR REPLACE) so the column list stays in its
+-- natural order across re-runs; the CASCADE also takes the dependent
+-- conversion view, which is recreated immediately below. Still idempotent.
+DROP VIEW IF EXISTS v_job_pipeline_status CASCADE;
+
+CREATE VIEW v_job_pipeline_status AS
 WITH signals AS (
     -- happened Quote/Measure/Template per job
     SELECT job_id,
@@ -68,6 +73,7 @@ moves AS (
     GROUP BY job_id
 )
 SELECT j.job_id,
+       j.job_name,
        (s.job_id IS NOT NULL)                          AS is_quoted,
        s.first_signal_date,
        s.last_signal_date,
@@ -102,7 +108,7 @@ LEFT JOIN moves m USING (job_id);
 -- only (payment notes REMOVED); settle 7 -> 30 days; cohort month = month
 -- of first_signal_date (stable).
 
-CREATE OR REPLACE VIEW v_quote_conversion_monthly AS
+CREATE VIEW v_quote_conversion_monthly AS
 SELECT date_trunc('month', first_signal_date)::date          AS quote_month,
        COUNT(*)                                              AS quoted_jobs,
        COUNT(*) FILTER (WHERE moved_forward)                 AS moved_forward,

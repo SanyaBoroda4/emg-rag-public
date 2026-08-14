@@ -50,7 +50,8 @@ ALLOWED_VIEWS = {
                      "status_name", "activity_date", "phase", "assignees",
                      "note", "happened", "is_scheduled_future"],
     "v_job_sqft": ["job_id", "total_sq_ft", "area_count"],
-    "v_job_pipeline_status": ["job_id", "is_quoted", "first_signal_date",
+    "v_job_pipeline_status": ["job_id", "job_name", "is_quoted",
+                              "first_signal_date",
                               "last_signal_date", "signal_source",
                               "had_dated_quote", "moved_forward",
                               "first_move_date", "move_is_future",
@@ -99,7 +100,7 @@ v_job_sqft(job_id, total_sq_ft numeric, area_count)
   -- Grouping by crew (or any activity attribute): put that column INSIDE the DISTINCT subquery —
   --   SELECT d.assignees, COUNT(*) AS jobs, SUM(s.total_sq_ft) AS sq_ft FROM (SELECT DISTINCT job_id, assignees FROM v_activities WHERE <filters>) d LEFT JOIN v_job_sqft s USING (job_id) GROUP BY d.assignees
   -- Joining v_job_sqft directly onto v_activities rows, or re-joining v_activities AFTER the DISTINCT subquery, is ALWAYS wrong — both count a job once per visit instead of once. The join must be LEFT JOIN: a few jobs have no area rows, and an inner join would silently drop them from job counts (COUNT(*) counts every job; SUM/AVG correctly skip the NULL sq ft).
-v_job_pipeline_status(job_id, is_quoted boolean, first_signal_date date, last_signal_date date, signal_source, had_dated_quote boolean, moved_forward boolean, first_move_date date, move_is_future boolean, days_silent, status)
+v_job_pipeline_status(job_id, job_name, is_quoted boolean, first_signal_date date, last_signal_date date, signal_source, had_dated_quote boolean, moved_forward boolean, first_move_date date, move_is_future boolean, days_silent, status)
   -- THE canonical per-job pipeline answer — one row per job, ALL columns are JOB-LEVEL facts (this view never counts activities/events; "how many times was job X quoted" is an EVENT count and belongs in v_activities).
   -- Locked definition: is_quoted = the job has a happened Quote, Measure, or Template (past only — a future-scheduled quote has not been given yet). moved_forward = the job has an Install or Removal with ANY date, past OR future (a booked future install counts; move_is_future flags it). ACTIVITIES ONLY: invoice numbers, paid status, and payment notes count for NOTHING here.
   -- status is EXACTLY one of: not_quoted, moved, pending (quoted, last signal <= 30 days ago, still settling), quiet (quoted, silent > 30 days, never moved). USE status FOR any "went quiet / stalled / no response after quote" question — do not re-derive from raw activities. Report quiet jobs split by v_jobs.status so cancelled jobs are visible.
