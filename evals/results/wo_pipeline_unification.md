@@ -125,6 +125,16 @@ scores 45/63 = 71.4%.
 `evals/baseline.json` untouched (routing 96.8/95.2 across two runs is
 inside the established noise band; retrieval unchanged).
 
+## Separate change (own commit `bc76813`, NOT part of this WO's SQL work): router temperature=0
+
+Before: six identical-config runs at default temperature spanned
+**92.1–96.8%** routing accuracy with zero router changes. After
+temperature=0: two consecutive tier-1-only runs both scored **exactly
+95.2%** (60/63, identical mismatch set). The spread was sampling noise;
+classification now takes the argmax. Future WOs can finally read routing
+movement as signal. (The three stable mismatches are Q41/Q56 —
+semantic-keyed questions the router sends structured — and Q63.)
+
 ## Cost
 
 2 full tier1+3 runs ($0.82 + $0.71) + smoke-test lane calls ≈ **$1.65**,
