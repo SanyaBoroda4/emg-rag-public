@@ -53,6 +53,11 @@ def route_query(question: str):
     client = anthropic.Anthropic()
     resp = client.messages.create(
         model=ROUTER_MODEL, max_tokens=200,
+        # temperature=0: across six identical-config eval runs the router
+        # spanned 92.1-96.8% routing accuracy with zero router changes —
+        # sampling noise at n=63 that kept polluting WO before/after
+        # comparisons. Classification wants the argmax, not a sample.
+        temperature=0,
         system=SYSTEM_PROMPT,
         output_config={"format": {"type": "json_schema", "schema": SCHEMA}},
         messages=[{"role": "user", "content": question}])
