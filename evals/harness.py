@@ -207,7 +207,7 @@ def judge_answer(row, record, chunk_rows, judge_model):
     cost = 0.0
     for attempt in range(2):
         resp = client.messages.create(
-            model=judge_model, max_tokens=2500, system=JUDGE_SYSTEM,
+            model=judge_model, max_tokens=4000, system=JUDGE_SYSTEM,
             output_config={"format": {"type": "json_schema",
                                       "schema": JUDGE_SCHEMA}},
             messages=[{"role": "user", "content": prompt}])
