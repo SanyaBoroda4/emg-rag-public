@@ -50,6 +50,11 @@ ALLOWED_VIEWS = {
                      "status_name", "activity_date", "phase", "assignees",
                      "note", "happened", "is_scheduled_future"],
     "v_job_sqft": ["job_id", "total_sq_ft", "area_count"],
+    "v_job_pipeline_status": ["job_id", "is_quoted", "first_signal_date",
+                              "last_signal_date", "signal_source",
+                              "had_dated_quote", "moved_forward",
+                              "first_move_date", "move_is_future",
+                              "days_silent", "status"],
     "v_quote_conversion_monthly": ["quote_month", "quoted_jobs",
                                    "moved_forward", "conversion_pct"],
 }
@@ -94,9 +99,15 @@ v_job_sqft(job_id, total_sq_ft numeric, area_count)
   -- Grouping by crew (or any activity attribute): put that column INSIDE the DISTINCT subquery —
   --   SELECT d.assignees, COUNT(*) AS jobs, SUM(s.total_sq_ft) AS sq_ft FROM (SELECT DISTINCT job_id, assignees FROM v_activities WHERE <filters>) d LEFT JOIN v_job_sqft s USING (job_id) GROUP BY d.assignees
   -- Joining v_job_sqft directly onto v_activities rows, or re-joining v_activities AFTER the DISTINCT subquery, is ALWAYS wrong — both count a job once per visit instead of once. The join must be LEFT JOIN: a few jobs have no area rows, and an inner join would silently drop them from job counts (COUNT(*) counts every job; SUM/AVG correctly skip the NULL sq ft).
+v_job_pipeline_status(job_id, is_quoted boolean, first_signal_date date, last_signal_date date, signal_source, had_dated_quote boolean, moved_forward boolean, first_move_date date, move_is_future boolean, days_silent, status)
+  -- THE canonical per-job pipeline answer — one row per job, ALL columns are JOB-LEVEL facts (this view never counts activities/events; "how many times was job X quoted" is an EVENT count and belongs in v_activities).
+  -- Locked definition: is_quoted = the job has a happened Quote, Measure, or Template (past only — a future-scheduled quote has not been given yet). moved_forward = the job has an Install or Removal with ANY date, past OR future (a booked future install counts; move_is_future flags it). ACTIVITIES ONLY: invoice numbers, paid status, and payment notes count for NOTHING here.
+  -- status is EXACTLY one of: not_quoted, moved, pending (quoted, last signal <= 30 days ago, still settling), quiet (quoted, silent > 30 days, never moved). USE status FOR any "went quiet / stalled / no response after quote" question — do not re-derive from raw activities. Report quiet jobs split by v_jobs.status so cancelled jobs are visible.
+  -- first_signal_date anchors the COHORT (stable; group trends by it); last_signal_date drives the SILENCE CLOCK (days_silent = as-of minus it; NULL once moved). signal_source = type behind last_signal_date: quote / measure / template.
+  -- had_dated_quote = a happened Quote specifically exists (narrower than is_quoted: measure/template-only jobs are quoted but have had_dated_quote = false).
 v_quote_conversion_monthly(quote_month date, quoted_jobs, moved_forward, conversion_pct)
-  -- Quote -> moved-forward conversion by monthly cohort (locked business definition v3: quoted = job's first DATED Quote, OR — measure-proxy — a job whose Quote activity is undated but has a dated Measure (quote happened, wasn't logged; cohort = first Measure date); a job with several re-quote attempts counts as ONE quoted job; moved forward = dated Install OR dated Removal OR a chatbot payment-confirmation note; quotes <7 days old excluded unless already moved). USE THIS VIEW for any conversion / close-rate / "moved forward after quote" question — do not re-derive.
-  -- An invoice NUMBER on a job does NOT imply the customer moved forward (invoices can be created before commitment); only dated Install/Removal or a payment note counts.
+  -- Quote -> moved-forward conversion by monthly cohort, derived from v_job_pipeline_status (definition v4: quoted/moved as defined there; cohort month = month of first_signal_date; a job enters its cohort once 30 days have passed since first_signal_date, or immediately if it moved). Counts are JOB-level. USE THIS VIEW for any conversion / close-rate question — do not re-derive.
+  -- An invoice NUMBER on a job does NOT imply the customer moved forward; neither does a payment note. Only a dated Install/Removal counts.
   -- Multi-month/yearly rates: aggregate the COUNTS (SUM(moved_forward)/SUM(quoted_jobs)) — NEVER average conversion_pct across months (unweighted month-averaging is wrong). Always SELECT the two sums alongside the computed rate so the answer can report "X% (M of Q)".
 """
 
@@ -114,7 +125,7 @@ Rules:
 - If the question is about jobs, prefer counting DISTINCT job_id when joins could duplicate rows.
 - Missing text values are EMPTY STRINGS, not NULL: "no X recorded" means (x = '' OR x IS NULL).
 - When listing entities, also select COUNT(*) OVER () AS total_count — the forced LIMIT must not hide the true total.
-- Definition: a job "went quiet" / "stalled after quote" = its most recent dated activity is a Quote with no later activity of any type.
+- A job "went quiet" / "stalled after quote" = v_job_pipeline_status.status = 'quiet'. Filter that column; do not re-derive stall logic from raw activities.
 - Counting business events: filter WHERE happened (see v_activities three-state rule). Row counts without that filter include placeholders and overstate reality.
 - The happened rule is for ACTIVITY rows only. Counting JOBS ("how many jobs did we do in Kiawah Island / in 2024") counts v_jobs rows matching the filters — NEVER add a status or process_name filter unless the question asks about job status (status is a lifecycle field, not an event marker).
 - Aggregate answers need their supporting counts: when summing or averaging (sq ft, revenue, rates), also SELECT the underlying count (e.g. COUNT(*) AS jobs alongside SUM(s.total_sq_ft)) in the same query.
