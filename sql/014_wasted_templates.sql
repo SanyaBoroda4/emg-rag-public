@@ -197,4 +197,15 @@ SELECT v.job_id,
 FROM verdict v
 JOIN v_jobs j USING (job_id);
 
-GRANT SELECT ON v_wasted_templates TO rag_reader;
+-- Rollup: the number Alex actually wants — per PM (salesperson) per year.
+CREATE VIEW v_wasted_templates_by_pm AS
+SELECT salesperson,
+       template_year,
+       COUNT(*)                                           AS real_templates,
+       COUNT(*) FILTER (WHERE wasted)                     AS wasted_templates,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE wasted) / COUNT(*), 1)
+                                                          AS wasted_pct
+FROM v_wasted_templates
+GROUP BY salesperson, template_year;
+
+GRANT SELECT ON v_wasted_templates, v_wasted_templates_by_pm TO rag_reader;
