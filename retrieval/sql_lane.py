@@ -59,6 +59,17 @@ ALLOWED_VIEWS = {
                               "days_silent", "status"],
     "v_quote_conversion_monthly": ["quote_month", "quoted_jobs",
                                    "moved_forward", "conversion_pct"],
+    "v_wasted_templates": ["job_id", "job_name", "salesperson", "city",
+                           "template_activity_id", "template_date",
+                           "phase_no", "phase_start_date", "phase_end_date",
+                           "templates_in_phase", "installs_in_phase",
+                           "next_template_date", "install_between",
+                           "structural_wasted", "note_wasted",
+                           "matched_note", "note_source", "wasted",
+                           "wasted_reason", "template_year"],
+    "v_wasted_templates_by_pm": ["salesperson", "template_year",
+                                 "real_templates", "wasted_templates",
+                                 "wasted_pct"],
 }
 
 # Low-cardinality columns have their EXACT value sets enumerated below (WO7
@@ -112,6 +123,12 @@ v_quote_conversion_monthly(quote_month date, quoted_jobs, moved_forward, convers
   -- Quote -> moved-forward conversion by monthly cohort, derived from v_job_pipeline_status (definition v4: quoted/moved as defined there; cohort month = month of first_signal_date; a job enters its cohort once 30 days have passed since first_signal_date, or immediately if it moved). Counts are JOB-level. USE THIS VIEW for any conversion / close-rate question — do not re-derive.
   -- An invoice NUMBER on a job does NOT imply the customer moved forward; neither does a payment note. Only a dated Install/Removal counts.
   -- Multi-month/yearly rates: aggregate the COUNTS (SUM(moved_forward)/SUM(quoted_jobs)) — NEVER average conversion_pct across months (unweighted month-averaging is wrong). Always SELECT the two sums alongside the computed rate so the answer can report "X% (M of Q)".
+v_wasted_templates(job_id, job_name, salesperson, city, template_activity_id, template_date date, phase_no, phase_start_date date, phase_end_date date, templates_in_phase, installs_in_phase, next_template_date date, install_between boolean, structural_wasted boolean, note_wasted boolean, matched_note, note_source, wasted boolean, wasted_reason, template_year)
+  -- THE canonical "wasted template" definition — one row per REAL template trip (Complete/Paid-in-Full AND dated; placeholders excluded), so a job can have several rows. A template is wasted when the template person drove to a job that was not ready: structural_wasted = another template followed it within the same phase (PHASE_GAP_DAYS = 30; a later template more than 30 days after the previous one starts a new phase and is never compared) with no real Install in between; note_wasted = readiness-failure language on the trip's note (cabinets/sink not installed, not ready, could not template, retemplate...). wasted = structural_wasted OR note_wasted; wasted_reason is EXACTLY one of: structural, note, both, or NULL when not wasted. matched_note holds the note text that fired (NULL otherwise).
+  -- "Wasted / failed / unnecessary / repeated templates", "template trips", "was the job ready for template" ALWAYS mean THIS view: COUNT(*) FILTER (WHERE wasted) — NEVER a raw count of Template activities in v_activities, and never re-derive the rule. "How many templates" (all trips) = COUNT(*) here; wasted % = wasted / COUNT(*). template_year groups by year; salesperson (the accountable PM) and city are already on the row — no join needed.
+  -- WHY was a template wasted: matched_note and wasted_reason. Job-level questions ("was the template on job X wasted"): SELECT template_date, wasted, wasted_reason, matched_note FROM v_wasted_templates WHERE job_id = X.
+v_wasted_templates_by_pm(salesperson, template_year, real_templates, wasted_templates, wasted_pct)
+  -- Rollup of v_wasted_templates per salesperson per year. USE IT for per-PM / per-year wasted-template counts and percentages. Across several years aggregate the COUNTS (SUM(wasted_templates), SUM(real_templates)) and recompute the rate — never average wasted_pct. Exclude the blank salesperson unless asked about unassigned jobs. Report "X% (W of N)".
 """
 
 SYSTEM_PROMPT = f"""You translate questions about a countertop fabrication company's data into a single PostgreSQL SELECT statement.
@@ -129,6 +146,7 @@ Rules:
 - Missing text values are EMPTY STRINGS, not NULL: "no X recorded" means (x = '' OR x IS NULL).
 - When listing entities, also select COUNT(*) OVER () AS total_count — the forced LIMIT must not hide the true total.
 - A job "went quiet" / "stalled after quote" = v_job_pipeline_status.status = 'quiet'. Filter that column; do not re-derive stall logic from raw activities.
+- "Wasted / failed / unnecessary / repeated templates", template trips, "was the job ready for template" = v_wasted_templates.wasted (or the v_wasted_templates_by_pm rollup). Never count Template rows in v_activities for these questions and never re-derive the rule.
 - Counting business events: filter WHERE happened (see v_activities three-state rule). Row counts without that filter include placeholders and overstate reality.
 - The happened rule is for ACTIVITY rows only. Counting JOBS ("how many jobs did we do in Kiawah Island / in 2024") counts v_jobs rows matching the filters — NEVER add a status or process_name filter unless the question asks about job status (status is a lifecycle field, not an event marker).
 - Aggregate answers need their supporting counts: when summing or averaging (sq ft, revenue, rates), also SELECT the underlying count (e.g. COUNT(*) AS jobs alongside SUM(s.total_sq_ft)) in the same query.

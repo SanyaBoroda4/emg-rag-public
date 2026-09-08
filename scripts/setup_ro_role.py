@@ -2,7 +2,7 @@
 
 The text-to-SQL lane executes model-written SQL, so its credential must be
 physically incapable of writing: rag_reader gets CONNECT + USAGE + SELECT on
-the five v_* views and NOTHING else (no base-table access). A 10s
+the v_* views listed below and NOTHING else (no base-table access). A 10s
 statement_timeout is set at the role level as a second line of defence
 (sql_lane also sets it per session).
 
@@ -19,7 +19,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from ingest.db import get_conn
 
 VIEWS = ["v_jobs", "v_job_areas", "v_invoices", "v_job_invoices",
-         "v_activities", "v_quote_conversion_monthly"]
+         "v_activities", "v_job_sqft", "v_job_pipeline_status",
+         "v_quote_conversion_monthly",
+         "v_wasted_templates", "v_wasted_templates_by_pm"]
 
 
 def main() -> int:
