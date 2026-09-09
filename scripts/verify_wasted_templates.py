@@ -199,9 +199,12 @@ def report(cur):
 def sensitivity(cur):
     print("\n=== SENSITIVITY: PHASE_GAP_DAYS ===")
     text = SQL_FILE.read_text(encoding="utf-8")
-    marker = "CREATE VIEW v_wasted_templates AS\n"
+    marker = "CREATE OR REPLACE VIEW v_wasted_templates AS\n"
     start = text.index(marker) + len(marker)
-    body = text[start:text.index(";\n", start)]
+    # the body ends at the final join line (a bare ";\n" search would stop
+    # at the first semicolon inside a comment)
+    terminator = "JOIN v_jobs j USING (job_id);"
+    body = text[start:text.index(terminator, start) + len(terminator) - 1]
     assert body.count("SELECT 30 AS phase_gap_days") == 1, \
         "expected exactly one PHASE_GAP_DAYS constant in the view body"
     results = {}
