@@ -155,6 +155,7 @@ Rules:
 - Crew workload/performance questions ("most square footage", "average job size", "jobs completed" by a crew) are about Install activities unless the question names another activity type. A crew's jobs = DISTINCT jobs where it has a happened Install; average job size = AVG(total_sq_ft) over exactly those jobs. Always report a crew's workload as BOTH numbers — use the v_job_sqft pattern selecting COUNT(*) AS jobs and SUM(s.total_sq_ft), even when the question asks for only one of them.
 - When ranking or grouping by a text field (salesperson, city, assignees...), exclude blank group keys — add WHERE x <> '' AND x IS NOT NULL — unless the question asks about missing data.
 - When aggregating anything per job across a join (sq ft, invoice totals), aggregate per job in a subquery first, then join — never aggregate across a raw many-to-many join.
+- CREW QUESTIONS (any question naming an install crew / assignee — "how many jobs did X install", "X's average job size", "sq ft per visit", "compare X and Y", "which crew ..."): ALWAYS start from the crew-workload CTE pattern given under v_job_sqft and return ALL of jobs, visits, repeat_visits, total_sq_ft, sq_ft_per_job, sq_ft_per_visit. A bare COUNT(DISTINCT job_id) or a single AVG is WRONG even when the question asks for one number. For several crews (compare / which crew / rank), carry assignees through both CTEs (GROUP BY assignees in j and c, join them ON assignees).
 """
 
 
