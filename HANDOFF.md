@@ -2,8 +2,8 @@
 # EMG RAG — Project Handoff / Status
 
 > Purpose of this file: bring a brand-new collaborator (human or AI chat with no
-> prior context) fully up to speed. Last updated: 2026-09-09, after WO8
-> (wasted templates). Read `CLAUDE.md` first for the hard operating
+> prior context) fully up to speed. Last updated: 2026-09-09, after WO9
+> (wasted templates v2 + crew fixes). Read `CLAUDE.md` first for the hard operating
 > rules; this file is the story and the current state.
 
 ## What this project is
@@ -75,6 +75,7 @@ private repo is mirrored (sanitized) to a public repo.
 | PIPE | One canonical pipeline definition | **COMPLETE.** `sql/012`: `v_job_pipeline_status` (per-job: is_quoted = happened Quote/Measure/Template past-only; moved = Install/Removal ANY date, activities only — payment signals removed; SETTLE_DAYS=30, 7-day rule retired; first vs last signal date = cohort vs silence clock) + QCONV v4 derived from it + Q26 buckets (moved 3,063 / pending 46 / quiet 1,306; 84% of quiet = Canceled). Overall conversion v3 65.9% → **v4 70.0%** (3,063/4,377) — WO predicted a fall, measured a RISE: only 11 payment-only movers lost, 339 no-Quote jobs joined and 95% of them moved. Faithfulness 91.7% (WO-best). Q59–62+Q30 keys superseded (intended reds; corrected numbers in report). Resolves open decision #3. Deliverable: `evals/results/wo_pipeline_unification.md`. Cost ≈$1.65 |
 | AREAL | Activity reality + JOIN fan-out | **COMPLETE.** `sql/011`: `v_activities.happened`/`is_scheduled_future` (three-state rule: placeholder / happened / scheduled-future; ~44% of rows are pre-created placeholders — 5,315 Quote rows but only 3,154 real), `v_job_sqft` per-job pre-aggregation (LEFT JOIN pattern; fixes activity×area fan-out AND repeat-visit double-count). Schema-prompt rules + answerer stops volunteering unsupported schema stats. Generation 60.3%→**69.8%**, faithfulness 81.8%→**90.0%**. Q31–37 crew block + Q59–62 all produce verified numbers. 4 measured rounds, 3 mid-WO regressions (Q22/Q2/Q33) found+fixed. Deliverable: `evals/results/wo_activity_reality.md`. Cost ≈$2.95 |
 | WT | Wasted-template detection (WO8) | **COMPLETE.** `sql/014`: `v_wasted_templates` (one row per REAL template trip; phases split at `PHASE_GAP_DAYS`=30; structural = next template in the phase with no install between; note = readiness-failure regex on the trip's note / same-day Measure note; redo phrases flag the PREVIOUS template) + `v_wasted_templates_by_pm`. Reproduces all 10 of Alex's hand verdicts + 680/772 edges (`scripts/verify_wasted_templates.py`, exit≠0 on mismatch). **266 / 3,534 = 7.5% wasted**; Victor Slabunov most (54, 12.1%), Diana Diaz worst rate (12.6%), 2026 worst year (12.2%). Sensitivity 21/45 days: ±15. Q74–82 added (draft). Deliverable: `evals/results/wo_wasted_templates.md`. Cost ≈$2 |
+| WT2 | WO9: status widening, crew fixes, WO8 follow-ups | **COMPLETE.** `sql/015` v2 of `v_wasted_templates`: Step 0 counts Confirmed/In Progress (+127 templates, +290 installs), `activity_date <= CURRENT_DATE` guard, same-day template pairs collapse to one trip, three note patterns tightened (2262/2676/3714), 853 kept. Each change measured alone, gate 12/12 after each, **no verdict flipped**. 266/3,534 (7.5%) → **252/3,643 (6.9%)**; Diana Diaz 26→17 (nine same-day pairs). Crew block Q64–73 1/10 → **10/10** via the crew-workload CTE pattern (per-job vs per-visit; Q36/Q37 re-keyed to the all-jobs denominator). Final eval 96.3 / **73.2** / 87.3 (WO8: 96.3 / 62.2 / 84.8). Voyage check: no throttling left in the query path; eval time is LLM latency (judge + router unrecorded ≈ 535 s of 780 s). Deliverable: `evals/results/wo9_status_widening.md` |
 | QCONV | Quote → moved-forward conversion | **COMPLETE (definition v3).** `v_quote_conversion_monthly` (`sql/008` v2, `sql/009` v3), wired into the SQL lane. Locked definition: quoted = job's first DATED Quote, OR measure-proxy (undated Quote + dated Measure ⇒ quote happened unlogged, cohort = first Measure date); re-quotes = ONE job; moved = dated Install OR dated Removal (future dates count) OR chatbot payment note (`Payment received/recorded —` / `check-bot`, 85 activities — human "asked for payment" excluded); invoice numbers do NOT count; 7-day freshness rule; as-of hardcoded 2026-07-30 (TODO CURRENT_DATE). **Overall 65.9%** (2,523/3,830); yearly: 2020 64.7 → 2023 peak 85.2 → 2024 61.1 → 2025 54.3 → 2026 47.6. Sanity jobs verified (483 proxy, 5693 future-Removal, 5022 payment-only, 377 invoiced-not-moved, 5840 fresh-excluded). Golden candidates Q59–63 added (draft, v3 numbers). Visibility stats: 111 invoiced-but-not-moved; 279 dated-Measure-but-no-Quote-activity (excluded, awaiting Alex's call) |
 
 ## WO7 detail (complete — kept for context)
@@ -135,29 +136,27 @@ Final numbers in `evals/results/before_after.md`. Remaining reds: Q28/Q30
    payment-signal blind spot.
 4. Voyage payment method (would cut hour-long embed/eval runs to ~1 min).
 5. GitHub Actions secrets for CI not yet verified end-to-end.
-6. **Wasted templates (WO8)**: sign off Q74–82; prune the 44 matched notes
-   (853 / 2262 / 2676 / 3714 look like false positives); decide whether
-   the 16 same-day template pairs are one trip or two (literal rule flags
-   them; −16 if not); 852 reads `both` not `structural` (redo note on the
-   second template); blank salesperson is the largest bucket (805 trips).
-7. **Q64–73 (crew visit-vs-job, added 2026-09-08)**: 9/10 fail on first
-   measurement, for four separable reasons (WO8 report): per-job averages
-   divide by all jobs vs `AVG()` skipping the area-less job (Q64/69/71);
-   per-VISIT sq ft is not a pattern the lane knows — it averages job totals
-   per visit row (Q65/67/70, real lane gap); list-shaped keys with a third
-   number the answer omits (Q66/68); Q73's installs postdate the snapshot.
+6. **Wasted templates (WO8/WO9)**: sign off Q74–82 (re-keyed to v2 in WO9); prune the remaining 42 matched notes
+   (2262/2676/3714 already removed, 853 kept, same-day pairs already
+   collapsed — all applied in WO9); blank salesperson is still the largest
+   bucket (816 trips, 52 wasted).
+7. **Q64–73 after WO9**: 10/10 verified in the final run, but Q65 missed
+   1 of 4 runs with the same prompt (SQL model at default temperature picks
+   the wrong join shape run-to-run) — a temperature=0 SQL lane is the next
+   measured change; then record router/judge latency in the run JSON and
+   parallelise tier 3 if eval wall time matters. Q36/Q37 re-keyed (draft).
 
-Nothing in flight — project is between work orders. Likely next: per-visit
-sq-ft pattern in the SQL lane (Q65/67/70), material parser WO (3,671
-unparsed material values), freshness pipeline (un-hardcode the as-of date),
-wasted-template tuning after Alex prunes the note list.
+Nothing in flight — project is between work orders. Likely next: SQL lane
+temperature=0 (Q65/Q68), material parser WO (3,671 unparsed material
+values), freshness pipeline (un-hardcode the as-of date; `sql/015` already
+uses CURRENT_DATE as its guard), tier-3 parallelism + latency recording.
 
 ## Key files map
 
 ```
 CLAUDE.md                 operating rules (server, git, mirror) — READ FIRST
 HANDOFF.md                this file
-sql/001..014_*.sql        append-only migrations (014 = wasted templates)
+sql/001..015_*.sql        append-only migrations (014/015 = wasted templates v1/v2)
 ingest/                   loaders, chunker, contextualizer, embedder,
                           city normalizer, db.py (+get_ro_conn), voyage_util.py
 retrieval/                keyword.py dense.py fuse.py rerank.py sql_lane.py

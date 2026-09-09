@@ -1,6 +1,6 @@
-# Eval run 2026-09-09 08:37:07
+# Eval run 2026-09-09 09:44:36
 
-commit `5857959` · answer=claude-haiku-4-5 · sql=claude-haiku-4-5 · judge=claude-sonnet-5 · rerank=voyage
+commit `269b66d` · answer=claude-haiku-4-5 · sql=claude-haiku-4-5 · judge=claude-sonnet-5 · rerank=voyage
 
 ## Tier 1 — routing
 
@@ -25,11 +25,11 @@ refuse                           0           0           0           3
 
 ## Tier 3 — generation
 
-- correct: **51/82 (62.2%)**
-- faithfulness: 84.8%
-- context precision: 59.0%
+- correct: **60/82 (73.2%)**
+- faithfulness: 87.3%
+- context precision: 50.7%
 - generator: claude-haiku-4-5 · judge: claude-sonnet-5 (never the same model)
-- tier-3 cost: $0.95
+- tier-3 cost: $1.01
 
-Known-FAILING: Q28 still failing, Q30 still failing
-New failures (verified rows): Q16, Q26, Q29, Q64, Q65, Q66, Q67, Q68, Q69, Q70, Q71, Q73
+Known-FAILING: Q28 PASSES(!), Q30 still failing, Q65 PASSES(!), Q68 PASSES(!)
+New failures (verified rows): Q16, Q29
