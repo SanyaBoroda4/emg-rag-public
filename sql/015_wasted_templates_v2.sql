@@ -11,6 +11,11 @@
 --
 -- Change 2a — same-job-same-date templates collapse to one trip before
 -- phase-splitting (Alex's ruling: one trip, not a wasted template).
+-- Change 2b — three readiness patterns tightened (Alex's rulings on the
+-- four suspect notes): 'not ready for install' is not a template failure
+-- (2262); 'can't template ... lack of glue gun' is equipment, not site
+-- readiness (2676); 'confirm IF they adjusted the cabinets' is a question,
+-- not a report (3714). 853 'They Adjusted the Cabinets' stays flagged.
 --
 -- Everything else (phases, structural signal, note signal, redo
 -- attribution, same-day Measure notes) is exactly sql/014 — see its header
@@ -32,13 +37,18 @@ WITH params AS (
            -- nothing); revisit when the freshness pipeline exists.
            CURRENT_DATE                                   AS as_of,
            -- readiness-failure language: flags the template it is written on
-           '(not ready|weren''?t ready|wasn''?t ready'
+           -- 2b: readiness must refer to the template, never the install
+           '((not|weren''?t|wasn''?t) ready(?! for (the |an? )?install)'
            || '|cabinets? (are |is |were |was |still )?(not|aren''?t|isn''?t|weren''?t|wasn''?t) (yet )?(installed|ready|in|done|set)'
            || '|cabinets? (need|needs|needed) (to be )?(adjust|redo|redone|fix|replace)'
-           || '|(redo|redid|redoing|adjust|fix|replace)\w* (some |the |of the |their |his |her |a few |all )*cabinets?'
+           -- 2b: 'They adjusted the cabinets' (a failure, job 853) yes;
+           -- 'confirm IF they adjusted the cabinets' (a question) no
+           || '|(?<!\mif they )(?<!\mif he )(?<!\mif she )(?<!\mif we )(?<!\mwhether they )(redo|redid|redoing|adjust|fix|replace)\w* (some |the |of the |their |his |her |a few |all )*cabinets?'
            || '|sink (is |was )?(not|isn''?t|wasn''?t) (yet )?(installed|in|ready|on site|there)'
            || '|uninstalled'
-           || '|could(n''?t| not) template|can''?t template|did(n''?t| not) template|unable to template'
+           -- 2b: 'can''t template ... lack of glue gun' is EMG''s equipment,
+           -- not site readiness
+           || '|(could(n''?t| not)|can''?t|did(n''?t| not)|unable to) template(?!.{0,40}\m(lack of|forgot|glue|tool|equipment|laser))'
            || '|(before|until) (i|we|he|she|they) (could|can) template'
            || '|will be installed later|installed later)'
                                                           AS readiness_re,
