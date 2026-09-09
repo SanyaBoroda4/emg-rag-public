@@ -1,0 +1,492 @@
+{
+ "meta": {
+  "git_sha": "7ec918a",
+  "answer_model": "claude-haiku-4-5",
+  "sql_model": "claude-haiku-4-5",
+  "router_model": "claude-haiku-4-5",
+  "rerank_backend": "voyage",
+  "rerank_enabled": "1",
+  "embed_model": "voyage-3.5-lite",
+  "timestamp": "2026-09-09 09:22:58",
+  "tiers": [
+   1,
+   3
+  ],
+  "questions": 10,
+  "total_cost_usd": 0.1159
+ },
+ "tier1": {
+  "accuracy": 1.0,
+  "matrix": {
+   "structured": {
+    "structured": 10,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 0
+   },
+   "semantic": {
+    "structured": 0,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 0
+   },
+   "hybrid": {
+    "structured": 0,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 0
+   },
+   "refuse": {
+    "structured": 0,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 0
+   }
+  },
+  "cost": 0.010046000000000001
+ },
+ "tier2": null,
+ "tier3": {
+  "correct": 8,
+  "total": 10,
+  "accuracy": 0.8,
+  "faithfulness": 1.0,
+  "context_precision": null,
+  "cost": 0.10582,
+  "judge_model": "claude-sonnet-5"
+ },
+ "failures": {
+  "new_failures": [
+   "65",
+   "68"
+  ],
+  "known_failing": {}
+ },
+ "questions": [
+  {
+   "id": "64",
+   "question": "What is Ihor/Tolik's average job size (per job, not per visit) in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "83.6 sq ft per job",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering jobs assigned to Ihor/Tolik in H1 2026, summing countertop areas, and dividing by job count\u2014all structured fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT DISTINCT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Ihor/Tolik%'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM v LEFT JOIN v_job_sqft AS s USING (job_id)) SELECT j.jobs, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS avg_sq_ft_per_job FROM j LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "total_sq_ft",
+     "avg_sq_ft_per_job"
+    ],
+    "sql_rows": [
+     [
+      108,
+      "9027.0",
+      "83.6"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Ihor/Tolik's average job size in the first half of 2026 was **83.6 sq ft per job** [SQL], across 108 jobs totaling 9,027 sq ft. This counts only jobs with dated, completed Install activities assigned to Ihor/Tolik between 2026-01-01 and 2026-07-01.",
+    "cost": 0.007235999999999999,
+    "latency": {
+     "sql": 2.652638877276331,
+     "answer": 1.6924132881686091
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The answer matches the expected value of 83.6 sq ft per job, and all details (108 jobs, 9027 sq ft) are directly supported by the SQL result."
+   }
+  },
+  {
+   "id": "65",
+   "question": "What is Ihor/Tolik's average square footage per install visit (not per job) in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "58.6 sq ft per visit",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering activities (salesperson, activity type 'install', date range H1 2026), summing countertop areas, and dividing by visit count.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH installs AS (SELECT job_id FROM v_activities WHERE assignees ILIKE '%Ihor/Tolik%' AND type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), totals AS (SELECT COUNT(*) AS visits, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM installs AS i LEFT JOIN v_job_sqft AS s USING (job_id)) SELECT visits, total_sq_ft, ROUND(CAST(total_sq_ft AS DECIMAL) / visits, 1) AS sq_ft_per_visit FROM totals LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      154,
+      "19394.5",
+      "125.9"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Ihor/Tolik's average square footage per install visit in the first half of 2026 was **125.9 sq ft**, across 154 completed install visits totaling 19,394.5 sq ft [SQL].",
+    "cost": 0.007045,
+    "latency": {
+     "sql": 2.4235757081769407,
+     "answer": 1.0830283709801733
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The system's answer accurately reflects the SQL result provided (125.9 sq ft), so it's faithful to the evidence. However, this does not match the expected answer of 58.6 sq ft per visit, indicating the SQL query likely double-counted square footage due to a join issue (e.g., multiple visits per job causing sq ft totals to be summed multiple times). Thus the answer is not correct despite being faithful to the flawed evidence."
+   }
+  },
+  {
+   "id": "66",
+   "question": "How many install visits did Yuri/Petro make in the first half of 2026, and how does that compare to the number of jobs?",
+   "route": "structured",
+   "expected_answer": "42 visits across 35 jobs \u2014 7 jobs required a second visit",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting Install activities by salesperson (Yuri/Petro) filtered by date range (H1 2026) and comparing activity count to job count are both structured aggregations over activity types, dates, and job records.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH installs AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Yuri/Petro%') SELECT COUNT(*) AS visits, COUNT(DISTINCT job_id) AS jobs, COUNT(*) - COUNT(DISTINCT job_id) AS repeat_visits FROM installs LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "visits",
+     "jobs",
+     "repeat_visits"
+    ],
+    "sql_rows": [
+     [
+      42,
+      35,
+      7
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yuri/Petro completed 42 install visits across 35 jobs in the first half of 2026, meaning 7 of those visits were repeat installs on jobs that already had at least one install visit during that period [SQL].",
+    "cost": 0.0066370000000000005,
+    "latency": {
+     "sql": 1.9802360660396516,
+     "answer": 1.2370418668724597
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Matches expected answer exactly: 42 visits, 35 jobs, 7 repeat visits, all supported by SQL result."
+   }
+  },
+  {
+   "id": "67",
+   "question": "What is Yuri/Petro's average square footage per install visit in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "87.0 sq ft per visit",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering installs by salesperson (Yuri/Petro) and date range (H1 2026), summing countertop areas, and dividing by install activity count.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Yuri/Petro%'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)), c AS (SELECT COUNT(*) AS visits FROM v) SELECT j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j, c LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      35,
+      42,
+      "3653.1",
+      "87.0"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yuri/Petro's average square footage per install visit in the first half of 2026 was **87.0 sq ft** [SQL]. This covers 42 dated, completed install activities across 35 distinct jobs totaling 3,653.1 sq ft.",
+    "cost": 0.007251,
+    "latency": {
+     "sql": 2.7634131857194006,
+     "answer": 1.2176502961665392
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Answer matches SQL result exactly (87.0 sq ft per visit) and additional details (42 visits, 35 jobs, 3653.1 sq ft) are all supported by the returned row."
+   }
+  },
+  {
+   "id": "68",
+   "question": "How many jobs did Leo install in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "16 jobs, 23 install visits, 1,089.5 sq ft total",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Count of Install activities by salesperson (Leo) and date range (Jan\u2013Jun 2026) \u2014 answerable by filtering activity type, salesperson, and date fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Leo%') SELECT COUNT(DISTINCT job_id) AS jobs FROM v LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs"
+    ],
+    "sql_rows": [
+     [
+      16
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Leo installed on 16 jobs in the first half of 2026 [SQL].\n\nThis counts distinct jobs with dated, completed Install activities assigned to Leo between 1 January and 30 June 2026.",
+    "cost": 0.00633,
+    "latency": {
+     "sql": 1.8102625031024218,
+     "answer": 1.3596917148679495
+    },
+    "correct": false,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The system correctly reports 16 jobs, matching the expected answer's job count. It omits the visit count and sq ft figures but does not contradict them; the core answer to the question (jobs count) is correct and supported by the SQL result."
+   }
+  },
+  {
+   "id": "69",
+   "question": "What is Leo's average job size in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "68.1 sq ft per job",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering jobs assigned to Leo in H1 2026 and calculating average countertop area (sq ft) \u2014 a structured field.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT DISTINCT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Leo%'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM v LEFT JOIN v_job_sqft AS s USING (job_id)) SELECT j.jobs, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS avg_sq_ft_per_job FROM j LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "total_sq_ft",
+     "avg_sq_ft_per_job"
+    ],
+    "sql_rows": [
+     [
+      16,
+      "1089.5",
+      "68.1"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Leo's average job size in the first half of 2026 is **68.1 sq ft per job** [SQL], based on 16 completed Install activities assigned to Leo between January 1 and July 1, 2026, totaling 1,089.5 sq ft.",
+    "cost": 0.007017000000000001,
+    "latency": {
+     "sql": 2.3597872192040086,
+     "answer": 1.160752329044044
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Answer matches SQL result of 68.1 sq ft/job and expected answer; all details supported by evidence."
+   }
+  },
+  {
+   "id": "70",
+   "question": "What is Leo's average square footage per install visit in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "47.4 sq ft per visit",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering Install activities by salesperson (Leo) and date range (H1 2026), summing countertop areas, and dividing by activity count.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND assignees ILIKE '%Leo%' AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)), c AS (SELECT COUNT(*) AS visits FROM v_activities WHERE type_name = 'Install' AND happened AND assignees ILIKE '%Leo%' AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01') SELECT j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j, c LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      16,
+      23,
+      "1089.5",
+      "47.4"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Leo's average square footage per install visit in the first half of 2026 is **47.4 sq ft per visit** [SQL].\n\nThis is based on 23 completed install visits across 16 distinct jobs totaling 1,089.5 sq ft [SQL].",
+    "cost": 0.007571,
+    "latency": {
+     "sql": 2.370575680397451,
+     "answer": 1.1600195728242397
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The system's answer matches the expected value of 47.4 sq ft per visit and is fully supported by the SQL result data provided."
+   }
+  },
+  {
+   "id": "71",
+   "question": "Which install crew has the smallest average job size in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "Leo, 68.1 sq ft per job",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering Install activities in H1 2026, grouping by crew, calculating average job size (sq ft), and ranking.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id, assignees FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), crews AS (SELECT d.assignees, COUNT(DISTINCT d.job_id) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, ROUND(SUM(COALESCE(s.total_sq_ft, 0)) / COUNT(DISTINCT d.job_id), 1) AS avg_job_size FROM (SELECT DISTINCT job_id, assignees FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id) WHERE d.assignees <> '' AND d.assignees IS NOT NULL GROUP BY d.assignees) SELECT assignees, jobs, total_sq_ft, avg_job_size FROM crews ORDER BY avg_job_size ASC LIMIT 1",
+    "sql_error": null,
+    "row_count": 6,
+    "sql_columns": [
+     "assignees",
+     "jobs",
+     "total_sq_ft",
+     "avg_job_size"
+    ],
+    "sql_rows": [
+     [
+      "Leo",
+      16,
+      "1089.5",
+      "68.1"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Leo** has the smallest average job size in the first half of 2026, at **68.1 sq ft per job** [SQL]. This is based on 16 distinct jobs totaling 1,089.5 sq ft completed by Leo across dated, completed Install activities between January 1 and June 30, 2026.",
+    "cost": 0.007634,
+    "latency": {
+     "sql": 3.095431352034211,
+     "answer": 1.338818575721234
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Matches expected answer: Leo, 68.1 sq ft per job, supported by SQL result."
+   }
+  },
+  {
+   "id": "72",
+   "question": "Rank all four install crews by total square footage installed in the first half of 2026",
+   "route": "structured",
+   "expected_answer": "Ivan Andreev 9,067.6; Ihor/Tolik 9,027.0; Yuri/Petro 3,653.1; Leo 1,089.5",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Ranking crews by total square footage requires filtering Install activities by date range (H1 2026) and crew assignment, then summing sq ft per crew \u2014 all structured fields.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), d AS (SELECT DISTINCT job_id, assignees FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), j AS (SELECT d.assignees, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM d LEFT JOIN v_job_sqft AS s USING (job_id) GROUP BY d.assignees) SELECT assignees AS crew, jobs, total_sq_ft FROM j WHERE assignees <> '' AND assignees IS NOT NULL ORDER BY total_sq_ft DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 6,
+    "sql_columns": [
+     "crew",
+     "jobs",
+     "total_sq_ft"
+    ],
+    "sql_rows": [
+     [
+      "Ivan Andreev",
+      87,
+      "9067.6"
+     ],
+     [
+      "Ihor/Tolik",
+      108,
+      "9027.0"
+     ],
+     [
+      "Yuri/Petro",
+      35,
+      "3653.1"
+     ],
+     [
+      "Leo",
+      16,
+      "1089.5"
+     ],
+     [
+      "Murilo",
+      2,
+      "200.3"
+     ],
+     [
+      "Other\u00e2\u20ac\u2122s",
+      1,
+      "102"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "The ranking of install crews by total square footage installed in the first half of 2026 (counting only dated, completed install activities) is [SQL]:\n\n1. **Ivan Andreev** \u2013 9,067.6 sq ft (87 jobs)\n2. **Ihor/Tolik** \u2013 9,027.0 sq ft (108 jobs)\n3. **Yuri/Petro** \u2013 3,653.1 sq ft (35 jobs)\n4. **Leo** \u2013 1,089.5 sq ft (16 jobs)\n\nNote: The results also include Murilo (200.3 sq ft, 2 jobs) and Other's (102 sq ft, 1 job), but these do not appear to be among the \"four install crews\" referenced in your question.",
+    "cost": 0.008066,
+    "latency": {
+     "sql": 2.394290286116302,
+     "answer": 2.234288020990789
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "The answer matches the expected ranking and values exactly, and correctly notes additional minor crews not part of the main four. All claims are supported by the SQL evidence."
+   }
+  },
+  {
+   "id": "73",
+   "question": "For job 5637, how many square feet were installed and how many install visits did it take?",
+   "route": "structured",
+   "expected_answer": "102 sq ft total, across 2 install visits",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering job 5637 and summing countertop area from install activities, then counting install activity records.",
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT s.total_sq_ft, (SELECT COUNT(*) FROM v_activities AS a WHERE a.job_id = 5637 AND a.type_name = 'Install' AND a.happened) AS visits FROM v_job_sqft AS s WHERE s.job_id = 5637 LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "total_sq_ft",
+     "visits"
+    ],
+    "sql_rows": [
+     [
+      "102",
+      2
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "For job 5637, **102 square feet** were installed across **2 install visits** [SQL].",
+    "cost": 0.006157,
+    "latency": {
+     "sql": 1.4256257847882807,
+     "answer": 0.8328375867567956
+    },
+    "correct": true,
+    "faithful": true,
+    "context_precision": null,
+    "judge_reason": "Matches expected answer exactly, supported by SQL result."
+   }
+  }
+ ]
+}
