@@ -9,6 +9,9 @@
 -- Estimate and RTF never count. All three tunables (phase gap, status
 -- list, as-of guard) sit together in the params CTE.
 --
+-- Change 2a — same-job-same-date templates collapse to one trip before
+-- phase-splitting (Alex's ruling: one trip, not a wasted template).
+--
 -- Everything else (phases, structural signal, note signal, redo
 -- attribution, same-day Measure notes) is exactly sql/014 — see its header
 -- for the full rule and the 10 hand-verified jobs it reproduces.
@@ -57,12 +60,22 @@ real_events AS (                                   -- Step 0 (v2)
       AND a.activity_date <= p.as_of
 ),
 templates AS (
-    SELECT activity_id, job_id, activity_date, notes,
+    -- Change 2a (Alex, 2026-09-09): two real templates on the same job and
+    -- the same date are ONE trip, never a wasted template. Collapsed here,
+    -- before phase-splitting; the notes are concatenated so no note signal
+    -- is lost; template_activity_id is the lowest id of the group.
+    SELECT MIN(activity_id)                               AS activity_id,
+           job_id,
+           activity_date,
+           string_agg(notes, E'
+' ORDER BY activity_id)
+               FILTER (WHERE notes <> '')                 AS notes,
            LAG(activity_date) OVER (PARTITION BY job_id
-                                    ORDER BY activity_date, activity_id)
+                                    ORDER BY activity_date)
                                                           AS prev_date
     FROM real_events
     WHERE type_name = 'Template'
+    GROUP BY job_id, activity_date
 ),
 phased AS (                                        -- Step 1
     SELECT t.*,
