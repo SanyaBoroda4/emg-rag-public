@@ -1,6 +1,6 @@
 """Wasted-template gate (WO8).
 
-The rule behind v_wasted_templates (sql/014) was reverse-engineered from ten
+The rule behind v_wasted_templates (sql/014, v2 in sql/015) was reverse-engineered from ten
 jobs Alex judged by hand. This script asserts every one of those verdicts
 exactly, plus the two structural edge cases (680: undated placeholder must
 not count; 772: a 2023 template is its own phase). Exit non-zero on ANY
@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ingest.db import get_conn
 
-SQL_FILE = Path(__file__).resolve().parent.parent / "sql" / "014_wasted_templates.sql"
+SQL_FILE = Path(__file__).resolve().parent.parent / "sql" / "015_wasted_templates_v2.sql"
 JOB_URL = "https://granite-marble-tops.moraware.net/sys/job/{}"
 
 # job -> (expected wasted?, signal that MUST have fired, Alex's words)
