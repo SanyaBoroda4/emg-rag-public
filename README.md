@@ -8,7 +8,7 @@ See `CLAUDE.md` for project context, server constraints, and working rules.
 ## Layout
 
 - `docker-compose.yml` — pgvector Postgres 17, memory-capped, localhost-only on 5433
-- `sql/` — idempotent, append-only migrations (001 schema … 005 retrieval views)
+- `sql/` — idempotent, append-only migrations (001 schema … 005 retrieval views … 012 pipeline status, 014 wasted templates)
 - `ingest/` — ingestion + semantic-layer package (`db.py` connection helper)
 - `retrieval/` — BM25/dense/RRF lanes, reranker, text-to-SQL lane, router, answer
 - `scripts/check_db.py` — verifies connection, extension, and tables
@@ -35,6 +35,21 @@ See `CLAUDE.md` for project context, server constraints, and working rules.
   (`evals/results/benchmark.md`). The structured lane's failure modes turned
   out to be semantic (which column, substring vs exact), not join
   complexity, and prompt-side schema enumeration addresses those.
+
+## Canonical business definitions (views, not prompts)
+
+Business questions with a contested definition are implemented once as a
+Postgres view, exposed to the text-to-SQL lane as authoritative, and gated
+by a script that asserts hand-verified cases:
+
+- **Pipeline status / quote conversion** — `v_job_pipeline_status`,
+  `v_quote_conversion_monthly` (`sql/012`–`013`).
+- **Wasted templates** — `v_wasted_templates`, `v_wasted_templates_by_pm`
+  (`sql/014`): a template trip is wasted when another template followed it
+  within 30 days with no install between (structural) or its note records
+  the site was not ready (note). Rule reverse-engineered from 10 hand-judged
+  jobs; `scripts/verify_wasted_templates.py` reproduces all of them and
+  reports the per-PM table, matched notes, and a 21/30/45-day sensitivity.
 
 ## Known outstanding work
 
