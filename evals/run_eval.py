@@ -137,9 +137,11 @@ def tier3(rows, cur, qvecs, answer_model=None, sql_model=None):
         "cost": total_cost,
         "judge_model": judge,
     }
+    def pct(x):  # None when no question in the run produced the metric
+        return f"{x:.1%}" if x is not None else "—"
     print(f"correct: {n_correct}/{len(rows)} ({agg['accuracy']:.1%})  "
-          f"faithfulness: {agg['faithfulness']:.1%}  "
-          f"context precision: {agg['context_precision']:.1%}  "
+          f"faithfulness: {pct(agg['faithfulness'])}  "
+          f"context precision: {pct(agg['context_precision'])}  "
           f"cost: ${total_cost:.2f}")
     return agg
 
@@ -228,8 +230,11 @@ def write_reports(meta, rows, t1, t2, t3, failures):
         md += ["## Tier 3 — generation", "",
                f"- correct: **{t3['correct']}/{t3['total']} "
                f"({t3['accuracy']:.1%})**",
-               f"- faithfulness: {t3['faithfulness']:.1%}",
-               f"- context precision: {t3['context_precision']:.1%}",
+               f"- faithfulness: {t3['faithfulness']:.1%}"
+               if t3['faithfulness'] is not None else "- faithfulness: —",
+               f"- context precision: {t3['context_precision']:.1%}"
+               if t3['context_precision'] is not None
+               else "- context precision: —",
                f"- generator: {meta['answer_model']} · judge: "
                f"{t3['judge_model']} (never the same model)",
                f"- tier-3 cost: ${t3['cost']:.2f}", ""]
