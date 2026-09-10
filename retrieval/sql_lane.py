@@ -170,6 +170,11 @@ def generate_sql(question: str, hybrid: bool = False, model: str = None):
                    "stage.)")
     resp = client.messages.create(
         model=model or SQL_MODEL, max_tokens=2500,
+        # temperature=0 (WO10): with the same prompt Q65 alternated between
+        # the correct two-CTE per-visit query (58.6) and a per-visit-row join
+        # (125.9) across four runs. Text-to-SQL wants the argmax, not a
+        # sample — same reasoning as the router in WO8.
+        temperature=0,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": prompt}])
     sql = next((b.text for b in resp.content if b.type == "text"), "").strip()
@@ -253,7 +258,7 @@ def repair_sql(question: str, bad_sql: str, error: str, hybrid: bool,
     if hybrid:
         prompt += "\n\n(The SELECT must include the job_id column.)"
     resp = client.messages.create(
-        model=model or SQL_MODEL, max_tokens=1000,
+        model=model or SQL_MODEL, max_tokens=1000, temperature=0,
         system=SYSTEM_PROMPT,
         messages=[
             {"role": "user", "content": prompt},
