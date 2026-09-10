@@ -51,6 +51,14 @@ by a script that asserts hand-verified cases:
   jobs; `scripts/verify_wasted_templates.py` reproduces all of them and
   reports the per-PM table, matched notes, and a 21/30/45-day sensitivity.
 
+## Running the eval
+
+`python evals/run_eval.py --workers 4` runs the full golden set (tiers 1–3)
+in about 5 minutes; `--workers 1` is the sequential path. Router and judge
+latency are recorded per question; the Sonnet judge is the dominant stage.
+Router and text-to-SQL both run at temperature 0 so run-to-run movement is
+signal, not sampling noise.
+
 ## Known outstanding work
 
 - **`job_areas.material_name` needs a parser, not a mapping table**: 3,671

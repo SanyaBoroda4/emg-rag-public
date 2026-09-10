@@ -2,8 +2,8 @@
 # EMG RAG — Project Handoff / Status
 
 > Purpose of this file: bring a brand-new collaborator (human or AI chat with no
-> prior context) fully up to speed. Last updated: 2026-09-09, after WO9
-> (wasted templates v2 + crew fixes). Read `CLAUDE.md` first for the hard operating
+> prior context) fully up to speed. Last updated: 2026-09-10, after WO10
+> (SQL determinism, eval latency, WO9 follow-ups). Read `CLAUDE.md` first for the hard operating
 > rules; this file is the story and the current state.
 
 ## What this project is
@@ -76,6 +76,7 @@ private repo is mirrored (sanitized) to a public repo.
 | AREAL | Activity reality + JOIN fan-out | **COMPLETE.** `sql/011`: `v_activities.happened`/`is_scheduled_future` (three-state rule: placeholder / happened / scheduled-future; ~44% of rows are pre-created placeholders — 5,315 Quote rows but only 3,154 real), `v_job_sqft` per-job pre-aggregation (LEFT JOIN pattern; fixes activity×area fan-out AND repeat-visit double-count). Schema-prompt rules + answerer stops volunteering unsupported schema stats. Generation 60.3%→**69.8%**, faithfulness 81.8%→**90.0%**. Q31–37 crew block + Q59–62 all produce verified numbers. 4 measured rounds, 3 mid-WO regressions (Q22/Q2/Q33) found+fixed. Deliverable: `evals/results/wo_activity_reality.md`. Cost ≈$2.95 |
 | WT | Wasted-template detection (WO8) | **COMPLETE.** `sql/014`: `v_wasted_templates` (one row per REAL template trip; phases split at `PHASE_GAP_DAYS`=30; structural = next template in the phase with no install between; note = readiness-failure regex on the trip's note / same-day Measure note; redo phrases flag the PREVIOUS template) + `v_wasted_templates_by_pm`. Reproduces all 10 of Alex's hand verdicts + 680/772 edges (`scripts/verify_wasted_templates.py`, exit≠0 on mismatch). **266 / 3,534 = 7.5% wasted**; Victor Slabunov most (54, 12.1%), Diana Diaz worst rate (12.6%), 2026 worst year (12.2%). Sensitivity 21/45 days: ±15. Q74–82 added (draft). Deliverable: `evals/results/wo_wasted_templates.md`. Cost ≈$2 |
 | WT2 | WO9: status widening, crew fixes, WO8 follow-ups | **COMPLETE.** `sql/015` v2 of `v_wasted_templates`: Step 0 counts Confirmed/In Progress (+127 templates, +290 installs), `activity_date <= CURRENT_DATE` guard, same-day template pairs collapse to one trip, three note patterns tightened (2262/2676/3714), 853 kept. Each change measured alone, gate 12/12 after each, **no verdict flipped**. 266/3,534 (7.5%) → **252/3,643 (6.9%)**; Diana Diaz 26→17 (nine same-day pairs). Crew block Q64–73 1/10 → **10/10** via the crew-workload CTE pattern (per-job vs per-visit; Q36/Q37 re-keyed to the all-jobs denominator). Final eval 96.3 / **73.2** / 87.3 (WO8: 96.3 / 62.2 / 84.8). Voyage check: no throttling left in the query path; eval time is LLM latency (judge + router unrecorded ≈ 535 s of 780 s). Deliverable: `evals/results/wo9_status_widening.md` |
+| DET | WO10: SQL-lane determinism, eval latency, WO9 loose ends | **COMPLETE.** SQL lane `temperature=0` (crew subset twice: 14/14 both runs, identical SQL on 13/14, identical rows 14/14). Eval records router + judge latency; `run_eval.py --workers N` runs tier 3 on a thread pool — full run wall 780 s → **319 s** with 4 workers, identical scores (96.3 / 73.2 / 87.3). Judge is 411 s of summed latency, the single biggest stage. Q29 (236) and Q82 (16 jobs) fixed by prompt rules. Blank-salesperson bucket analysed (816 trips, 651 jobs, 441 trips from 2020–21; Quote/Measure assignee could attribute 399 jobs) — decision for Alex, not applied. Pruning sheet of the 42 matched notes in the report. Deliverable: `evals/results/wo10_determinism_latency.md`. Cost ≈$1.46 |
 | QCONV | Quote → moved-forward conversion | **COMPLETE (definition v3).** `v_quote_conversion_monthly` (`sql/008` v2, `sql/009` v3), wired into the SQL lane. Locked definition: quoted = job's first DATED Quote, OR measure-proxy (undated Quote + dated Measure ⇒ quote happened unlogged, cohort = first Measure date); re-quotes = ONE job; moved = dated Install OR dated Removal (future dates count) OR chatbot payment note (`Payment received/recorded —` / `check-bot`, 85 activities — human "asked for payment" excluded); invoice numbers do NOT count; 7-day freshness rule; as-of hardcoded 2026-07-30 (TODO CURRENT_DATE). **Overall 65.9%** (2,523/3,830); yearly: 2020 64.7 → 2023 peak 85.2 → 2024 61.1 → 2025 54.3 → 2026 47.6. Sanity jobs verified (483 proxy, 5693 future-Removal, 5022 payment-only, 377 invoiced-not-moved, 5840 fresh-excluded). Golden candidates Q59–63 added (draft, v3 numbers). Visibility stats: 111 invoiced-but-not-moved; 279 dated-Measure-but-no-Quote-activity (excluded, awaiting Alex's call) |
 
 ## WO7 detail (complete — kept for context)
@@ -140,16 +141,18 @@ Final numbers in `evals/results/before_after.md`. Remaining reds: Q28/Q30
    (2262/2676/3714 already removed, 853 kept, same-day pairs already
    collapsed — all applied in WO9); blank salesperson is still the largest
    bucket (816 trips, 52 wasted).
-7. **Q64–73 after WO9**: 10/10 verified in the final run, but Q65 missed
-   1 of 4 runs with the same prompt (SQL model at default temperature picks
-   the wrong join shape run-to-run) — a temperature=0 SQL lane is the next
-   measured change; then record router/judge latency in the run JSON and
-   parallelise tier 3 if eval wall time matters. Q36/Q37 re-keyed (draft).
+7. **Blank-salesperson bucket** (WO10 report §4a): (a) keep as
+   "(unassigned)", (b) `inferred_pm` from the Quote/Measure assignee
+   (399 of 651 jobs attributable, needs its own gate), or (c) backfill
+   `salesperson` in Moraware for 2020–2023. Recommendation a now, c if the
+   historical per-PM number matters.
+8. **Matched-note pruning** — 42 notes listed in the WO10 report §4b; each
+   drop becomes a lookaround in `sql/015`'s params CTE.
 
-Nothing in flight — project is between work orders. Likely next: SQL lane
-temperature=0 (Q65/Q68), material parser WO (3,671 unparsed material
-values), freshness pipeline (un-hardcode the as-of date; `sql/015` already
-uses CURRENT_DATE as its guard), tier-3 parallelism + latency recording.
+Nothing in flight — project is between work orders. Likely next: material
+parser WO (3,671 unparsed material values), freshness pipeline (un-hardcode
+the as-of date; `sql/015` already uses CURRENT_DATE as its guard), a faster
+judge (411 s of the eval is Sonnet judging; run evals with `--workers 4`).
 
 ## Key files map
 
