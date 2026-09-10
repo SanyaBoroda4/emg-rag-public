@@ -74,12 +74,13 @@ def tier2(rows, cur, qvecs):
     return agg
 
 
-def tier3(rows, cur, qvecs, answer_model=None, sql_model=None):
-    judge = judge_model_for(answer_model or ANSWER_MODEL)
-    print(f"\n=== Tier 3: generation "
-          f"(answer={answer_model or ANSWER_MODEL}, judge={judge}) ===")
+def _tier3_one(row, cur, qvecs, judge, answer_model, sql_model):
+    """Generate + judge ONE question on the given cursor; returns its cost.
+    Per-row work only, so tier3 can run it on a thread pool (WO10): every
+    Claude/Voyage call builds its own client and each worker owns its own
+    DB connection, so rows never share mutable state."""
     total_cost = 0.0
-    for row in rows:
+    if True:  # body kept at loop depth for a minimal diff
         route = row.get("_predicted_route") or row["route"]
         ret = row.get("_retrieval")
         if ret is None and route in ("semantic", "hybrid"):
@@ -121,7 +122,34 @@ def tier3(rows, cur, qvecs, answer_model=None, sql_model=None):
                 len(useful & set(rec["chunk_ids"])) / len(rec["chunk_ids"])
                 if rec["chunk_ids"] else None)
         rec["judge_reason"] = verdict.get("reason")
+        rec["latency"]["router"] = row.get("_route_latency")
         row["_generation"] = rec
+    return total_cost
+
+
+def tier3(rows, cur, qvecs, answer_model=None, sql_model=None, workers=1):
+    judge = judge_model_for(answer_model or ANSWER_MODEL)
+    print(f"\n=== Tier 3: generation "
+          f"(answer={answer_model or ANSWER_MODEL}, judge={judge}, "
+          f"workers={workers}) ===")
+    t_start = time.perf_counter()
+    if workers <= 1:
+        total_cost = sum(_tier3_one(row, cur, qvecs, judge, answer_model,
+                                    sql_model) for row in rows)
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+        import threading
+        local = threading.local()  # one DB connection per worker thread
+
+        def work(row):
+            if not hasattr(local, "conn"):
+                local.conn = get_conn()
+                local.cur = local.conn.cursor()
+            return _tier3_one(row, local.cur, qvecs, judge, answer_model,
+                              sql_model)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            total_cost = sum(pool.map(work, rows))
+    wall = time.perf_counter() - t_start
 
     scored = [r["_generation"] for r in rows]
     n_correct = sum(1 for g in scored if g["correct"])
@@ -136,13 +164,19 @@ def tier3(rows, cur, qvecs, answer_model=None, sql_model=None):
              if g["context_precision"] is not None], "p"),
         "cost": total_cost,
         "judge_model": judge,
+        "workers": workers,
+        "wall_seconds": round(wall, 1),
+        "latency_totals": {k: round(sum(
+            (g.get("latency") or {}).get(k) or 0 for g in scored), 1)
+            for k in ("router", "sql", "answer", "judge")},
     }
     def pct(x):  # None when no question in the run produced the metric
         return f"{x:.1%}" if x is not None else "—"
     print(f"correct: {n_correct}/{len(rows)} ({agg['accuracy']:.1%})  "
           f"faithfulness: {pct(agg['faithfulness'])}  "
           f"context precision: {pct(agg['context_precision'])}  "
-          f"cost: ${total_cost:.2f}")
+          f"cost: ${total_cost:.2f}  wall: {wall:.0f}s  "
+          f"latency totals: {agg['latency_totals']}")
     return agg
 
 
@@ -187,6 +221,7 @@ def write_reports(meta, rows, t1, t2, t3, failures):
         d["gold_ids"] = row["gold_ids"]
         d["predicted_route"] = row.get("_predicted_route")
         d["route_reason"] = row.get("_route_reason")
+        d["route_latency"] = row.get("_route_latency")
         d["lane_metrics"] = row.get("_lane_metrics")
         ret = row.get("_retrieval")
         if ret:
@@ -256,6 +291,9 @@ def main() -> int:
     ap.add_argument("--check-baseline", default=None)
     ap.add_argument("--golden", default=None,
                     help="alternate golden CSV (CI uses the fixture set)")
+    ap.add_argument("--workers", type=int, default=1,
+                    help="tier-3 thread pool size (1 = sequential, the "
+                         "pre-WO10 behaviour)")
     args = ap.parse_args()
     tiers = {int(t) for t in args.tiers.split(",")}
 
@@ -263,7 +301,8 @@ def main() -> int:
     if args.subset:
         rows = rows[:args.subset]
     meta = run_metadata({"tiers": sorted(tiers),
-                         "questions": len(rows)})
+                         "questions": len(rows), "workers": args.workers})
+    t_run = time.perf_counter()
     print(f"eval @ {meta['git_sha']} · {len(rows)} questions · "
           f"tiers {sorted(tiers)}")
 
@@ -279,12 +318,13 @@ def main() -> int:
             if 3 in tiers:
                 if t1 is None:
                     t1 = tier1(rows)
-                t3 = tier3(rows, cur, qvecs)
+                t3 = tier3(rows, cur, qvecs, workers=args.workers)
                 failures = report_failures(rows)
 
     total = (t1["cost"] if t1 else 0) + (t3["cost"] if t3 else 0)
     meta["total_cost_usd"] = round(total, 4)
-    print(f"\ntotal run cost: ${total:.4f}")
+    meta["wall_seconds"] = round(time.perf_counter() - t_run, 1)
+    print(f"\ntotal run cost: ${total:.4f}   wall: {meta['wall_seconds']:.0f}s")
     write_reports(meta, rows, t1, t2, t3, failures)
 
     if args.check_baseline:

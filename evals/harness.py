@@ -205,6 +205,8 @@ def judge_answer(row, record, chunk_rows, judge_model):
     # max_tokens must cover adaptive thinking (Sonnet 5 thinks by default and
     # can consume a small budget entirely, leaving no text block).
     cost = 0.0
+    t0 = time.perf_counter()
+    record.setdefault("latency", {})
     for attempt in range(2):
         resp = client.messages.create(
             model=judge_model, max_tokens=4000, system=JUDGE_SYSTEM,
@@ -212,6 +214,7 @@ def judge_answer(row, record, chunk_rows, judge_model):
                                       "schema": JUDGE_SCHEMA}},
             messages=[{"role": "user", "content": prompt}])
         cost += cost_of(judge_model, resp.usage)
+        record["latency"]["judge"] = time.perf_counter() - t0
         text = next((b.text for b in resp.content if b.type == "text"), "")
         if text:
             try:
@@ -226,7 +229,10 @@ def judge_answer(row, record, chunk_rows, judge_model):
 
 def run_router(row):
     """Tier-1 unit: returns (predicted_route, reason, cost)."""
+    # WO10: router + judge were ~9 of the eval's 13 minutes, unrecorded
+    t0 = time.perf_counter()
     decision, usage = route_query(row["question"])
+    row["_route_latency"] = time.perf_counter() - t0
     return decision["route"], decision["reason"], \
         cost_of("claude-haiku-4-5", usage)
 
