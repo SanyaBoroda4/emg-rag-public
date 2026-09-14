@@ -60,8 +60,11 @@ def load_golden(path=GOLDEN_CSV, statuses=("verified", "draft", "FAILING")):
         for r in csv.DictReader(f):
             if r["status"] not in statuses:
                 continue  # 'retired' rows never run
+            # "MULTIPLE — verify >=1 genuine <category> match returned"
+            # (WO11 existence keys) carries no gold ids: the row is judged
+            # on substance and skipped by tier 2.
             r["gold_ids"] = [int(x) for x in r["relevant_ids"].split(",")
-                             if x.strip()]
+                             if x.strip().isdigit()]
             rows.append(r)
     return rows
 
