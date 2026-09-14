@@ -101,7 +101,16 @@ def _tier3_one(row, cur, qvecs, judge, answer_model, sql_model,
         chunk_rows = load_chunk_rows(cur, rec["chunk_ids"])
         expected_route = row["route"]
         verdict = {}
-        if expected_route == "refuse":
+        if rec["sql_error"]:
+            # WO11: a query that errors is a failure however gracefully the
+            # answerer declines afterwards — Q26 scored "correct" for an
+            # honest refusal after UndefinedColumn. No judge call.
+            rec["correct"] = False
+            rec["faithful"] = None
+            rec["context_precision"] = None
+            verdict = {"reason": "SQL lane raised an exception — scored "
+                                 "incorrect by rule: " + rec["sql_error"]}
+        elif expected_route == "refuse":
             declined = ("only answers questions about" in (rec["answer"] or "")
                         or "cannot answer" in (rec["answer"] or "").lower())
             if not declined and not no_judge:
