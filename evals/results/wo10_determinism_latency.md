@@ -253,3 +253,147 @@ Incorrect: Q11, Q16, Q28, Q30, Q31, Q39, Q41, Q42, Q43, Q44, Q45, Q47, Q48, Q49,
 ## Cost
 
 Two crew subsets $0.18 + $0.18 + full run $1.10 → **≈ $1.46**.
+
+---
+
+# Addendum 2026-09-14 — the measurement as specified
+
+The 2026-09-10 section above measured Change 1 on the 14-question crew
+subset twice, and Change 2 as one summed judge number with no per-stage
+table. The work order asks for the structured subset three times plus one
+pre-change run, and a per-stage table against wall time with the untimed
+residual. This addendum is that measurement, at commit `ff101ab`
+(harness: `--route structured --no-judge` subset flags, stage table,
+judge call count; no view, prompt, key or model change).
+
+## Change 1 — three post-change runs, one pre-change run
+
+Structured subset = every `route=structured` golden row: 53 questions
+(33 verified, 20 draft). Judge-free numeric scoring, 4 workers, ~$0.43 and
+~112 s per run. Router 53/53 on all four runs.
+
+| run | code | correct | failing set | Q65 |
+|---|---|---|---|---|
+| post 1 · `2026-09-14-0819-structured.json` | `ff101ab` | 45/53 | 11, 16, 26, 31, 59, 60, 61, 63 | **58.6** |
+| post 2 · `2026-09-14-0821-structured.json` | `ff101ab` | 45/53 | 11, 16, 26, 31, 59, 60, 61, 63 | **58.6** |
+| post 3 · `2026-09-14-0822-structured.json` | `ff101ab` | 45/53 | 11, 16, 26, 31, 59, 60, 61, 63 | **58.6** |
+| pre (sampling) · `2026-09-14-0824-structured-notemp-ablation.json` | `ff101ab` minus both `temperature=0` lines | 43/53 | 11, 16, 26, 31, **34**, 59, 60, 61, 63, **68** | 58.6 |
+
+**Verdict: deterministic.** The three post-change failing sets are
+identical, and no question's correctness flipped across the three runs.
+
+Below the pass/fail line, temperature=0 is not byte-identical: SQL text
+was identical on 49/53 questions and result rows on 50/53. The four that
+differed (Q8, Q35, Q63, Q76) differed only in an alias name (`vi` vs
+`ji`) or an extra supporting column (Q35 added visits and sq ft/visit;
+Q76 added total templates and waste rate; Q63 returned invoice number and
+date instead of a count). Every headline number was the same on all three
+runs. Identical result rows are not guaranteed by the API; identical
+answers are what the eval needs, and it got them.
+
+Q26 ("which jobs went quiet after a quote") sits in every failing set
+because its expected answer contains no number, so judge-free scoring
+cannot score it; in the full run the judge marks it correct (it declines,
+as the key says it should). The real judge-free failing set is therefore
+seven questions, all of them the known key/scoring problems (Q11, Q16,
+Q31, Q59–61, Q63).
+
+**The pre-change run.** The work order asks for `cbd24ae`. That commit
+also predates the Q29/Q82 prompt rules (`2fc04c4`) and its harness cannot
+run a judge-free subset, so a run there would have conflated three
+changes. The ablation instead runs the current code with only the two
+`temperature=0` lines removed — the single variable the change touched.
+It lost two questions that the greedy path answers: Q34 and Q68 both
+sampled a bare `COUNT(DISTINCT job_id)` and answered "35 jobs" / "16
+jobs" with no sq ft — the same third-number failure class as WO9's Q68.
+Q65 came out 58.6 on this one sampling run; the 125.9 double-count seen
+in WO9 was one of four runs then, and one draw here did not reproduce it.
+One run cannot show a distribution; it shows that sampling produced a
+different failing set than the greedy path, which is the point.
+
+**Accuracy did not drop** with temperature=0: the greedy path scored 45/53
+against the sampling run's 43/53.
+
+## Change 2 — per-stage timing on the full run
+
+Full Tier 1–3 run, **`--workers 1`** (sequential, so the stage sum is
+comparable to wall time), `2026-09-14-0837-full.json`, $1.06.
+
+| stage | total seconds | % of wall time | calls |
+|---|---|---|---|
+| router | 116.4 | 15.8% | 82 |
+| embed (Voyage, one batch) | 0.5 | 0.1% | 1 |
+| bm25 | 0.8 | 0.1% | 26 |
+| dense | 0.8 | 0.1% | 26 |
+| rerank (Voyage) | 5.3 | 0.7% | 26 |
+| sql | 92.3 | 12.5% | 59 |
+| answer | 127.3 | 17.3% | 79 |
+| judge (one call scores faithfulness + correctness + context precision) | 392.8 | 53.3% | 79 |
+| **sum** | **736.2** | **99.9%** | |
+| **actual wall time** | **737.0** | 100% | |
+| **gap (untimed)** | **0.8** | 0.1% | |
+
+The residual blind spot is **0.8 s of 737 s**. The harness is fully
+instrumented. Rerank was already timed separately from fuse inside
+`run_retrieval` (fuse is in-process RRF and takes no measurable time); the
+CLI simply never printed it. The judge is a single Sonnet call per
+question that returns all three metrics in one JSON verdict, so it is one
+stage with a call count rather than three timers; no question needed the
+second (retry) call in this run. Calls: 3 refuse rows skip answer and
+judge; 59 SQL calls = 57 predicted-structured + 2 hybrid.
+
+Where the time goes at 1 worker: judge 53%, answer 17%, router 16%, SQL
+13%. Retrieval end to end is 1% of the run. The `--workers 4` path from
+2026-09-10 overlaps these (319 s wall for the same work).
+
+## Post-WO10 baseline vs WO9
+
+| run | commit | workers | routing | generation | faithfulness | ctx precision | cost | wall |
+|---|---|---|---|---|---|---|---|---|
+| WO9 run B | `cbd24ae` | 1 | 96.3% | 73.2% (60/82) | 87.3% | — | $1.09 | ~780 s |
+| WO10 (2026-09-10) | `2fc04c4` | 4 | 96.3% | 73.2% (60/82) | 87.3% | — | $1.10 | 319 s |
+| **WO10 final (2026-09-14)** | `ff101ab` | 1 | 96.3% | **72.0% (59/82)** | **91.1%** | 56.2% | $1.06 | 737 s |
+
+One question changed against the 2026-09-10 run: **Q68 ✓ → ✗**. Its SQL
+returned the identical row (16 jobs, 23 visits, 1,089.5 sq ft) in both
+runs and in all three subset runs; in this full run the answerer wrote
+"16 jobs … 23 install visits … 7 required a second visit" and left the sq
+ft out. The answer model still samples at its default temperature, so
+that stage is the remaining run-to-run variance in the generation score;
+it is out of scope here (the work order leaves the answer model
+untouched) and is the obvious next one-line experiment. Incorrect set:
+Q11, Q16, Q28, Q30, Q31, Q39, Q41–45, Q47–49, Q51, Q52, Q54, Q56, Q57,
+Q59–61, Q68.
+
+## Surprises (addendum)
+
+1. **The blind spot was already closed by the 2026-09-10 timers** — the
+   gap is 0.8 s. WO9's "9 minutes unaccounted for" was entirely router +
+   judge.
+2. **temperature=0 froze the outcome, not the bytes.** 4/53 SQL texts and
+   3/53 row sets still varied, all cosmetically. Anyone building a
+   byte-level SQL cache on the assumption of determinism should not.
+3. **The residual nondeterminism moved to the answerer.** Q68 flipped on
+   answer phrasing with identical SQL rows. SQL determinism is done;
+   answer determinism is the next lever, and it is the same one-line
+   change.
+4. **Q26 is unscorable without the judge** (no number in the key). Any
+   judge-free structured run will list it as failing; it is not.
+5. **A single sampling run did not reproduce Q65 = 125.9.** The
+   double-count is a minority draw; WO9 hit it 1-in-4.
+
+## Cost (addendum)
+
+4 subset runs × $0.43 + full run $1.06 → **$2.78** this session;
+**$4.24** for WO10 overall (over the $3 target, under the $5 stop line).
+The overrun is the Sep 10 measurement that this addendum redoes.
+
+## Housekeeping
+
+Four `while true … pgrep -f run_eval.py` monitor loops from the WO8/WO9
+sessions are still running on the server (PIDs 1558705, 1558976,
+1562126, 1563413). Their `pgrep -f run_eval.py` matches their own command
+line, so they never see the eval exit. They are idle `sleep` loops and
+harmless, but they should be killed: `kill 1558705 1558976 1562126
+1563413`. Not done here — the session's permission mode declined a kill
+on the server.
