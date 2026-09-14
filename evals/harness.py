@@ -215,6 +215,7 @@ def judge_answer(row, record, chunk_rows, judge_model):
             messages=[{"role": "user", "content": prompt}])
         cost += cost_of(judge_model, resp.usage)
         record["latency"]["judge"] = time.perf_counter() - t0
+        record["judge_calls"] = attempt + 1  # one call scores all metrics
         text = next((b.text for b in resp.content if b.type == "text"), "")
         if text:
             try:
