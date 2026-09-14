@@ -1,6 +1,6 @@
-# Eval run 2026-09-14 08:24:48
+# Eval run 2026-09-14 09:15:46
 
-commit `ff101ab` · answer=claude-haiku-4-5 · sql=claude-haiku-4-5 · judge=claude-sonnet-5 · rerank=voyage
+commit `446c30e` · answer=claude-haiku-4-5 · sql=claude-haiku-4-5 · judge=claude-sonnet-5 · rerank=voyage
 
 ## Tier 1 — routing
 
@@ -18,35 +18,35 @@ refuse                           0           0           0           3
 
 | lane | R@5 | R@10 | R@20 | MRR | NDCG@10 |
 |---|---|---|---|---|---|
-| bm25 | 0.087 | 0.130 | 0.174 | 0.102 | 0.101 |
-| dense | 0.293 | 0.293 | 0.478 | 0.232 | 0.226 |
-| fused | 0.217 | 0.370 | 0.467 | 0.165 | 0.207 |
-| reranked | 0.446 | 0.522 | 0.609 | 0.441 | 0.454 |
+| bm25 | 0.091 | 0.091 | 0.182 | 0.111 | 0.091 |
+| dense | 0.280 | 0.280 | 0.576 | 0.326 | 0.273 |
+| fused | 0.273 | 0.500 | 0.644 | 0.196 | 0.256 |
+| reranked | 0.674 | 0.818 | 0.909 | 0.660 | 0.691 |
 
 ## Tier 3 — generation
 
-- correct: **59/82 (72.0%)**
-- faithfulness: 91.1%
-- context precision: 56.2%
+- correct: **74/82 (90.2%)**
+- faithfulness: 89.9%
+- context precision: 59.0%
 - generator: claude-haiku-4-5 · judge: claude-sonnet-5 (never the same model)
-- tier-3 cost: $0.98
+- tier-3 cost: $1.04
 
 ## Stage timing (whole run)
 
 ```
 stage        seconds   % wall  calls
-router         116.4    15.8%     82
-embed            0.5     0.1%      1
-bm25             0.8     0.1%     26
-dense            0.8     0.1%     26
-rerank           5.3     0.7%     26
-sql             92.3    12.5%     59
-answer         127.3    17.3%     79
-judge          392.8    53.3%     79
-sum            736.2    99.9%
-wall           737.0   100.0%
-gap              0.8     0.1%
+router         113.4    41.8%     82
+embed            3.2     1.2%      1
+bm25             0.8     0.3%     26
+dense            0.9     0.3%     26
+rerank           5.3     1.9%     26
+sql             91.3    33.7%     59
+answer         125.9    46.4%     79
+judge          372.5   137.4%     79
+sum            713.3   263.0%
+wall           271.2   100.0%
+gap           -442.1  -163.0%
 ```
 
-Known-FAILING: Q28 still failing, Q30 still failing
-New failures (verified rows): Q16, Q68
+Known-FAILING: 
+New failures (verified rows): Q26, Q45, Q47, Q49
