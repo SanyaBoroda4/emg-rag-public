@@ -3,7 +3,7 @@
 
 > Purpose of this file: bring a brand-new collaborator (human or AI chat with no
 > prior context) fully up to speed. Last updated: 2026-09-14, after WO11 (golden re-key, quoted-jobs definition)
-> (SQL determinism, eval latency, WO9 follow-ups). Read `CLAUDE.md` first for the hard operating
+> with the 4,236 vs 4,415 quoted-jobs decision pending. Read `CLAUDE.md` first for the hard operating
 > rules; this file is the story and the current state.
 
 ## What this project is
