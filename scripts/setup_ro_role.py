@@ -20,7 +20,7 @@ from ingest.db import get_conn
 
 VIEWS = ["v_jobs", "v_job_areas", "v_invoices", "v_job_invoices",
          "v_activities", "v_job_sqft", "v_job_pipeline_status",
-         "v_quote_conversion_monthly",
+         "v_quote_conversion_monthly", "v_quoted_jobs",
          "v_wasted_templates", "v_wasted_templates_by_pm"]
 
 
