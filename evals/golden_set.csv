@@ -14,7 +14,7 @@ id,question,route,expected_answer,relevant_ids,source_of_truth,difficulty,status
 13,How many areas have no material recorded?,structured,1885,,same query,medium,verified,
 14,What is our most common activity type?,structured,"Install, 7758",,SQL: count activities by type,easy,verified,
 15,How many Repair activities are there?,structured,846,,same query,easy,verified,
-16,How many quotes have we issued in total?,structured,5315,,same query,easy,verified,FIXED in WO7 — router now treats 'quotes' as the activity type. Passed in Aug 9 and Aug 14 runs.
+16,How many quotes have we issued in total?,structured,4236,,"SELECT COUNT(*) FROM v_quoted_jobs (sql/016): a job is quoted when it has a Quote, Measure or Template activity with status Confirmed / Complete / Paid in Full and Finished / In Progress, dated or not (Estimate never counts). 2,680 via Quote + 1,556 via Measure/Template proxy = 4,236; psql 2026-09-14",easy,verified,"Job-level: one job with several quote activities is one quoted job. Definition locked by Alex 2026-09-14 (WO11). Old key 5315 counted Quote activity rows. NOTE: v_job_pipeline_status.is_quoted says 4,415 (dated signals incl. Estimates) — unreconciled, Alex's decision."
 17,Which area do we work in most?,structured,"West Ashley, 603 jobs",,city_normalized counts,medium,verified,post-WO5; was wrong before normalization
 18,How many jobs in Johns Island?,structured,421,,city_normalized,easy,verified,
 19,How many jobs in Mount Pleasant?,structured,516,,city_normalized,hard,verified,~30 raw spellings collapse here — key normalization test
