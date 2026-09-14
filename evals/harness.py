@@ -29,7 +29,8 @@ import anthropic
 import voyageai
 
 from ingest.voyage_util import retry_voyage, EMBED_MODEL
-from retrieval.answer import ANSWER_MODEL, generate_answer, load_chunk_rows
+from retrieval.answer import (ANSWER_MODEL, _format_chunks, generate_answer,
+                              load_chunk_rows)
 from retrieval.dense import dense_search_vec
 from retrieval.fuse import rrf_fuse
 from retrieval.keyword import keyword_search
@@ -195,9 +196,12 @@ def judge_answer(row, record, chunk_rows, judge_model):
         ev.append(f"SQL executed:\n{record['sql']}\n"
                   f"columns: {record.get('sql_columns')}\n"
                   f"rows:\n{rows_disp}{more}")
-    for cid, jid, jname, ctx, raw, is_bot in chunk_rows:
-        tag = " [AUTOMATED SYSTEM RECORD]" if is_bot else ""
-        ev.append(f"[chunk {cid}, job {jid}]{tag}\n{ctx}\n{raw[:400]}")
+    # WO11 (Q42): the judge must see EXACTLY the chunk text the answerer
+    # saw — same header (job name included: Moraware job names carry street
+    # addresses, and the judge called those "fabricated"), full note (the
+    # 400-char cut hid evidence the answerer had).
+    if chunk_rows:
+        ev.append(_format_chunks(chunk_rows))
     prompt = (f"Question: {row['question']}\n\n"
               f"Expected answer (ground truth): {row['expected_answer']}\n\n"
               f"Evidence retrieved:\n\n" + ("\n\n".join(ev) or "(none)") +
