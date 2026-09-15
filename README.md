@@ -59,6 +59,61 @@ latency are recorded per question; the Sonnet judge is the dominant stage.
 Router and text-to-SQL both run at temperature 0 so run-to-run movement is
 signal, not sampling noise.
 
+## Observability (Langfuse)
+
+Every question — ad-hoc through `scripts/query.py` or golden through
+`evals/run_eval.py` — is recorded end to end in Langfuse Cloud (US region,
+free Hobby tier). Nothing changes without credentials: `retrieval/tracing.py`
+is a no-op when `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` are absent, and
+every SDK call is wrapped so a Langfuse outage degrades to "no tracing",
+never to a failed query. The base URL comes from `LANGFUSE_BASE_URL` in
+`.env` and is passed explicitly.
+
+**Trace vs span, plainly.** A *trace* is one question, start to finish, named
+after its entry point (`query_cli` or `eval_run`). A *span* (Langfuse calls
+it an observation) is one stage inside that question. Model calls are a
+special span type, a *generation*, which carries the model name, token
+counts and cost. A *score* is a number attached to a trace afterwards — the
+eval's verdicts.
+
+**What is traced, per question:**
+
+| span | what it records |
+|---|---|
+| `router` | question → route + one-line reason; model, tokens, cost |
+| `bm25`, `dense`, `fuse`, `rerank` | query, chunk ids in rank order, RRF scores, rerank scores, backend |
+| `embed_query` | the Voyage query embedding (CLI path; the eval embeds all questions in one batch) |
+| `sql_generate`, `sql_repair` | the generated SQL; model, tokens, cost |
+| `sql_validate` | whitelist/parse result — a rejected query is a failed span with the validator's message |
+| `sql_execute` | columns, row count, first rows — **a Postgres error is a failed span with the error text** |
+| `answer` | chunk ids and SQL passed in, the answer, model, tokens, cost |
+| `judge` | eval only: the verdict JSON, model, tokens, cost |
+
+Trace metadata (filterable): entry point, git commit, model names, rerank
+backend, `route_expected` / `route_predicted`, and for eval runs the golden
+`question_id` and `status`. An eval run is one *session* named
+`eval-YYYYMMDD-HHMM-<sha>` (also a tag), and each of its 82 traces carries
+scores `correct` (0/1, judge reason as the comment), `faithfulness`,
+`context_precision`, `retrieval_recall_at_10` (rows with gold chunk ids) and
+`sql_error` when the lane raised. The one question the tiers share is one
+trace: its router call (tier 1), retrieval (tier 2) and generation + judge
+(tier 3) appear as three root spans under the same trace id.
+
+**How to read a trace.** Open Tracing → Traces, filter by tag (`cli`,
+`eval`, or the run's session id) or by score (`correct = 0` for every failure
+in a run). A structured question reads top to bottom as
+`router 1.6 s → sql_generate 0.8 s → sql_validate → sql_execute 0.02 s
+(516 rows) → answer 0.7 s`, each generation with its own cost; a semantic one
+shows `bm25 → embed_query → dense → fuse → rerank → answer` with the chunk
+ids at every step. A failed stage is red with its message — e.g.
+`sql_execute · ERROR · UndefinedColumn: column "salesperson" does not exist`,
+which is exactly how Q26's WO11 bug looks.
+
+**Retention.** The free tier keeps 30 days. Anything worth keeping (a
+baseline run, a failure worth citing) must be exported — the eval's own JSON
+under `evals/results/` is the durable record; Langfuse is for looking, not
+archiving.
+
 ## Known outstanding work
 
 - **`job_areas.material_name` needs a parser, not a mapping table**: 3,671
