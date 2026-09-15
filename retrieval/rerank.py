@@ -23,6 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from dotenv import load_dotenv
 
+from retrieval.tracing import span
+
 load_dotenv()
 
 RERANK_ENABLED = os.environ.get("RERANK_ENABLED", "1") == "1"
@@ -68,7 +70,20 @@ def rerank(cur, query: str, candidates: list, n: int = 6):
         return []
     if not RERANK_ENABLED:
         return candidates[:n]
+    with span("rerank", as_type="retriever", input={
+                  "query": query,
+                  "candidates_in": [c["chunk_id"] for c in candidates]},
+              metadata={"backend": RERANK_BACKEND,
+                        "model": VOYAGE_MODEL if RERANK_BACKEND == "voyage"
+                        else LOCAL_MODEL, "n": n}) as s:
+        ranked = _rerank(cur, query, candidates, n)
+        s.update(output=[{"chunk_id": c["chunk_id"],
+                          "rerank_score": round(c.get("rerank_score", 0.0), 4)}
+                         for c in ranked])
+    return ranked
 
+
+def _rerank(cur, query, candidates, n):
     ids = [c["chunk_id"] for c in candidates]
     cur.execute(
         "SELECT chunk_id, coalesce(context_text, '') || E'\\n' || raw_text "

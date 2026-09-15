@@ -8,19 +8,38 @@ phrases); if that returns nothing, retry with OR semantics so partial matches
 still surface. Ranked by ts_rank_cd.
 """
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from retrieval.tracing import span
+
 
 def keyword_search(cur, query: str, n: int = 50, job_ids=None):
     """Return [(chunk_id, rank_position)] for the top-N keyword matches.
 
     job_ids: optional list restricting the search (used by the hybrid route).
     """
+    with span("bm25", as_type="retriever", input=query,
+              metadata={"n": n, "job_filter": None if job_ids is None
+                        else len(job_ids)}) as s:
+        ranked = _keyword_search(cur, query, n, job_ids)
+        s.update(output={"attempt": "and" if ranked and ranked[0][2] == 0
+                         else "or" if ranked else "none",
+                         "chunk_ids": [cid for cid, _, _ in ranked]})
+    return [(cid, rank) for cid, rank, _ in ranked]
+
+
+def _keyword_search(cur, query, n, job_ids):
+    """Returns [(chunk_id, rank, attempt_index)]."""
     terms = [t for t in query.split() if t.strip()]
     if not terms:
         return []
     attempts = [query, " OR ".join(terms)] if len(terms) > 1 else [query]
 
     job_filter = "AND c.job_id = ANY(%s)" if job_ids is not None else ""
-    for attempt in attempts:
+    for k, attempt in enumerate(attempts):
         params = [attempt]
         if job_ids is not None:
             params.append(list(job_ids))
@@ -35,5 +54,5 @@ def keyword_search(cur, query: str, n: int = 50, job_ids=None):
         """, params)
         rows = cur.fetchall()
         if rows:
-            return [(cid, i + 1) for i, (cid,) in enumerate(rows)]
+            return [(cid, i + 1, k) for i, (cid,) in enumerate(rows)]
     return []

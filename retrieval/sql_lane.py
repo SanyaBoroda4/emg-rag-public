@@ -28,6 +28,8 @@ from dotenv import load_dotenv
 from sqlglot import exp
 
 from ingest.db import get_ro_conn
+from retrieval.pricing import cost_of
+from retrieval.tracing import generation, span
 
 load_dotenv()
 
@@ -175,21 +177,27 @@ def generate_sql(question: str, hybrid: bool = False, model: str = None):
         prompt += ("\n\n(Return the matching jobs: the SELECT must include "
                    "the job_id column so results can key a second retrieval "
                    "stage.)")
-    resp = client.messages.create(
-        model=model or SQL_MODEL, max_tokens=2500,
-        # temperature=0 (WO10): with the same prompt Q65 alternated between
-        # the correct two-CTE per-visit query (58.6) and a per-visit-row join
-        # (125.9) across four runs. Text-to-SQL wants the argmax, not a
-        # sample — same reasoning as the router in WO8.
-        temperature=0,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}])
-    sql = next((b.text for b in resp.content if b.type == "text"), "").strip()
-    if sql.startswith("```"):
-        sql = sql.strip("`")
-        if sql.lower().startswith("sql"):
-            sql = sql[3:]
-        sql = sql.strip()
+    use_model = model or SQL_MODEL
+    with generation("sql_generate", model=use_model, input=prompt,
+                    metadata={"temperature": 0, "hybrid": hybrid}) as g:
+        resp = client.messages.create(
+            model=use_model, max_tokens=2500,
+            # temperature=0 (WO10): with the same prompt Q65 alternated
+            # between the correct two-CTE per-visit query (58.6) and a
+            # per-visit-row join (125.9) across four runs. Text-to-SQL wants
+            # the argmax, not a sample — same reasoning as the router in WO8.
+            temperature=0,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}])
+        sql = next((b.text for b in resp.content if b.type == "text"),
+                   "").strip()
+        if sql.startswith("```"):
+            sql = sql.strip("`")
+            if sql.lower().startswith("sql"):
+                sql = sql[3:]
+            sql = sql.strip()
+        g.update(output=sql, usage=resp.usage,
+                 cost=cost_of(use_model, resp.usage))
     return sql, resp.usage
 
 
@@ -239,8 +247,9 @@ def execute_sql(sql: str):
     becomes a confidently wrong total ("200 jobs" when 246 match; WO7 Q29).
     Falls back to len(rows) if the count query fails or times out.
     """
-    with get_ro_conn() as conn, conn.cursor() as cur:
-        cur.execute(sql)
+    with span("sql_execute", input=sql, metadata={"role": "rag_reader"}) as s, \
+            get_ro_conn() as conn, conn.cursor() as cur:
+        cur.execute(sql)  # a Postgres error propagates: the span records it
         columns = [d.name for d in cur.description]
         rows = cur.fetchall()
         total_count = len(rows)
@@ -254,6 +263,9 @@ def execute_sql(sql: str):
                 total_count = cur.fetchone()[0]
         except Exception:
             pass  # keep the fallback; never fail the lane over the count
+        s.update(output={"columns": columns, "row_count": total_count,
+                         "rows_shown": len(rows),
+                         "first_rows": [str(tuple(r)) for r in rows[:5]]})
     return columns, rows, total_count
 
 
@@ -264,22 +276,30 @@ def repair_sql(question: str, bad_sql: str, error: str, hybrid: bool,
     prompt = question
     if hybrid:
         prompt += "\n\n(The SELECT must include the job_id column.)"
-    resp = client.messages.create(
-        model=model or SQL_MODEL, max_tokens=1000, temperature=0,
-        system=SYSTEM_PROMPT,
-        messages=[
-            {"role": "user", "content": prompt},
-            {"role": "assistant", "content": bad_sql},
-            {"role": "user", "content":
-             f"That SQL was rejected: {error}\nRewrite it. Same rules — "
-             f"output only the corrected SQL."},
-        ])
-    sql = next((b.text for b in resp.content if b.type == "text"), "").strip()
-    if sql.startswith("```"):
-        sql = sql.strip("`")
-        if sql.lower().startswith("sql"):
-            sql = sql[3:]
-        sql = sql.strip()
+    use_model = model or SQL_MODEL
+    with generation("sql_repair", model=use_model,
+                    input={"question": prompt, "rejected_sql": bad_sql,
+                           "validator_error": error},
+                    metadata={"temperature": 0}) as g:
+        resp = client.messages.create(
+            model=use_model, max_tokens=1000, temperature=0,
+            system=SYSTEM_PROMPT,
+            messages=[
+                {"role": "user", "content": prompt},
+                {"role": "assistant", "content": bad_sql},
+                {"role": "user", "content":
+                 f"That SQL was rejected: {error}\nRewrite it. Same rules — "
+                 f"output only the corrected SQL."},
+            ])
+        sql = next((b.text for b in resp.content if b.type == "text"),
+                   "").strip()
+        if sql.startswith("```"):
+            sql = sql.strip("`")
+            if sql.lower().startswith("sql"):
+                sql = sql[3:]
+            sql = sql.strip()
+        g.update(output=sql, usage=resp.usage,
+                 cost=cost_of(use_model, resp.usage))
     return sql, resp.usage
 
 
@@ -293,12 +313,17 @@ def run_structured(question: str, hybrid: bool = False,
     raw_sql, usage = generate_sql(question, hybrid=hybrid, model=model)
     usages = [usage]
     try:
-        safe_sql = validate_sql(raw_sql)
+        with span("sql_validate", input=raw_sql) as s:
+            safe_sql = validate_sql(raw_sql)  # ValueError -> span ERROR
+            s.update(output=safe_sql)
     except ValueError as e:
         raw_sql, usage2 = repair_sql(question, raw_sql, str(e), hybrid,
                                      model=model)
         usages.append(usage2)
-        safe_sql = validate_sql(raw_sql)  # second failure propagates
+        with span("sql_validate", input=raw_sql,
+                  metadata={"attempt": "after repair"}) as s:
+            safe_sql = validate_sql(raw_sql)  # second failure propagates
+            s.update(output=safe_sql)
     columns, rows, total_count = execute_sql(safe_sql)
     return {"sql": safe_sql, "columns": columns, "rows": rows,
             "row_count": total_count, "rows_shown": len(rows),

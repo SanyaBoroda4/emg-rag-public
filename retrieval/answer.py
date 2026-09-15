@@ -23,6 +23,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import anthropic
 from dotenv import load_dotenv
 
+from retrieval.pricing import cost_of
+from retrieval.tracing import generation
+
 load_dotenv()
 
 ANSWER_MODEL = os.environ.get("ANSWER_MODEL", "claude-haiku-4-5")
@@ -90,10 +93,21 @@ def generate_answer(question: str, chunk_rows=None, sql_result=None,
         evidence.append("(no evidence was retrieved)")
 
     client = anthropic.Anthropic()
-    resp = client.messages.create(
-        model=model or ANSWER_MODEL, max_tokens=2000,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content":
-                   f"Question: {question}\n\n" + "\n\n---\n\n".join(evidence)}])
-    text = next((b.text for b in resp.content if b.type == "text"), "")
+    use_model = model or ANSWER_MODEL
+    with generation("answer", model=use_model, input={
+                        "question": question,
+                        "chunk_ids": [r[0] for r in (chunk_rows or [])],
+                        "sql": sql_result["sql"] if sql_result else None,
+                        "sql_row_count": sql_result["row_count"]
+                        if sql_result else None},
+                    metadata={"max_tokens": 2000}) as g:
+        resp = client.messages.create(
+            model=use_model, max_tokens=2000,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content":
+                       f"Question: {question}\n\n"
+                       + "\n\n---\n\n".join(evidence)}])
+        text = next((b.text for b in resp.content if b.type == "text"), "")
+        g.update(output=text, usage=resp.usage,
+                 cost=cost_of(use_model, resp.usage))
     return text, resp.usage

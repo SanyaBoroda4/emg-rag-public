@@ -13,7 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import voyageai
 
-from ingest.voyage_util import embed_texts
+from ingest.voyage_util import EMBED_MODEL, embed_texts
+from retrieval.tracing import span
 
 _vo = None
 
@@ -27,18 +28,35 @@ def _client():
 
 def embed_query(query: str):
     """1024-dim query embedding, with shared backoff (interactive: 2 min cap)."""
-    result = embed_texts(_client(), [query], input_type="query", max_wait=120)
+    with span("embed_query", as_type="embedding", input=query,
+              metadata={"model": EMBED_MODEL}) as s:
+        result = embed_texts(_client(), [query], input_type="query",
+                             max_wait=120)
+        try:
+            s.update(usage={"input": int(result.total_tokens)})
+        except Exception:
+            pass
     return result.embeddings[0]
 
 
 def dense_search(cur, query: str, n: int = 50, job_ids=None):
     """Return [(chunk_id, rank_position)] for the top-N nearest chunks."""
-    return dense_search_vec(cur, embed_query(query), n=n, job_ids=job_ids)
+    return dense_search_vec(cur, embed_query(query), n=n, job_ids=job_ids,
+                            query=query)
 
 
-def dense_search_vec(cur, qvec, n: int = 50, job_ids=None):
+def dense_search_vec(cur, qvec, n: int = 50, job_ids=None, query=None):
     """Same as dense_search but with a precomputed query vector — the eval
     harness embeds all golden questions in ONE Voyage call (rate limits)."""
+    with span("dense", as_type="retriever", input=query,
+              metadata={"n": n, "job_filter": None if job_ids is None
+                        else len(job_ids), "index": "exact scan"}) as s:
+        ranked = _dense_search_vec(cur, qvec, n, job_ids)
+        s.update(output={"chunk_ids": [cid for cid, _ in ranked]})
+    return ranked
+
+
+def _dense_search_vec(cur, qvec, n, job_ids):
     qstr = "[" + ",".join(f"{x:.8f}" for x in qvec) + "]"
     job_filter = "WHERE c.job_id = ANY(%s)" if job_ids is not None else ""
     params = ([list(job_ids)] if job_ids is not None else []) + [qstr, n]

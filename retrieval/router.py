@@ -18,6 +18,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import anthropic
 from dotenv import load_dotenv
 
+from retrieval.pricing import cost_of
+from retrieval.tracing import generation
+
 load_dotenv()
 
 ROUTER_MODEL = os.environ.get("ROUTER_MODEL", "claude-haiku-4-5")
@@ -51,20 +54,26 @@ SCHEMA = {
 def route_query(question: str):
     """Returns ({"route": ..., "reason": ...}, usage)."""
     client = anthropic.Anthropic()
-    resp = client.messages.create(
-        model=ROUTER_MODEL, max_tokens=200,
-        # temperature=0: across six identical-config eval runs the router
-        # spanned 92.1-96.8% routing accuracy with zero router changes —
-        # sampling noise at n=63 that kept polluting WO before/after
-        # comparisons. Classification wants the argmax, not a sample.
-        temperature=0,
-        system=SYSTEM_PROMPT,
-        output_config={"format": {"type": "json_schema", "schema": SCHEMA}},
-        messages=[{"role": "user", "content": question}])
-    text = next((b.text for b in resp.content if b.type == "text"), "")
-    try:
-        return json.loads(text), resp.usage
-    except json.JSONDecodeError:
-        return {"route": "semantic",
-                "reason": "router returned no parseable output — "
-                          "defaulting to semantic"}, resp.usage
+    with generation("router", model=ROUTER_MODEL, input=question,
+                    metadata={"temperature": 0}) as g:
+        resp = client.messages.create(
+            model=ROUTER_MODEL, max_tokens=200,
+            # temperature=0: across six identical-config eval runs the router
+            # spanned 92.1-96.8% routing accuracy with zero router changes —
+            # sampling noise at n=63 that kept polluting WO before/after
+            # comparisons. Classification wants the argmax, not a sample.
+            temperature=0,
+            system=SYSTEM_PROMPT,
+            output_config={"format": {"type": "json_schema",
+                                      "schema": SCHEMA}},
+            messages=[{"role": "user", "content": question}])
+        text = next((b.text for b in resp.content if b.type == "text"), "")
+        try:
+            decision = json.loads(text)
+        except json.JSONDecodeError:
+            decision = {"route": "semantic",
+                        "reason": "router returned no parseable output — "
+                                  "defaulting to semantic"}
+        g.update(output=decision, usage=resp.usage,
+                 cost=cost_of(ROUTER_MODEL, resp.usage))
+    return decision, resp.usage

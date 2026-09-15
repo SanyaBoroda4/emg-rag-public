@@ -37,16 +37,10 @@ from retrieval.keyword import keyword_search
 from retrieval.rerank import rerank
 from retrieval.router import route_query
 from retrieval.sql_lane import SQL_MODEL, run_structured
+from retrieval.pricing import PRICES, cost_of  # noqa: F401 (one price table)
+from retrieval.tracing import generation
 
 GOLDEN_CSV = Path(__file__).resolve().parent / "golden_set.csv"
-
-# $/MTok (in, out). Sonnet 5 at intro pricing through 2026-08-31.
-PRICES = {"claude-haiku-4-5": (1.0, 5.0), "claude-sonnet-5": (2.0, 10.0)}
-
-
-def cost_of(model, usage):
-    inp, out = PRICES.get(model, (0, 0))
-    return (usage.input_tokens * inp + usage.output_tokens * out) / 1e6
 
 
 def judge_model_for(answer_model: str) -> str:
@@ -215,20 +209,38 @@ def judge_answer(row, record, chunk_rows, judge_model):
     t0 = time.perf_counter()
     record.setdefault("latency", {})
     for attempt in range(2):
-        resp = client.messages.create(
-            model=judge_model, max_tokens=4000, system=JUDGE_SYSTEM,
-            output_config={"format": {"type": "json_schema",
-                                      "schema": JUDGE_SCHEMA}},
-            messages=[{"role": "user", "content": prompt}])
-        cost += cost_of(judge_model, resp.usage)
-        record["latency"]["judge"] = time.perf_counter() - t0
-        record["judge_calls"] = attempt + 1  # one call scores all metrics
-        text = next((b.text for b in resp.content if b.type == "text"), "")
-        if text:
-            try:
-                return json.loads(text), cost
-            except json.JSONDecodeError:
-                pass
+        with generation("judge", model=judge_model,
+                        input={"question": row["question"],
+                               "expected": row["expected_answer"],
+                               "answer": record["answer"],
+                               "chunk_ids": [r[0] for r in chunk_rows],
+                               "sql": record.get("sql")},
+                        metadata={"attempt": attempt + 1,
+                                  "max_tokens": 4000}) as g:
+            resp = client.messages.create(
+                model=judge_model, max_tokens=4000, system=JUDGE_SYSTEM,
+                output_config={"format": {"type": "json_schema",
+                                          "schema": JUDGE_SCHEMA}},
+                messages=[{"role": "user", "content": prompt}])
+            call_cost = cost_of(judge_model, resp.usage)
+            cost += call_cost
+            record["latency"]["judge"] = time.perf_counter() - t0
+            record["judge_calls"] = attempt + 1  # one call scores all metrics
+            text = next((b.text for b in resp.content if b.type == "text"),
+                        "")
+            verdict = None
+            if text:
+                try:
+                    verdict = json.loads(text)
+                except json.JSONDecodeError:
+                    verdict = None
+            g.update(output=verdict if verdict is not None
+                     else {"unparseable": text[:200],
+                           "stop_reason": resp.stop_reason},
+                     usage=resp.usage, cost=call_cost,
+                     level=None if verdict is not None else "WARNING")
+        if verdict is not None:
+            return verdict, cost
     return {"faithful": None, "correct": None, "useful_chunk_ids": [],
             "declined": False,
             "reason": f"judge returned no parseable verdict "
