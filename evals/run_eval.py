@@ -32,16 +32,43 @@ from evals.harness import (ANSWER_MODEL, embed_questions, judge_answer,
                            judge_model_for, load_chunk_rows, load_golden,
                            run_generation, run_metadata, run_retrieval,
                            run_router)
+from retrieval import tracing
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 LANES = ["bm25", "dense", "fused", "reranked"]
+
+# Langfuse run context (WO12): one deterministic trace id per question so
+# the tier-1 router call, tier-2 retrieval and tier-3 generation of the same
+# question land in ONE trace; the run id is the trace's session_id and a
+# tag, so a whole eval is one filterable group in the dashboard.
+RUN = {"id": None, "meta": {}}
+
+
+def qtrace(row, tier):
+    m = RUN["meta"]
+    return tracing.trace(
+        "eval_run", trace_id=row.get("_trace_id"), session_id=RUN["id"],
+        tags=["eval", RUN["id"] or "no-run"], input=row["question"],
+        metadata={"question_id": row["id"], "status": row["status"],
+                  "route_expected": row["route"], "tier": tier,
+                  "git_sha": m.get("git_sha"),
+                  "answer_model": m.get("answer_model"),
+                  "sql_model": m.get("sql_model"),
+                  "router_model": m.get("router_model"),
+                  "rerank_backend": m.get("rerank_backend"),
+                  "run_id": RUN["id"]})
 
 
 def tier1(rows):
     print(f"\n=== Tier 1: routing ({len(rows)} questions) ===")
     total_cost = 0.0
     for row in rows:
-        predicted, reason, cost = run_router(row)
+        with qtrace(row, "tier1_router") as root:
+            predicted, reason, cost = run_router(row)
+            root.update(output={"route": predicted, "reason": reason},
+                        metadata={"route_predicted": predicted,
+                                  "route_expected": row["route"],
+                                  "routing_correct": predicted == row["route"]})
         row["_predicted_route"] = predicted
         row["_route_reason"] = reason
         total_cost += cost
@@ -58,7 +85,10 @@ def tier2(rows, cur, qvecs):
           f"gold chunk ids) ===")
     per_lane = {lane: [] for lane in LANES}
     for row in gold_rows:
-        ret = run_retrieval(cur, row["question"], qvecs[row["id"]])
+        with qtrace(row, "tier2_retrieval") as root:
+            ret = run_retrieval(cur, row["question"], qvecs[row["id"]])
+            root.update(output={"reranked_top10": ret["reranked"][:10],
+                                "gold_ids": row["gold_ids"]})
         row["_retrieval"] = ret
         row["_lane_metrics"] = {}
         for lane in LANES:
@@ -88,7 +118,7 @@ def _tier3_one(row, cur, qvecs, judge, answer_model, sql_model,
     numeric match only, semantic/hybrid rows are left unscored (correct=None).
     Used for cheap determinism runs of the structured subset (WO10)."""
     total_cost = 0.0
-    if True:  # body kept at loop depth for a minimal diff
+    with qtrace(row, "tier3_generation") as root:
         route = row.get("_predicted_route") or row["route"]
         ret = row.get("_retrieval")
         if ret is None and route in ("semantic", "hybrid"):
@@ -146,6 +176,22 @@ def _tier3_one(row, cur, qvecs, judge, answer_model, sql_model,
         rec["judge_reason"] = verdict.get("reason")
         rec["latency"]["router"] = row.get("_route_latency")
         row["_generation"] = rec
+        root.update(output=rec["answer"], metadata={
+            "route_predicted": route, "correct": rec["correct"],
+            "faithful": rec["faithful"], "sql_error": rec["sql_error"],
+            "cost_usd": round(total_cost, 5)})
+        root.set_trace_io(input=row["question"], output=rec["answer"])
+    # Scores attach to the question's trace (WO12 §4): the dashboard can
+    # then filter "every question that failed in run X" with the trace.
+    tid = row.get("_trace_id")
+    tracing.score(tid, "correct", rec["correct"],
+                  comment=(rec.get("judge_reason") or "")[:500] or None)
+    tracing.score(tid, "faithfulness", rec["faithful"])
+    tracing.score(tid, "context_precision", rec["context_precision"])
+    lm = (row.get("_lane_metrics") or {}).get("reranked") or {}
+    tracing.score(tid, "retrieval_recall_at_10", lm.get("recall@10"))
+    if rec["sql_error"]:
+        tracing.score(tid, "sql_error", 1.0, comment=rec["sql_error"][:500])
     return total_cost
 
 
@@ -208,12 +254,18 @@ STAGES = ("router", "embed", "bm25", "dense", "rerank", "sql", "answer",
           "judge")
 
 
-def stage_table(rows, embed_seconds, wall):
-    """Per-stage wall-clock totals for the whole run (WO10). Retrieval
-    stages are counted wherever they ran (tier 2 for gold rows, tier 3 for
-    the rest). The gap between the stage sum and the run's wall time is the
-    harness's remaining blind spot — meaningful at --workers 1 only, since
-    a thread pool overlaps stages and the sum then exceeds wall time."""
+def stage_table(rows, embed_seconds, wall, workers=1):
+    """Per-stage totals of call time for the whole run (WO10; corrected in
+    WO12). Retrieval stages are counted wherever they ran (tier 2 for gold
+    rows, tier 3 for the rest).
+
+    Shares are of WALL time only at --workers 1, where the stage sum vs wall
+    gap is the harness's untimed residual (0.8 s of 737 s on 2026-09-14).
+    With a thread pool the stages overlap, the sum exceeds wall time, and
+    the old table printed 263% and a negative gap — so at workers > 1 the
+    share column is each stage's share of the SUMMED call time and there is
+    no gap row. Langfuse records the same call boundaries per observation
+    (WO12); the two agree because they time the same `with` blocks."""
     tot = {k: 0.0 for k in STAGES}
     calls = {k: 0 for k in STAGES}
     if embed_seconds is not None:
@@ -238,18 +290,27 @@ def stage_table(rows, embed_seconds, wall):
                 tot["judge"] += lat["judge"]
                 calls["judge"] += gen.get("judge_calls") or 1
     total = sum(tot.values())
-    share = (lambda s: f"{s / wall:.1%}") if wall else (lambda s: "—")
-    lines = [f"{'stage':<10}{'seconds':>10}{'% wall':>9}{'calls':>7}"]
+    sequential = workers <= 1
+    base = wall if sequential else total
+    share = (lambda s: f"{s / base:.1%}") if base else (lambda s: "—")
+    col = "% wall" if sequential else "% of sum"
+    lines = [f"{'stage':<10}{'seconds':>10}{col:>9}{'calls':>7}"]
     for k in STAGES:
         lines.append(f"{k:<10}{tot[k]:>10.1f}{share(tot[k]):>9}"
                      f"{calls[k]:>7}")
-    lines += [f"{'sum':<10}{total:>10.1f}{share(total):>9}",
-              f"{'wall':<10}{wall:>10.1f}{share(wall):>9}",
-              f"{'gap':<10}{wall - total:>10.1f}{share(wall - total):>9}"]
+    lines.append(f"{'sum':<10}{total:>10.1f}{share(total):>9}")
+    if sequential:
+        lines += [f"{'wall':<10}{wall:>10.1f}{share(wall):>9}",
+                  f"{'gap':<10}{wall - total:>10.1f}"
+                  f"{share(wall - total):>9}"]
+    else:
+        lines.append(f"{'wall':<10}{wall:>10.1f}     (stages overlap "
+                     f"across {workers} workers; no gap row)")
     table = {"seconds": {k: round(v, 1) for k, v in tot.items()},
              "calls": calls, "sum_seconds": round(total, 1),
-             "wall_seconds": round(wall, 1),
-             "gap_seconds": round(wall - total, 1)}
+             "wall_seconds": round(wall, 1), "workers": workers,
+             "share_basis": "wall" if sequential else "sum",
+             "gap_seconds": round(wall - total, 1) if sequential else None}
     return table, "\n".join(lines)
 
 
@@ -390,39 +451,50 @@ def main() -> int:
                          "questions": len(rows), "workers": args.workers,
                          "route_filter": args.route,
                          "no_judge": args.no_judge})
+    # Langfuse: run id = session id + tag on every trace of this run
+    RUN["id"] = f"eval-{time.strftime('%Y%m%d-%H%M')}-{meta['git_sha']}"
+    RUN["meta"] = meta
+    meta["langfuse_run_id"] = RUN["id"] if tracing.enabled() else None
+    for row in rows:
+        row["_trace_id"] = tracing.new_trace_id(f"{RUN['id']}:Q{row['id']}")
     t_run = time.perf_counter()
     print(f"eval @ {meta['git_sha']} · {len(rows)} questions · "
-          f"tiers {sorted(tiers)}")
+          f"tiers {sorted(tiers)}"
+          + (f" · langfuse session {RUN['id']}" if tracing.enabled()
+             else " · langfuse off"))
 
     t1 = t2 = t3 = None
     failures = {}
     embed_seconds = None
-    if 1 in tiers:
-        t1 = tier1(rows)  # routing needs no database
-    if 2 in tiers or 3 in tiers:
-        t0 = time.perf_counter()
-        qvecs = embed_questions(rows)
-        embed_seconds = time.perf_counter() - t0
-        with get_conn() as conn, conn.cursor() as cur:
-            if 2 in tiers:
-                t2 = tier2(rows, cur, qvecs)
-            if 3 in tiers:
-                if t1 is None:
-                    t1 = tier1(rows)
-                t3 = tier3(rows, cur, qvecs, workers=args.workers,
-                           no_judge=args.no_judge)
-                failures = report_failures(rows)
+    try:
+        if 1 in tiers:
+            t1 = tier1(rows)  # routing needs no database
+        if 2 in tiers or 3 in tiers:
+            t0 = time.perf_counter()
+            qvecs = embed_questions(rows)
+            embed_seconds = time.perf_counter() - t0
+            with get_conn() as conn, conn.cursor() as cur:
+                if 2 in tiers:
+                    t2 = tier2(rows, cur, qvecs)
+                if 3 in tiers:
+                    if t1 is None:
+                        t1 = tier1(rows)
+                    t3 = tier3(rows, cur, qvecs, workers=args.workers,
+                               no_judge=args.no_judge)
+                    failures = report_failures(rows)
+    finally:
+        tracing.flush()  # never lose a run's traces to a crash or exit
 
     total = (t1["cost"] if t1 else 0) + (t3["cost"] if t3 else 0)
     meta["total_cost_usd"] = round(total, 4)
     meta["wall_seconds"] = round(time.perf_counter() - t_run, 1)
     print(f"\ntotal run cost: ${total:.4f}   wall: {meta['wall_seconds']:.0f}s")
     stages, stages_text = stage_table(rows, embed_seconds,
-                                      meta["wall_seconds"])
-    print("\n=== Stage timing (whole run; gap = untimed) ===")
+                                      meta["wall_seconds"], args.workers)
+    print("\n=== Stage timing (summed call time per stage"
+          + ("; gap = untimed) ===" if args.workers <= 1
+             else f"; {args.workers} workers overlap) ==="))
     print(stages_text)
-    if args.workers > 1:
-        print("(workers > 1: stages overlap, so the sum can exceed wall time)")
     write_reports(meta, rows, t1, t2, t3, failures, stages, stages_text)
 
     if args.check_baseline:
