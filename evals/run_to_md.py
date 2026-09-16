@@ -166,16 +166,21 @@ for q in gold_q:
       f"{s(lm.get('mrr'), 2)} | {q['route']} |")
 w("")
 
-w("## 5. Stage timing (whole run, sequential)")
+workers = st.get("workers") or m.get("workers") or 1
+sequential = workers <= 1
+w(f"## 5. Stage timing (summed call time per stage; "
+  f"{'sequential' if sequential else str(workers) + ' workers, stages overlap'})")
 w("")
-w("| stage | total seconds | % of wall | calls |")
-w("|---|---|---|---|")
 wall = st["wall_seconds"]
+base = wall if sequential else st["sum_seconds"]
+w(f"| stage | total seconds | {'% of wall' if sequential else '% of summed call time'} | calls |")
+w("|---|---|---|---|")
 for k, v in st["seconds"].items():
-    w(f"| {k} | {v} | {v / wall:.1%} | {st['calls'][k]} |")
-w(f"| **sum** | {st['sum_seconds']} | {st['sum_seconds'] / wall:.1%} | |")
-w(f"| **wall** | {wall} | 100% | |")
-w(f"| **gap (untimed)** | {st['gap_seconds']} | {st['gap_seconds'] / wall:.1%} | |")
+    w(f"| {k} | {v} | {v / base:.1%} | {st['calls'][k]} |")
+w(f"| **sum** | {st['sum_seconds']} | {st['sum_seconds'] / base:.1%} | |")
+w(f"| **wall** | {wall} | {'100%' if sequential else 'n/a (parallel)'} | |")
+if sequential and st.get("gap_seconds") is not None:
+    w(f"| **gap (untimed)** | {st['gap_seconds']} | {st['gap_seconds'] / wall:.1%} | |")
 w("")
 w("The judge is one Sonnet call per question that returns faithfulness, "
   "correctness and useful chunk ids in a single JSON verdict; it is timed as "
