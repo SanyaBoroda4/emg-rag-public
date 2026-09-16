@@ -292,3 +292,36 @@ reduce to three precise questions:
 
 One answer to question 1 settles 184 of the 189 jobs and decides which
 conversion rate is the company's number.
+
+---
+
+## Ruling and what was applied (2026-09-16)
+
+**Alex: "count as quoted."** — the 184 dated-Estimate jobs are quoted.
+
+Applied as `sql/019` (`v_quoted_jobs` v2): a job is quoted when it has a
+Quote/Measure/Template that is in an accepted status (dated or not — the
+WO11 wording kept, which answers question 2 "yes") **or is dated at all,
+whatever its status**. No as-of cutoff (the WO11 wording kept, which
+answers question 3 "yes, counted now").
+
+| | v1 (`sql/016`) | **v2 (`sql/019`)** | pipeline `is_quoted` |
+|---|---|---|---|
+| jobs | 4,236 | **4,423** | 4,415 |
+| via a Quote row | 2,680 | 2,864 | — |
+| via Measure/Template proxy only | 1,556 | 1,559 | — |
+| ∩ pipeline | 4,231 | **4,415 (all of it)** | — |
+| only here | 5 | 8 | 0 |
+
+The 8 jobs v2 counts that the pipeline does not are the as-of/date axes
+only: 4411, 4907 (undated Confirmed quotes); 5814, 5849, 5859 (Confirmed
+templates dated 2026-08-03); 5692, 5725, 5807 (Estimate-status
+measure/templates dated 2026-08-04…15). The pipeline will pick up the six
+dated ones when its as-of moves. Nothing the pipeline counts is missing
+from v2, so the two views are now one definition with one cutoff
+difference, not two definitions.
+
+**Conversion rates unchanged**: the ruling keeps dated Estimates in, which
+is what `v_job_pipeline_status` already did; 70.0% / 85.7% / 63.4% / 2023
+stand, and Q59–Q62 keep their keys. Q16's key moves 4,236 → **4,423**.
+Schema prompt updated to the v2 wording; `v_quoted_jobs` columns unchanged.

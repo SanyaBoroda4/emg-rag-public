@@ -43,7 +43,16 @@ Postgres view, exposed to the text-to-SQL lane as authoritative, and gated
 by a script that asserts hand-verified cases:
 
 - **Pipeline status / quote conversion** — `v_job_pipeline_status`,
-  `v_quote_conversion_monthly` (`sql/012`–`013`).
+  `v_quote_conversion_monthly` (`sql/012`–`013`, `017`).
+- **Quoted jobs** — `v_quoted_jobs` (`sql/019`, ruling 2026-09-16): a job is
+  quoted when it has a Quote, Measure or Template that is either in an
+  accepted status (Confirmed / Complete / Paid in Full and Finished /
+  In Progress, dated or not) or dated at all, whatever its status; only an
+  undated Estimate placeholder counts for nothing. 4,423 jobs on the
+  snapshot. The pipeline view's `is_quoted` (4,415) is the same signal
+  restricted to dates on or before the as-of — the conversion-cohort rule,
+  not a second definition; the 8-job gap is undated-Confirmed and
+  after-as-of rows. Diagnostic: `evals/results/wo15_quoted_jobs_diagnostic.md`.
 - **Wasted templates** — `v_wasted_templates`, `v_wasted_templates_by_pm`
   (`sql/014`): a template trip is wasted when another template followed it
   within 30 days with no install between (structural) or its note records
