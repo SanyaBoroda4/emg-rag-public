@@ -103,6 +103,12 @@ def generate_answer(question: str, chunk_rows=None, sql_result=None,
                     metadata={"max_tokens": 2000}) as g:
         resp = client.messages.create(
             model=use_model, max_tokens=2000,
+            # temperature=0 (WO13): with identical code the eval scored 76/82
+            # and 74/82 on consecutive runs — Q26/Q28/Q49/Q58 flipped on
+            # answer phrasing alone (identical SQL rows and chunks). Same fix
+            # as the router (WO8) and the SQL lane (WO10): a grounded answer
+            # wants the argmax, not a sample.
+            temperature=0,
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content":
                        f"Question: {question}\n\n"
