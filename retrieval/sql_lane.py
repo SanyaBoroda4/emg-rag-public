@@ -253,19 +253,30 @@ def execute_sql(sql: str):
         columns = [d.name for d in cur.description]
         rows = cur.fetchall()
         total_count = len(rows)
+        count_skipped = None
         try:
             tree = sqlglot.parse_one(sql, dialect="postgres")
             limited = tree.args.pop("limit", None)
             if limited is not None and len(rows) > 0:
-                count_sql = (f"SELECT COUNT(*) FROM "
-                             f"({tree.sql(dialect='postgres')}) AS _t")
-                cur.execute(count_sql)
-                total_count = cur.fetchone()[0]
+                # WO14: when fewer rows came back than the LIMIT allowed, the
+                # LIMIT did not truncate anything and len(rows) IS the true
+                # total — re-running the query for COUNT(*) doubled the cost
+                # of every one-row answer on v_wasted_templates (~0.3 s).
+                # At the cap (forced 200, or a model-written LIMIT 1 whose
+                # total is the group count) the count query runs as before.
+                lim = int(limited.expression.this)
+                count_skipped = len(rows) < lim
+                if not count_skipped:
+                    count_sql = (f"SELECT COUNT(*) FROM "
+                                 f"({tree.sql(dialect='postgres')}) AS _t")
+                    cur.execute(count_sql)
+                    total_count = cur.fetchone()[0]
         except Exception:
-            pass  # keep the fallback; never fail the lane over the count
+            count_skipped = None  # unknown limit shape: len(rows) fallback
         s.update(output={"columns": columns, "row_count": total_count,
                          "rows_shown": len(rows),
-                         "first_rows": [str(tuple(r)) for r in rows[:5]]})
+                         "first_rows": [str(tuple(r)) for r in rows[:5]]},
+                 metadata={"count_skipped": count_skipped})
     return columns, rows, total_count
 
 
