@@ -178,10 +178,59 @@ Score strictly:
 Respond with JSON only."""
 
 
+# WO14: number of independent judge calls per question; verdicts decided
+# by majority. Sonnet 5 rejects temperature/top_p (400 "deprecated for this
+# model"), so voting is the only determinism lever that keeps the judge's
+# model, prompt, evidence and thinking unchanged. 1 = the pre-WO14 judge.
+JUDGE_VOTES = int(os.environ.get("JUDGE_VOTES", "1"))
+
+
 def judge_answer(row, record, chunk_rows, judge_model):
-    """One judge call scoring faithfulness, correctness, context precision,
-    and refusal. Returns (verdict_dict, cost)."""
-    client = anthropic.Anthropic()
+    """Judge scoring faithfulness, correctness, context precision and
+    refusal. With JUDGE_VOTES > 1, that many independent calls are made
+    and correct / faithful / declined are each decided by majority;
+    useful_chunk_ids = ids named by a majority of votes; the reason is
+    taken from a vote on the winning side. Returns (verdict_dict, cost)."""
+    prompt = _judge_prompt(row, record, chunk_rows)
+    votes, cost = [], 0.0
+    record.setdefault("latency", {})
+    t0 = time.perf_counter()
+    record["judge_calls"] = 0
+    for _ in range(max(1, JUDGE_VOTES)):
+        v, c = _judge_once(prompt, row, record, chunk_rows, judge_model, t0)
+        cost += c
+        if v is not None:
+            votes.append(v)
+    if not votes:
+        return {"faithful": None, "correct": None, "useful_chunk_ids": [],
+                "declined": False,
+                "reason": "judge returned no parseable verdict"}, cost
+    if len(votes) == 1:
+        return votes[0], cost
+    n = len(votes)
+    maj = lambda key: sum(1 for v in votes if v.get(key)) * 2 > n
+    ids = {}
+    for v in votes:
+        for cid in v.get("useful_chunk_ids", []) or []:
+            ids[cid] = ids.get(cid, 0) + 1
+    verdict = {
+        "correct": maj("correct"), "faithful": maj("faithful"),
+        "declined": maj("declined"),
+        "useful_chunk_ids": sorted(c for c, k in ids.items() if k * 2 > n),
+        "unsupported_claims": sorted({cl for v in votes
+                                      for cl in v.get("unsupported_claims", [])
+                                      or []}),
+    }
+    side = [v for v in votes if bool(v.get("correct")) == verdict["correct"]]
+    verdict["reason"] = (f"[{sum(1 for v in votes if v.get('correct'))}/{n} "
+                         f"correct, {sum(1 for v in votes if v.get('faithful'))}"
+                         f"/{n} faithful] " + (side[0].get("reason") or ""))
+    record["judge_votes"] = [(bool(v.get("correct")), bool(v.get("faithful")))
+                             for v in votes]
+    return verdict, cost
+
+
+def _judge_prompt(row, record, chunk_rows):
     # The judge must see the same SQL evidence the generator saw — a row
     # COUNT alone made it brand row-derived claims as fabrications (WO7).
     ev = []
@@ -199,15 +248,21 @@ def judge_answer(row, record, chunk_rows, judge_model):
     # 400-char cut hid evidence the answerer had).
     if chunk_rows:
         ev.append(_format_chunks(chunk_rows))
-    prompt = (f"Question: {row['question']}\n\n"
-              f"Expected answer (ground truth): {row['expected_answer']}\n\n"
-              f"Evidence retrieved:\n\n" + ("\n\n".join(ev) or "(none)") +
-              f"\n\nSystem's answer:\n{record['answer']}")
+    return (f"Question: {row['question']}\n\n"
+            f"Expected answer (ground truth): {row['expected_answer']}\n\n"
+            f"Evidence retrieved:\n\n" + ("\n\n".join(ev) or "(none)") +
+            f"\n\nSystem's answer:\n{record['answer']}")
+
+
+def _judge_once(prompt, row, record, chunk_rows, judge_model, t0):
+    """One judge call (with one retry on an unparseable verdict). Model,
+    prompt, evidence, max_tokens and default adaptive thinking are exactly
+    the pre-WO14 judge; no temperature (Sonnet 5 rejects it).
+    Returns (verdict or None, cost)."""
+    client = anthropic.Anthropic()
     # max_tokens must cover adaptive thinking (Sonnet 5 thinks by default and
     # can consume a small budget entirely, leaving no text block).
     cost = 0.0
-    t0 = time.perf_counter()
-    record.setdefault("latency", {})
     for attempt in range(2):
         with generation("judge", model=judge_model,
                         input={"question": row["question"],
@@ -216,6 +271,7 @@ def judge_answer(row, record, chunk_rows, judge_model):
                                "chunk_ids": [r[0] for r in chunk_rows],
                                "sql": record.get("sql")},
                         metadata={"attempt": attempt + 1,
+                                  "vote": record.get("judge_calls", 0) + 1,
                                   "max_tokens": 4000}) as g:
             resp = client.messages.create(
                 model=judge_model, max_tokens=4000, system=JUDGE_SYSTEM,
@@ -225,7 +281,7 @@ def judge_answer(row, record, chunk_rows, judge_model):
             call_cost = cost_of(judge_model, resp.usage)
             cost += call_cost
             record["latency"]["judge"] = time.perf_counter() - t0
-            record["judge_calls"] = attempt + 1  # one call scores all metrics
+            record["judge_calls"] = record.get("judge_calls", 0) + 1
             text = next((b.text for b in resp.content if b.type == "text"),
                         "")
             verdict = None
@@ -241,10 +297,7 @@ def judge_answer(row, record, chunk_rows, judge_model):
                      level=None if verdict is not None else "WARNING")
         if verdict is not None:
             return verdict, cost
-    return {"faithful": None, "correct": None, "useful_chunk_ids": [],
-            "declined": False,
-            "reason": f"judge returned no parseable verdict "
-                      f"(stop_reason={resp.stop_reason})"}, cost
+    return None, cost
 
 
 def run_router(row):
