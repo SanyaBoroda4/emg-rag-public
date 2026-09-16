@@ -56,8 +56,17 @@ by a script that asserts hand-verified cases:
 `python evals/run_eval.py --workers 4` runs the full golden set (tiers 1–3)
 in about 5 minutes; `--workers 1` is the sequential path. Router and judge
 latency are recorded per question; the Sonnet judge is the dominant stage.
-Router and text-to-SQL both run at temperature 0 so run-to-run movement is
-signal, not sampling noise.
+Router, text-to-SQL and the answer model all run at temperature 0 so
+run-to-run movement in *what the system produces* is signal, not sampling
+noise. The one remaining source of variance is the Sonnet judge: Sonnet 5
+rejects `temperature`/`top_p` (400), and majority-of-3 voting
+(`JUDGE_VOTES=3`, available but **not** the default) still flipped a
+genuinely borderline row (Q30, 5 ✓ / 4 ✗ across nine independent verdicts).
+Measured floor: ±1–2 questions per run, on 2–4 semantic rows. Read a
+change as real when it moves the failing *set*, not the count.
+`python evals/rejudge.py <run.json> --passes 3 --out /tmp/rj` re-judges a
+saved run (judge cost only, ~$0.46/pass) to measure that floor without
+re-running the pipeline.
 
 ## Observability (Langfuse)
 

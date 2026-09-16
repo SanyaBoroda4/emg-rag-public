@@ -1,0 +1,3191 @@
+{
+ "meta": {
+  "git_sha": "d11ff85",
+  "answer_model": "claude-haiku-4-5",
+  "sql_model": "claude-haiku-4-5",
+  "router_model": "claude-haiku-4-5",
+  "rerank_backend": "voyage",
+  "rerank_enabled": "1",
+  "embed_model": "voyage-3.5-lite",
+  "timestamp": "2026-09-16 09:41:24",
+  "tiers": [
+   1,
+   3
+  ],
+  "questions": 53,
+  "workers": 4,
+  "route_filter": "structured",
+  "no_judge": true,
+  "langfuse_run_id": "eval-20260916-0941-d11ff85",
+  "total_cost_usd": 0.4628,
+  "wall_seconds": 109.8
+ },
+ "tier1": {
+  "accuracy": 1.0,
+  "matrix": {
+   "structured": {
+    "structured": 53,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 0
+   },
+   "semantic": {
+    "structured": 0,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 0
+   },
+   "hybrid": {
+    "structured": 0,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 0
+   },
+   "refuse": {
+    "structured": 0,
+    "semantic": 0,
+    "hybrid": 0,
+    "refuse": 0
+   }
+  },
+  "cost": 0.050667
+ },
+ "tier2": null,
+ "tier3": {
+  "correct": 51,
+  "total": 53,
+  "accuracy": 0.9622641509433962,
+  "faithfulness": null,
+  "context_precision": null,
+  "cost": 0.412149,
+  "judge_model": null,
+  "workers": 4,
+  "wall_seconds": 33.5,
+  "latency_totals": {
+   "router": 73.1,
+   "sql": 74.3,
+   "answer": 54.4,
+   "judge": 0
+  }
+ },
+ "stages": {
+  "seconds": {
+   "router": 73.1,
+   "embed": 0.4,
+   "bm25": 0.0,
+   "dense": 0.0,
+   "rerank": 0.0,
+   "sql": 74.3,
+   "answer": 54.4,
+   "judge": 0.0
+  },
+  "calls": {
+   "router": 53,
+   "embed": 1,
+   "bm25": 0,
+   "dense": 0,
+   "rerank": 0,
+   "sql": 53,
+   "answer": 53,
+   "judge": 0
+  },
+  "sum_seconds": 202.1,
+  "wall_seconds": 109.8,
+  "workers": 4,
+  "share_basis": "sum",
+  "gap_seconds": null
+ },
+ "failures": {
+  "new_failures": [],
+  "known_failing": {}
+ },
+ "questions": [
+  {
+   "id": "1",
+   "question": "How many jobs has Natalia Pavlenko sold?",
+   "route": "structured",
+   "expected_answer": "1198",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs by salesperson is a straightforward filter and count over the structured salesperson field.",
+   "route_latency": 1.297887665219605,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS jobs_sold FROM v_jobs WHERE salesperson = 'Natalia Pavlenko' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_sold"
+    ],
+    "sql_rows": [
+     [
+      1198
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Natalia Pavlenko has sold 1,198 jobs [SQL].",
+    "cost": 0.00694,
+    "latency": {
+     "sql": 0.7788923839107156,
+     "answer": 0.48075321689248085,
+     "router": 1.297887665219605
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "2",
+   "question": "Who is our top salesperson by job count?",
+   "route": "structured",
+   "expected_answer": "Natalia Pavlenko, 1198 jobs",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by counting jobs per salesperson and ranking; no free-text analysis needed.",
+   "route_latency": 1.5591836413368583,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT salesperson, COUNT(*) AS job_count FROM v_jobs WHERE salesperson <> '' AND salesperson IS NOT NULL GROUP BY salesperson ORDER BY job_count DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 11,
+    "sql_columns": [
+     "salesperson",
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      "Natalia Pavlenko",
+      1198
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Natalia Pavlenko** is the top salesperson by job count with **1,198 jobs** [SQL].",
+    "cost": 0.007149,
+    "latency": {
+     "sql": 1.0553303817287087,
+     "answer": 0.7993364874273539,
+     "router": 1.5591836413368583
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "3",
+   "question": "How many jobs did Alex Sorokin sell?",
+   "route": "structured",
+   "expected_answer": "996",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs by salesperson is a direct filter and count over structured fields (salesperson name and job records).",
+   "route_latency": 1.5963544184342027,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS jobs_sold FROM v_jobs WHERE salesperson = 'Alex Sorokin' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_sold"
+    ],
+    "sql_rows": [
+     [
+      996
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Alex Sorokin sold 996 jobs [SQL].",
+    "cost": 0.006898,
+    "latency": {
+     "sql": 0.8508471408858895,
+     "answer": 0.6614202009513974,
+     "router": 1.5963544184342027
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "4",
+   "question": "How many jobs did Victor sell?",
+   "route": "structured",
+   "expected_answer": "441",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs by salesperson (Victor) is a direct filter and count over structured fields.",
+   "route_latency": 1.4740676963701844,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS jobs_sold FROM v_jobs WHERE salesperson = 'Victor Slabunov' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_sold"
+    ],
+    "sql_rows": [
+     [
+      441
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Victor Slabunov sold 441 jobs [SQL].",
+    "cost": 0.006901,
+    "latency": {
+     "sql": 0.7943129874765873,
+     "answer": 0.47142749931663275,
+     "router": 1.4740676963701844
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "5",
+   "question": "List all salespeople by number of jobs",
+   "route": "structured",
+   "expected_answer": "Natalia 1198, Alex 996, Galya 939, Victor 441, Sasha 277, Diana 205, Max 111",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs per salesperson is a direct aggregation over structured fields (salesperson and job identifiers).",
+   "route_latency": 1.0924763502553105,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT salesperson, COUNT(*) AS jobs, COUNT(*) OVER () AS total_count FROM v_jobs WHERE salesperson <> '' AND salesperson IS NOT NULL GROUP BY salesperson ORDER BY jobs DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 11,
+    "sql_columns": [
+     "salesperson",
+     "jobs",
+     "total_count"
+    ],
+    "sql_rows": [
+     [
+      "Natalia Pavlenko",
+      1198,
+      11
+     ],
+     [
+      "Alex Sorokin",
+      996,
+      11
+     ],
+     [
+      "Galya Gornishka",
+      939,
+      11
+     ],
+     [
+      "Victor Slabunov",
+      441,
+      11
+     ],
+     [
+      "Sasha Nosova",
+      277,
+      11
+     ],
+     [
+      "Diana Diaz",
+      205,
+      11
+     ],
+     [
+      "Max Konikov",
+      111,
+      11
+     ],
+     [
+      "Other",
+      7,
+      11
+     ],
+     [
+      "Eugene Konikov",
+      5,
+      11
+     ],
+     [
+      "Vlad Gorshchynskiy",
+      2,
+      11
+     ],
+     [
+      "Denis Trofimov",
+      2,
+      11
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Salespeople by number of jobs [SQL]:**\n\n1. Natalia Pavlenko \u2013 1,198 jobs\n2. Alex Sorokin \u2013 996 jobs\n3. Galya Gornishka \u2013 939 jobs\n4. Victor Slabunov \u2013 441 jobs\n5. Sasha Nosova \u2013 277 jobs\n6. Diana Diaz \u2013 205 jobs\n7. Max Konikov \u2013 111 jobs\n8. Other \u2013 7 jobs\n9. Eugene Konikov \u2013 5 jobs\n10. Vlad Gorshchynskiy \u2013 2 jobs\n11. Denis Trofimov \u2013 2 jobs",
+    "cost": 0.007961,
+    "latency": {
+     "sql": 1.1697414657101035,
+     "answer": 1.2183885220438242,
+     "router": 1.0924763502553105
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "6",
+   "question": "How much did we invoice in 2024?",
+   "route": "structured",
+   "expected_answer": "$5,200,113",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Sum of invoice totals filtered by year 2024 \u2014 answerable from structured invoice data.",
+   "route_latency": 1.2250516945496202,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT SUM(total_amt) AS total_invoiced FROM v_invoices WHERE EXTRACT(YEAR FROM txn_date) = 2024 LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "total_invoiced"
+    ],
+    "sql_rows": [
+     [
+      "5200113.02"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "We invoiced **$5,200,113.02** in 2024 [SQL].",
+    "cost": 0.0069949999999999995,
+    "latency": {
+     "sql": 0.8276574499905109,
+     "answer": 0.6510864850133657,
+     "router": 1.2250516945496202
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "7",
+   "question": "What was our best revenue year?",
+   "route": "structured",
+   "expected_answer": "2024, $5.2M",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by summing invoice totals grouped by year; no free-text interpretation needed.",
+   "route_latency": 0.9297780487686396,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT CAST(EXTRACT(YEAR FROM txn_date) AS INT) AS year, SUM(total_amt) AS revenue, COUNT(*) AS invoice_count FROM v_invoices WHERE txn_date IS NOT NULL GROUP BY EXTRACT(YEAR FROM txn_date) ORDER BY revenue DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 9,
+    "sql_columns": [
+     "year",
+     "revenue",
+     "invoice_count"
+    ],
+    "sql_rows": [
+     [
+      2024,
+      "5200113.02",
+      574
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Our best revenue year was **2024 with $5,200,113.02 across 574 invoices** [SQL].",
+    "cost": 0.007344999999999999,
+    "latency": {
+     "sql": 1.28320381231606,
+     "answer": 0.7267053825780749,
+     "router": 0.9297780487686396
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "8",
+   "question": "How many invoices did we issue in 2023?",
+   "route": "structured",
+   "expected_answer": "553",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting invoices by year is a straightforward aggregation over structured invoice date fields.",
+   "route_latency": 0.9901328654959798,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS invoice_count FROM v_invoices WHERE EXTRACT(YEAR FROM txn_date) = 2023 LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "invoice_count"
+    ],
+    "sql_rows": [
+     [
+      553
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "We issued **553 invoices in 2023** [SQL].",
+    "cost": 0.006946,
+    "latency": {
+     "sql": 0.7709778742864728,
+     "answer": 0.6660966593772173,
+     "router": 0.9901328654959798
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "9",
+   "question": "What is our total invoiced amount across all years?",
+   "route": "structured",
+   "expected_answer": "$27,736,469",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by summing the invoice total field across all invoices in the database, regardless of year.",
+   "route_latency": 1.0240567540749907,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT SUM(total_amt) AS total_invoiced_amount FROM v_invoices LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "total_invoiced_amount"
+    ],
+    "sql_rows": [
+     [
+      "27736469.23"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Our total invoiced amount across all years is **$27,736,469.23** [SQL].",
+    "cost": 0.006924,
+    "latency": {
+     "sql": 0.627224181778729,
+     "answer": 0.612718004733324,
+     "router": 1.0240567540749907
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "10",
+   "question": "Did revenue grow from 2021 to 2024?",
+   "route": "structured",
+   "expected_answer": "Yes \u2014 2021 $2,590,573 to 2024 $5,200,113",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by summing invoice totals (revenue) for 2021 and 2024, then comparing the two years.",
+   "route_latency": 1.0201737731695175,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT CAST(EXTRACT(YEAR FROM txn_date) AS INT) AS year, SUM(total_amt) AS revenue, COUNT(*) AS invoice_count FROM v_invoices WHERE EXTRACT(YEAR FROM txn_date) IN (2021, 2022, 2023, 2024) GROUP BY EXTRACT(YEAR FROM txn_date) ORDER BY year LIMIT 200",
+    "sql_error": null,
+    "row_count": 4,
+    "sql_columns": [
+     "year",
+     "revenue",
+     "invoice_count"
+    ],
+    "sql_rows": [
+     [
+      2021,
+      "2590573.38",
+      763
+     ],
+     [
+      2022,
+      "3200110.64",
+      643
+     ],
+     [
+      2023,
+      "4127158.52",
+      553
+     ],
+     [
+      2024,
+      "5200113.02",
+      574
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yes, revenue grew from 2021 to 2024 [SQL]. Revenue increased from $2,590,573.38 in 2021 to $5,200,113.02 in 2024, with consistent year-over-year growth: 2022 ($3,200,110.64), 2023 ($4,127,158.52), and 2024 ($5,200,113.02) [SQL].",
+    "cost": 0.007832,
+    "latency": {
+     "sql": 1.0852047866210341,
+     "answer": 1.5155920563265681,
+     "router": 1.0201737731695175
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "11",
+   "question": "Which material do we use most?",
+   "route": "structured",
+   "expected_answer": "Dallas White, 58 jobs",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by counting or summing material field across all jobs to find the most frequently used or highest-volume material.",
+   "route_latency": 0.8757183272391558,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT material_name, COUNT(*) AS usage_count FROM v_job_areas WHERE material_name <> '' AND material_name IS NOT NULL GROUP BY material_name ORDER BY usage_count DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 3671,
+    "sql_columns": [
+     "material_name",
+     "usage_count"
+    ],
+    "sql_rows": [
+     [
+      "Dallas White",
+      66
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Based on the evidence, **Dallas White** is the material we use most, appearing in 66 job areas [SQL]. \n\n(Note: The query counts material usage across all job areas in the dataset, which totals 3,671 records.)",
+    "cost": 0.007306999999999999,
+    "latency": {
+     "sql": 0.9522540215402842,
+     "answer": 1.17751176469028,
+     "router": 0.8757183272391558
+    },
+    "correct": false,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "12",
+   "question": "How many jobs used Dallas White?",
+   "route": "structured",
+   "expected_answer": "152",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs by material (Dallas White) is a straightforward filter and count over the materials field in the structured data.",
+   "route_latency": 1.1748766349628568,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS jobs_with_dallas_white FROM v_job_areas WHERE material_name ILIKE '%Dallas White%' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_with_dallas_white"
+    ],
+    "sql_rows": [
+     [
+      152
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "152 jobs used Dallas White [SQL].",
+    "cost": 0.0069700000000000005,
+    "latency": {
+     "sql": 0.8348622787743807,
+     "answer": 0.5612086113542318,
+     "router": 1.1748766349628568
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "13",
+   "question": "How many areas have no material recorded?",
+   "route": "structured",
+   "expected_answer": "1885",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting countertop areas with missing or null material field is a direct structured query over the areas table.",
+   "route_latency": 0.9583576181903481,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS areas_with_no_material FROM v_job_areas WHERE (material_name = '' OR material_name IS NULL) LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "areas_with_no_material"
+    ],
+    "sql_rows": [
+     [
+      1885
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**1,885 areas have no material recorded** [SQL].\n\nThis counts all job-area records where the material_name field is empty or null.",
+    "cost": 0.00707,
+    "latency": {
+     "sql": 0.8851339993998408,
+     "answer": 0.9526383122429252,
+     "router": 0.9583576181903481
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "14",
+   "question": "What is our most common activity type?",
+   "route": "structured",
+   "expected_answer": "Install, 7758",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by counting activity types across all jobs in the tracking data.",
+   "route_latency": 0.8547995639964938,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT type_name, COUNT(*) AS count FROM v_activities GROUP BY type_name ORDER BY count DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 18,
+    "sql_columns": [
+     "type_name",
+     "count"
+    ],
+    "sql_rows": [
+     [
+      "Install",
+      7758
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "The most common activity type is **Install**, with 7,758 records [SQL].\n\n(This count includes all activity records in the system, including both completed and placeholder activities.)",
+    "cost": 0.007098999999999999,
+    "latency": {
+     "sql": 0.7662108363583684,
+     "answer": 0.7992804609239101,
+     "router": 0.8547995639964938
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "15",
+   "question": "How many Repair activities are there?",
+   "route": "structured",
+   "expected_answer": "846",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting activities of a specific type (Repair) is a direct aggregation over the structured activity-type field.",
+   "route_latency": 1.5677100466564298,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS repair_activities FROM v_activities WHERE type_name = 'Repair' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "repair_activities"
+    ],
+    "sql_rows": [
+     [
+      846
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "There are 846 Repair activities [SQL], counting all activity records with type_name = 'Repair' including unscheduled placeholders.",
+    "cost": 0.0069700000000000005,
+    "latency": {
+     "sql": 0.6626001335680485,
+     "answer": 0.9242477798834443,
+     "router": 1.5677100466564298
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "16",
+   "question": "How many quotes have we issued in total?",
+   "route": "structured",
+   "expected_answer": "4236",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting Quote activities is a straightforward aggregation over the activity type field.",
+   "route_latency": 0.9688425157219172,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS quotes_issued FROM v_quoted_jobs LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "quotes_issued"
+    ],
+    "sql_rows": [
+     [
+      4236
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "We have issued **4,236 quotes in total** [SQL].",
+    "cost": 0.00684,
+    "latency": {
+     "sql": 0.7740681795403361,
+     "answer": 0.7232344532385468,
+     "router": 0.9688425157219172
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "17",
+   "question": "Which area do we work in most?",
+   "route": "structured",
+   "expected_answer": "West Ashley, 603 jobs",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by summing or averaging countertop areas by geographic location/address, or by counting jobs per area \u2014 structured aggregation over job and location fields.",
+   "route_latency": 2.2605777140706778,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT city, COUNT(*) AS job_count FROM v_jobs WHERE city IS NOT NULL AND city <> '' GROUP BY city ORDER BY job_count DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 68,
+    "sql_columns": [
+     "city",
+     "job_count"
+    ],
+    "sql_rows": [
+     [
+      "West Ashley",
+      603
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "West Ashley is the area where we work most, with 603 jobs [SQL].",
+    "cost": 0.007039,
+    "latency": {
+     "sql": 0.868029298260808,
+     "answer": 0.6185240307822824,
+     "router": 2.2605777140706778
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "18",
+   "question": "How many jobs in Johns Island?",
+   "route": "structured",
+   "expected_answer": "421",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Filtering jobs by location (Johns Island) and counting is a straightforward structured query over job records.",
+   "route_latency": 1.486124544404447,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS jobs FROM v_jobs WHERE city = 'Johns Island' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs"
+    ],
+    "sql_rows": [
+     [
+      421
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "There are **421 jobs in Johns Island** [SQL].",
+    "cost": 0.006882,
+    "latency": {
+     "sql": 0.656949058175087,
+     "answer": 0.7086361618712544,
+     "router": 1.486124544404447
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "19",
+   "question": "How many jobs in Mount Pleasant?",
+   "route": "structured",
+   "expected_answer": "516",
+   "difficulty": "hard",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs filtered by location (Mount Pleasant) is a straightforward structured query over job records.",
+   "route_latency": 1.3376870090141892,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS jobs FROM v_jobs WHERE city = 'Mount Pleasant' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs"
+    ],
+    "sql_rows": [
+     [
+      516
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**516 jobs** in Mount Pleasant [SQL].",
+    "cost": 0.0068720000000000005,
+    "latency": {
+     "sql": 1.687275366857648,
+     "answer": 0.9130809316411614,
+     "router": 1.3376870090141892
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "20",
+   "question": "How many jobs have no city recorded at all?",
+   "route": "structured",
+   "expected_answer": "1779",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs with missing city field is a direct filter and count over structured location data.",
+   "route_latency": 1.459052773192525,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS jobs_with_no_city FROM v_jobs WHERE city IS NULL LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_with_no_city"
+    ],
+    "sql_rows": [
+     [
+      1779
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**1,779 jobs have no city recorded at all.** [SQL]",
+    "cost": 0.006892,
+    "latency": {
+     "sql": 0.6610786998644471,
+     "answer": 0.7606808571144938,
+     "router": 1.459052773192525
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "21",
+   "question": "How many jobs in Charleston proper?",
+   "route": "structured",
+   "expected_answer": "81",
+   "difficulty": "hard",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs filtered by location (Charleston proper) is a straightforward structured query over job address data.",
+   "route_latency": 0.9293772364035249,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS jobs FROM v_jobs WHERE city = 'Charleston' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs"
+    ],
+    "sql_rows": [
+     [
+      81
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "There are **81 jobs in Charleston** [SQL].",
+    "cost": 0.006866,
+    "latency": {
+     "sql": 0.6546181170269847,
+     "answer": 0.6213044421747327,
+     "router": 0.9293772364035249
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "22",
+   "question": "How many jobs did we do on Kiawah Island?",
+   "route": "structured",
+   "expected_answer": "178",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting jobs filtered by location (Kiawah Island) is a straightforward structured query over job records.",
+   "route_latency": 0.9013604950159788,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS jobs FROM v_jobs WHERE city = 'Kiawah Island' LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs"
+    ],
+    "sql_rows": [
+     [
+      178
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "We completed **178 jobs on Kiawah Island** [SQL].",
+    "cost": 0.006921999999999999,
+    "latency": {
+     "sql": 0.7952144471928477,
+     "answer": 0.6409740457311273,
+     "router": 0.9013604950159788
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "26",
+   "question": "Which jobs went quiet after a quote?",
+   "route": "structured",
+   "expected_answer": "1306 jobs went quiet after a quote (status = 'quiet' in v_job_pipeline_status: quoted, never moved, silent beyond the settle window). Listing a sample of them with salesperson/city is fine; most are Canceled in Moraware but the question does not ask for that split",
+   "difficulty": "hard",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering jobs with Quote activities and checking for absence of subsequent activities after the quote date\u2014no free-text reading required.",
+   "route_latency": 1.1443613078445196,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT job_id, job_name, customer, salesperson, city, first_signal_date, last_signal_date, days_silent, status FROM v_job_pipeline_status WHERE status = 'quiet' ORDER BY last_signal_date DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 1306,
+    "sql_columns": [
+     "job_id",
+     "job_name",
+     "customer",
+     "salesperson",
+     "city",
+     "first_signal_date",
+     "last_signal_date",
+     "days_silent",
+     "status"
+    ],
+    "sql_rows": [
+     [
+      5759,
+      "Patrick Anderson",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "2026-06-29",
+      "2026-06-29",
+      31,
+      "quiet"
+     ],
+     [
+      5734,
+      "Kathleen Eovino_Costco",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mount Pleasant",
+      "2026-06-21",
+      "2026-06-28",
+      32,
+      "quiet"
+     ],
+     [
+      5331,
+      "Alisha and Chuck Floyd",
+      "regular customer",
+      "Natalia Pavlenko",
+      "James Island",
+      "2026-01-14",
+      "2026-06-28",
+      32,
+      "quiet"
+     ],
+     [
+      5717,
+      "Erin Gardner_COSTCO",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "James Island",
+      "2026-06-28",
+      "2026-06-28",
+      32,
+      "quiet"
+     ],
+     [
+      5686,
+      "Merle _new house",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Wadmalaw Island",
+      "2026-06-27",
+      "2026-06-27",
+      33,
+      "quiet"
+     ],
+     [
+      5740,
+      "Solaris - 32 Ocean Course (Hobbie)",
+      "Solaris",
+      null,
+      "Kiawah Island",
+      "2026-06-27",
+      "2026-06-27",
+      33,
+      "quiet"
+     ],
+     [
+      5758,
+      "Carolyne Hannon",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "2026-06-27",
+      "2026-06-27",
+      33,
+      "quiet"
+     ],
+     [
+      5754,
+      "Kerry Sullivan (personal house)",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "James Island",
+      "2026-06-25",
+      "2026-06-26",
+      34,
+      "quiet"
+     ],
+     [
+      5646,
+      "Matt Kern",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mount Pleasant",
+      "2026-05-15",
+      "2026-06-25",
+      35,
+      "quiet"
+     ],
+     [
+      5749,
+      "Deanna Kosler",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "James Island",
+      "2026-06-25",
+      "2026-06-25",
+      35,
+      "quiet"
+     ],
+     [
+      5741,
+      "Solaris - 14 Avocet Ln (Fisher)",
+      "Solaris",
+      null,
+      null,
+      "2026-06-22",
+      "2026-06-22",
+      38,
+      "quiet"
+     ],
+     [
+      5642,
+      "Roy Mahshie - Berman Residence",
+      "Roy Mahshie",
+      null,
+      null,
+      "2026-05-13",
+      "2026-06-22",
+      38,
+      "quiet"
+     ],
+     [
+      5739,
+      "Amanda Bartlett",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Summerville",
+      "2026-06-21",
+      "2026-06-21",
+      39,
+      "quiet"
+     ],
+     [
+      5718,
+      "Charleston Woodwork Creations_1489 St Peters Rd",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Walterboro",
+      "2026-06-21",
+      "2026-06-21",
+      39,
+      "quiet"
+     ],
+     [
+      5724,
+      "Angela Funcik",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "2026-06-17",
+      "2026-06-17",
+      43,
+      "quiet"
+     ],
+     [
+      5727,
+      "Gus Betzares",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "2026-06-17",
+      "2026-06-17",
+      43,
+      "quiet"
+     ],
+     [
+      5244,
+      "Kathleen Otto (COSTCO)",
+      "Costco (Cosentino)",
+      "Alex Sorokin",
+      "Kiawah Island",
+      "2025-11-21",
+      "2026-06-16",
+      44,
+      "quiet"
+     ],
+     [
+      5713,
+      "Kevin Kosco",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mount Pleasant",
+      "2026-06-13",
+      "2026-06-13",
+      47,
+      "quiet"
+     ],
+     [
+      5702,
+      "Brandt Armstrong",
+      "Walk-In Client",
+      "Alex Sorokin",
+      "James Island",
+      "2026-06-11",
+      "2026-06-11",
+      49,
+      "quiet"
+     ],
+     [
+      5706,
+      "Jerad and Amber Horn",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Johns Island",
+      "2026-06-11",
+      "2026-06-11",
+      49,
+      "quiet"
+     ],
+     [
+      5663,
+      "520 Magnolia_Harborside Remodelling",
+      "Harborside Remodelling",
+      "Alex Sorokin",
+      "West Ashley",
+      "2026-05-27",
+      "2026-06-09",
+      51,
+      "quiet"
+     ],
+     [
+      5648,
+      "Bonnie - 18 Sussex Rd",
+      "Costco (Cosentino)",
+      null,
+      "West Ashley",
+      "2026-05-22",
+      "2026-06-06",
+      54,
+      "quiet"
+     ],
+     [
+      5689,
+      "Laurie Wyatt",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mcclellanville",
+      "2026-06-04",
+      "2026-06-04",
+      56,
+      "quiet"
+     ],
+     [
+      5685,
+      "Rose Peterson",
+      "Walk-In Client",
+      "Alex Sorokin",
+      "James Island",
+      "2026-06-03",
+      "2026-06-03",
+      57,
+      "quiet"
+     ],
+     [
+      5651,
+      "Jenny Strauss",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mount Pleasant",
+      "2026-05-27",
+      "2026-06-03",
+      57,
+      "quiet"
+     ],
+     [
+      5684,
+      "Andrew Canderson",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Wadmalaw Island",
+      "2026-06-03",
+      "2026-06-03",
+      57,
+      "quiet"
+     ],
+     [
+      5680,
+      "Jon Vollmuth",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Hollywood",
+      "2026-06-02",
+      "2026-06-02",
+      58,
+      "quiet"
+     ],
+     [
+      5682,
+      "Shauna Franks",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "2026-06-02",
+      "2026-06-02",
+      58,
+      "quiet"
+     ],
+     [
+      5668,
+      "Dan Neidhardt",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Hollywood",
+      "2026-05-29",
+      "2026-05-30",
+      61,
+      "quiet"
+     ],
+     [
+      5672,
+      "Jeffrey Herndon",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Walterboro",
+      "2026-05-29",
+      "2026-05-29",
+      62,
+      "quiet"
+     ],
+     [
+      5022,
+      "Anna Krits",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Daniel Island",
+      "2026-05-22",
+      "2026-05-27",
+      64,
+      "quiet"
+     ],
+     [
+      5661,
+      "Marty Stahl",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "2026-05-22",
+      "2026-05-22",
+      69,
+      "quiet"
+     ],
+     [
+      5218,
+      "Julia Petrolawicz",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "2025-11-10",
+      "2026-05-18",
+      73,
+      "quiet"
+     ],
+     [
+      5650,
+      "Syd Schuler",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "2026-05-18",
+      "2026-05-18",
+      73,
+      "quiet"
+     ],
+     [
+      5649,
+      "Rebecca Glazier",
+      "Alex_Supply",
+      "Alex Sorokin",
+      null,
+      "2026-05-16",
+      "2026-05-16",
+      75,
+      "quiet"
+     ],
+     [
+      5644,
+      "Amish Furniture Store_Marchaks outdoor kitchen",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mount Pleasant",
+      "2026-05-14",
+      "2026-05-14",
+      77,
+      "quiet"
+     ],
+     [
+      5641,
+      "Lorin Payton",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "2026-05-13",
+      "2026-05-13",
+      78,
+      "quiet"
+     ],
+     [
+      5638,
+      "Gochnauer Construction_ 2596 Jenkins Point Rd",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Seabrook Island",
+      "2026-05-13",
+      "2026-05-13",
+      78,
+      "quiet"
+     ],
+     [
+      5640,
+      "Kristin Shelbourne",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Bluffton",
+      "2026-05-12",
+      "2026-05-12",
+      79,
+      "quiet"
+     ],
+     [
+      5601,
+      "Dana Masselli",
+      "regular customer",
+      "Natalia Pavlenko",
+      "Mount Pleasant",
+      "2026-05-11",
+      "2026-05-11",
+      80,
+      "quiet"
+     ],
+     [
+      5589,
+      "Solaris - Sieve (Master + Laundry)",
+      "Solaris",
+      "Victor Slabunov",
+      null,
+      "2026-05-10",
+      "2026-05-10",
+      81,
+      "quiet"
+     ],
+     [
+      5618,
+      "Catherine Martin_COSTCO",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Mount Pleasant",
+      "2026-05-06",
+      "2026-05-07",
+      84,
+      "quiet"
+     ],
+     [
+      5628,
+      "Architrave Interior Design_Harvel-Magro Residence",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Charleston",
+      "2026-05-06",
+      "2026-05-06",
+      85,
+      "quiet"
+     ],
+     [
+      5619,
+      "Erin Brady",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "2026-05-04",
+      "2026-05-04",
+      87,
+      "quiet"
+     ],
+     [
+      5615,
+      "Liz Staw_Vanity",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "Johns Island",
+      "2026-05-04",
+      "2026-05-04",
+      87,
+      "quiet"
+     ],
+     [
+      5612,
+      "Adam Meehan",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "2026-05-04",
+      "2026-05-04",
+      87,
+      "quiet"
+     ],
+     [
+      5591,
+      "Stewart Darby",
+      "regular customer",
+      "Natalia Pavlenko",
+      null,
+      "2026-05-01",
+      "2026-05-01",
+      90,
+      "quiet"
+     ],
+     [
+      5557,
+      "Rhonda - Fireplace",
+      "Regular customers",
+      "Victor Slabunov",
+      "Kiawah Island",
+      "2026-04-22",
+      "2026-04-30",
+      91,
+      "quiet"
+     ],
+     [
+      5608,
+      "Ashley Shaver",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      null,
+      "2026-04-28",
+      "2026-04-28",
+      93,
+      "quiet"
+     ],
+     [
+      5604,
+      "David Allis",
+      "Alex`s Jobs",
+      "Alex Sorokin",
+      "West Ashley",
+      "2026-04-27",
+      "2026-04-27",
+      94,
+      "quiet"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "[SQL] 1,306 jobs went quiet after a quote. The query filtered for status = 'quiet' in the v_job_pipeline_status view, which encodes jobs that received a quote but have had no activity since. The result set shows the 50 most recent cases; the true total is 1,306 distinct jobs.\n\nExamples include Patrick Anderson (job 5759, last signal 2026-06-29, 31 days silent), Kathleen Eovino_Costco (job 5734, last signal 2026-06-28, 32 days silent), and Alisha and Chuck Floyd (job 5331, last signal 2026-06-28, 32 days silent).",
+    "cost": 0.011315,
+    "latency": {
+     "sql": 1.3687831573188305,
+     "answer": 2.5915381340309978,
+     "router": 1.1443613078445196
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "29",
+   "question": "Find jobs with tile work",
+   "route": "structured",
+   "expected_answer": "236 jobs",
+   "difficulty": "hard",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Filtering jobs by activity type 'tile' is a direct structured query over the activity types field.",
+   "route_latency": 1.5353336818516254,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(DISTINCT job_id) AS jobs_with_tile_work FROM v_activities WHERE type_name = 'Tile' AND happened LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs_with_tile_work"
+    ],
+    "sql_rows": [
+     [
+      236
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**236 jobs have tile work** [SQL], counting only dated, completed tile activities.",
+    "cost": 0.006979,
+    "latency": {
+     "sql": 0.7716178456321359,
+     "answer": 1.0455545336008072,
+     "router": 1.5353336818516254
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "31",
+   "question": "How many square feet did Ihor/Tolik install in March 2026?",
+   "route": "structured",
+   "expected_answer": "1,909.3 sq ft across 23 jobs (29 install visits)",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Filtering by salesperson (Ihor/Tolik), activity type (install), month (March 2026), and summing square footage is a straightforward structured query over job and activity records.",
+   "route_latency": 1.1587273944169283,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-03-01' AND activity_date < '2026-04-01' AND assignees ILIKE '%Ihor/Tolik%'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)), c AS (SELECT COUNT(*) AS visits, COUNT(*) - COUNT(DISTINCT job_id) AS repeat_visits FROM v) SELECT j.jobs, c.visits, c.repeat_visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j, c LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "visits",
+     "repeat_visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      23,
+      29,
+      6,
+      "1909.3",
+      "83.0",
+      "65.8"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Ihor/Tolik installed **1,909.3 square feet** in March 2026 across 23 jobs in 29 visits (6 repeat visits). That averages 83.0 sq ft per job and 65.8 sq ft per visit. [SQL]",
+    "cost": 0.008677,
+    "latency": {
+     "sql": 1.9419501796364784,
+     "answer": 1.2529047401621938,
+     "router": 1.1587273944169283
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "32",
+   "question": "Which install crew did the most square footage in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "Ivan Andreev, 9,067.6 sq ft",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering Install activities to Jan\u2013Jun 2026, summing countertop areas by crew, and ranking by total sq ft.",
+   "route_latency": 1.0850471826270223,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id, assignees FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), j AS (SELECT d.assignees, COUNT(*) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM (SELECT DISTINCT job_id, assignees FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id) GROUP BY d.assignees), c AS (SELECT assignees, COUNT(*) AS visits FROM v GROUP BY assignees) SELECT j.assignees, j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j JOIN c USING (assignees) WHERE j.assignees <> '' ORDER BY j.total_sq_ft DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 6,
+    "sql_columns": [
+     "assignees",
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      "Ivan Andreev",
+      87,
+      149,
+      "9067.6",
+      "104.2",
+      "60.9"
+     ],
+     [
+      "Ihor/Tolik",
+      108,
+      154,
+      "9027.0",
+      "83.6",
+      "58.6"
+     ],
+     [
+      "Yuri/Petro",
+      35,
+      42,
+      "3653.1",
+      "104.4",
+      "87.0"
+     ],
+     [
+      "Leo",
+      16,
+      23,
+      "1089.5",
+      "68.1",
+      "47.4"
+     ],
+     [
+      "Murilo",
+      2,
+      2,
+      "200.3",
+      "100.2",
+      "100.2"
+     ],
+     [
+      "Other\u00e2\u20ac\u2122s",
+      1,
+      1,
+      "102",
+      "102.0",
+      "102.0"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Ivan Andreev** did the most square footage in the first half of 2026, with **9,067.6 sq ft** across 87 jobs and 149 visits, averaging 104.2 sq ft per job and 60.9 sq ft per visit [SQL].",
+    "cost": 0.008962,
+    "latency": {
+     "sql": 2.647804676555097,
+     "answer": 1.0755879655480385,
+     "router": 1.0850471826270223
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "33",
+   "question": "Which install crew completed the most jobs in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "Ihor/Tolik, 108 jobs",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering activities by type (install), date range (first half of 2026), and counting/ranking by crew assignment in structured fields.",
+   "route_latency": 1.1769342329353094,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id, assignees FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), j AS (SELECT d.assignees, COUNT(*) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM (SELECT DISTINCT job_id, assignees FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id) GROUP BY d.assignees), c AS (SELECT assignees, COUNT(*) AS visits FROM v GROUP BY assignees) SELECT j.assignees, j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j JOIN c USING (assignees) WHERE j.assignees <> '' ORDER BY j.jobs DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 6,
+    "sql_columns": [
+     "assignees",
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      "Ihor/Tolik",
+      108,
+      154,
+      "9027.0",
+      "83.6",
+      "58.6"
+     ],
+     [
+      "Ivan Andreev",
+      87,
+      149,
+      "9067.6",
+      "104.2",
+      "60.9"
+     ],
+     [
+      "Yuri/Petro",
+      35,
+      42,
+      "3653.1",
+      "104.4",
+      "87.0"
+     ],
+     [
+      "Leo",
+      16,
+      23,
+      "1089.5",
+      "68.1",
+      "47.4"
+     ],
+     [
+      "Murilo",
+      2,
+      2,
+      "200.3",
+      "100.2",
+      "100.2"
+     ],
+     [
+      "Other\u00e2\u20ac\u2122s",
+      1,
+      1,
+      "102",
+      "102.0",
+      "102.0"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Ihor/Tolik** completed the most install jobs in the first half of 2026, with **108 jobs across 154 visits, totaling 9,027.0 sq ft** (83.6 sq ft per job, 58.6 sq ft per visit). [SQL]",
+    "cost": 0.008956,
+    "latency": {
+     "sql": 2.5882515413686633,
+     "answer": 1.2149356473237276,
+     "router": 1.1769342329353094
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "34",
+   "question": "How many jobs did Yuri/Petro install in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "35 jobs, 3,653.1 sq ft",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Count of Install activities filtered by salesperson (Yuri or Petro) and date range (Jan\u2013Jun 2026) \u2014 pure structured query over activity types and dates.",
+   "route_latency": 1.518570221029222,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Yuri/Petro%'), j AS (SELECT COUNT(*) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)), c AS (SELECT COUNT(*) AS visits, COUNT(*) - COUNT(DISTINCT job_id) AS repeat_visits FROM v) SELECT j.jobs, c.visits, c.repeat_visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j, c LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "visits",
+     "repeat_visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      35,
+      42,
+      7,
+      "3653.1",
+      "104.4",
+      "87.0"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yuri/Petro installed **35 jobs** in the first half of 2026 (January\u2013June), completing 42 visits across them. Seven of those jobs required a second visit. The work totaled 3,653.1 sq ft, averaging 104.4 sq ft per job and 87.0 sq ft per visit. [SQL]",
+    "cost": 0.008761,
+    "latency": {
+     "sql": 2.7052676305174828,
+     "answer": 1.1379469409585,
+     "router": 1.518570221029222
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "35",
+   "question": "What is Ivan Andreev's average job size in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "104.2 sq ft per job",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering jobs by salesperson (Ivan Andreev), date range (first half of 2026), and calculating average countertop area from structured fields.",
+   "route_latency": 1.6171198831871152,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Ivan Andreev%'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)) SELECT j.jobs, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job FROM j LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "total_sq_ft",
+     "sq_ft_per_job"
+    ],
+    "sql_rows": [
+     [
+      87,
+      "9067.6",
+      "104.2"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Ivan Andreev's average job size in the first half of 2026 was **104.2 sq ft per job** [SQL]. This is based on 87 jobs totaling 9,067.6 sq ft, counting only jobs with dated, completed Install activities assigned to him between January 1 and June 30, 2026.",
+    "cost": 0.008318,
+    "latency": {
+     "sql": 2.14689957536757,
+     "answer": 1.4022788489237428,
+     "router": 1.6171198831871152
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "36",
+   "question": "Which crew has the largest average job size in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "Yuri/Petro, 104.4 sq ft per job",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering jobs to H1 2026, grouping by crew, calculating average square footage per crew, and ranking by average size.",
+   "route_latency": 1.1443536225706339,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id, assignees FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), j AS (SELECT d.assignees, COUNT(*) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM (SELECT DISTINCT job_id, assignees FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id) GROUP BY d.assignees), c AS (SELECT assignees, COUNT(*) AS visits FROM v GROUP BY assignees) SELECT j.assignees, j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j JOIN c USING (assignees) WHERE j.assignees <> '' ORDER BY sq_ft_per_job DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 6,
+    "sql_columns": [
+     "assignees",
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      "Yuri/Petro",
+      35,
+      42,
+      "3653.1",
+      "104.4",
+      "87.0"
+     ],
+     [
+      "Ivan Andreev",
+      87,
+      149,
+      "9067.6",
+      "104.2",
+      "60.9"
+     ],
+     [
+      "Other\u00e2\u20ac\u2122s",
+      1,
+      1,
+      "102",
+      "102.0",
+      "102.0"
+     ],
+     [
+      "Murilo",
+      2,
+      2,
+      "200.3",
+      "100.2",
+      "100.2"
+     ],
+     [
+      "Ihor/Tolik",
+      108,
+      154,
+      "9027.0",
+      "83.6",
+      "58.6"
+     ],
+     [
+      "Leo",
+      16,
+      23,
+      "1089.5",
+      "68.1",
+      "47.4"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Yuri/Petro** has the largest average job size in the first half of 2026, at **104.4 sq ft per job** [SQL].\n\nThe crew completed 35 jobs across 42 visits, totaling 3,653.1 sq ft [SQL].",
+    "cost": 0.008967,
+    "latency": {
+     "sql": 1.6656905338168144,
+     "answer": 1.1246120585128665,
+     "router": 1.1443536225706339
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "37",
+   "question": "Compare Ivan Andreev and Ihor/Tolik install performance in the first half of 2026",
+   "route": "structured",
+   "expected_answer": "Ihor/Tolik did more jobs (108 vs 87) but Ivan installed slightly more sq ft (9,067.6 vs 9,027.0); Ivan averages 104.2 sq ft/job vs 83.6",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Comparing install activity counts, dates, and performance metrics (e.g., jobs completed, timeline) for two salespeople in a date range is answerable by filtering activities by type (install), salesperson, and date range, then ranking or aggregating.",
+   "route_latency": 1.5202013682574034,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id, assignees FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND (assignees ILIKE '%Ivan Andreev%' OR assignees ILIKE '%Ihor/Tolik%')), j AS (SELECT d.assignees, COUNT(*) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM (SELECT DISTINCT job_id, assignees FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id) GROUP BY d.assignees), c AS (SELECT assignees, COUNT(*) AS visits FROM v GROUP BY assignees) SELECT j.assignees, j.jobs, c.visits, c.visits - j.jobs AS repeat_visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j JOIN c USING (assignees) ORDER BY sq_ft_per_job DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 2,
+    "sql_columns": [
+     "assignees",
+     "jobs",
+     "visits",
+     "repeat_visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      "Ivan Andreev",
+      87,
+      149,
+      62,
+      "9067.6",
+      "104.2",
+      "60.9"
+     ],
+     [
+      "Ihor/Tolik",
+      108,
+      154,
+      46,
+      "9027.0",
+      "83.6",
+      "58.6"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Install Performance Comparison (H1 2026)** [SQL]\n\n**Ivan Andreev:**\n- 87 jobs, 149 visits (62 repeat visits)\n- 9,067.6 sq ft total\n- 104.2 sq ft per job\n- 60.9 sq ft per visit\n\n**Ihor/Tolik:**\n- 108 jobs, 154 visits (46 repeat visits)\n- 9,027.0 sq ft total\n- 83.6 sq ft per job\n- 58.6 sq ft per visit\n\n**Summary:** Ihor/Tolik completed more jobs (108 vs. 87) with fewer repeat visits (46 vs. 62), suggesting better first-visit completion. Ivan Andreev handled larger average jobs (104.2 vs. 83.6 sq ft per job) but required more return visits proportionally.",
+    "cost": 0.009777000000000001,
+    "latency": {
+     "sql": 2.988714460283518,
+     "answer": 2.5241950545459986,
+     "router": 1.5202013682574034
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "59",
+   "question": "What is our overall quote-to-moved-forward conversion rate?",
+   "route": "structured",
+   "expected_answer": "70.0% (3063 of 4377 quoted jobs)",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Conversion rate is calculated by counting Quote activities and comparing to jobs that progressed to subsequent activity types (measure, fabrication, install, etc.) \u2014 pure structured aggregation over activity types and job progression.",
+   "route_latency": 1.8767857030034065,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT ROUND(100.0 * SUM(moved_forward) / SUM(quoted_jobs), 1) AS conversion_pct, SUM(moved_forward) AS moved_forward, SUM(quoted_jobs) AS quoted_jobs FROM v_quote_conversion_monthly LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "conversion_pct",
+     "moved_forward",
+     "quoted_jobs"
+    ],
+    "sql_rows": [
+     [
+      "70.0",
+      "3063",
+      "4377"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Our overall quote-to-moved-forward conversion rate is **70.0%** [SQL]. Of 4,377 quoted jobs, 3,063 moved forward.",
+    "cost": 0.007328,
+    "latency": {
+     "sql": 1.0289032217115164,
+     "answer": 0.9036025088280439,
+     "router": 1.8767857030034065
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "60",
+   "question": "What was our quote conversion rate in 2023?",
+   "route": "structured",
+   "expected_answer": "85.7% (409 of 477)",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Quote conversion rate is calculated by counting Quote activities and comparing to subsequent Install activities in 2023\u2014both structured fields (activity types and dates).",
+   "route_latency": 3.26462703384459,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT SUM(moved_forward) AS moved_forward, SUM(quoted_jobs) AS quoted_jobs, ROUND(100.0 * SUM(moved_forward) / SUM(quoted_jobs), 1) AS conversion_pct FROM v_quote_conversion_monthly WHERE EXTRACT(YEAR FROM quote_month) = 2023 LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "moved_forward",
+     "quoted_jobs",
+     "conversion_pct"
+    ],
+    "sql_rows": [
+     [
+      "409",
+      "477",
+      "85.7"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Our quote conversion rate in 2023 was **85.7%**, with 409 jobs moving forward out of 477 quoted jobs [SQL].",
+    "cost": 0.007411,
+    "latency": {
+     "sql": 1.546642896719277,
+     "answer": 0.9029072029516101,
+     "router": 3.26462703384459
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "61",
+   "question": "What was our quote conversion rate in 2024?",
+   "route": "structured",
+   "expected_answer": "63.4% (401 of 632)",
+   "difficulty": "easy",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Quote conversion rate is answerable by counting Quote activities and comparing to subsequent Install activities (or invoices) in 2024 \u2014 structured filtering and aggregation over activity types and dates.",
+   "route_latency": 1.841591464355588,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT ROUND(100.0 * SUM(moved_forward) / SUM(quoted_jobs), 1) AS conversion_pct, SUM(moved_forward) AS moved_forward, SUM(quoted_jobs) AS quoted_jobs FROM v_quote_conversion_monthly WHERE EXTRACT(YEAR FROM quote_month) = 2024 LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "conversion_pct",
+     "moved_forward",
+     "quoted_jobs"
+    ],
+    "sql_rows": [
+     [
+      "63.4",
+      "401",
+      "632"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Our quote conversion rate in 2024 was **63.4%**, with 401 jobs moving forward from 632 quoted jobs [SQL].",
+    "cost": 0.007386,
+    "latency": {
+     "sql": 1.1933961510658264,
+     "answer": 0.7269873600453138,
+     "router": 1.841591464355588
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "62",
+   "question": "Which full year had the best quote conversion rate?",
+   "route": "structured",
+   "expected_answer": "2023, 85.7% (409 of 477)",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Quote conversion rate is answerable by counting Quote activities and comparing to completed jobs (Install/Fabrication activities) per year\u2014structured filtering and aggregation over activity types and dates.",
+   "route_latency": 1.7396269366145134,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT CAST(EXTRACT(YEAR FROM quote_month) AS INT) AS year, SUM(moved_forward) AS moved_forward, SUM(quoted_jobs) AS quoted_jobs, ROUND(100.0 * SUM(moved_forward) / SUM(quoted_jobs), 1) AS conversion_pct FROM v_quote_conversion_monthly GROUP BY EXTRACT(YEAR FROM quote_month) ORDER BY conversion_pct DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 8,
+    "sql_columns": [
+     "year",
+     "moved_forward",
+     "quoted_jobs",
+     "conversion_pct"
+    ],
+    "sql_rows": [
+     [
+      2023,
+      "409",
+      "477",
+      "85.7"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**2023 had the best quote conversion rate at 85.7%** [SQL], with 409 jobs moving forward out of 477 quoted jobs.",
+    "cost": 0.007604,
+    "latency": {
+     "sql": 1.8447112534195185,
+     "answer": 0.965770916081965,
+     "router": 1.7396269366145134
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "63",
+   "question": "Job 377 has an invoice number on it - did that customer move forward?",
+   "route": "structured",
+   "expected_answer": "Not necessarily - an invoice number alone does not confirm commitment. This job has no dated Install or Removal activity and no payment-confirmation note, so it does NOT count as moved forward.",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Presence of an invoice number on a job is a structured field indicating transaction completion; 'moved forward' is answerable by checking invoice status and job progression dates.",
+   "route_latency": 1.5892683016136289,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT jp.job_id, jp.job_name, jp.moved_forward, jp.status, ji.doc_number, ji.txn_date FROM v_job_pipeline_status AS jp LEFT JOIN v_job_invoices AS ji USING (job_id) WHERE jp.job_id = 377 LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "job_id",
+     "job_name",
+     "moved_forward",
+     "status",
+     "doc_number",
+     "txn_date"
+    ],
+    "sql_rows": [
+     [
+      377,
+      "David Tisdale",
+      false,
+      "quiet",
+      "2895",
+      "2020-11-12"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "No, the customer did not move forward. Job 377 (David Tisdale) has `moved_forward = False` [SQL], even though an invoice (doc_number 2895, dated 2020-11-12) exists on the job [SQL]. The job's status is 'quiet' [SQL].",
+    "cost": 0.007626000000000001,
+    "latency": {
+     "sql": 1.27690639346838,
+     "answer": 1.1662052469328046,
+     "router": 1.5892683016136289
+    },
+    "correct": null,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "64",
+   "question": "What is Ihor/Tolik's average job size (per job, not per visit) in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "83.6 sq ft per job",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering jobs assigned to Ihor/Tolik in H1 2026, summing countertop areas, and dividing by job count \u2014 all structured fields.",
+   "route_latency": 1.6980929803103209,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Ihor/Tolik%'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)) SELECT j.jobs, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job FROM j LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "total_sq_ft",
+     "sq_ft_per_job"
+    ],
+    "sql_rows": [
+     [
+      108,
+      "9027.0",
+      "83.6"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Ihor/Tolik's average job size in the first half of 2026 was **83.6 sq ft per job** [SQL], based on 108 jobs totaling 9,027 sq ft (counting only dated, completed Install activities).",
+    "cost": 0.008268,
+    "latency": {
+     "sql": 1.783099721185863,
+     "answer": 1.0258022863417864,
+     "router": 1.6980929803103209
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "65",
+   "question": "What is Ihor/Tolik's average square footage per install visit (not per job) in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "58.6 sq ft per visit",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering activities (salesperson, activity type 'install', date range H1 2026), summing countertop areas, and dividing by visit count.",
+   "route_latency": 1.1455153720453382,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND assignees ILIKE '%Ihor/Tolik%' AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)), c AS (SELECT COUNT(*) AS visits FROM v_activities WHERE type_name = 'Install' AND happened AND assignees ILIKE '%Ihor/Tolik%' AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01') SELECT j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j, c LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      108,
+      154,
+      "9027.0",
+      "58.6"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Ihor/Tolik's average square footage per install visit in the first half of 2026 was **58.6 sq ft/visit** [SQL].\n\nThis is based on 154 completed install visits across 108 distinct jobs totaling 9,027 sq ft [SQL].",
+    "cost": 0.008822,
+    "latency": {
+     "sql": 2.049080009572208,
+     "answer": 0.8963986625894904,
+     "router": 1.1455153720453382
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "66",
+   "question": "How many install visits did Yuri/Petro make in the first half of 2026, and how does that compare to the number of jobs?",
+   "route": "structured",
+   "expected_answer": "42 visits across 35 jobs \u2014 7 jobs required a second visit",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Counting install activities by salesperson and date range, and comparing to job count, are both structured operations over activity types and dates.",
+   "route_latency": 1.1044947793707252,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Yuri/Petro%') SELECT COUNT(*) AS visits, COUNT(DISTINCT job_id) AS jobs, COUNT(*) - COUNT(DISTINCT job_id) AS repeat_visits FROM v LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "visits",
+     "jobs",
+     "repeat_visits"
+    ],
+    "sql_rows": [
+     [
+      42,
+      35,
+      7
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yuri/Petro made 42 install visits in the first half of 2026 across 35 jobs, with 7 repeat visits (meaning 7 jobs required a second install visit) [SQL].",
+    "cost": 0.007712,
+    "latency": {
+     "sql": 1.5708347465842962,
+     "answer": 1.056936675682664,
+     "router": 1.1044947793707252
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "67",
+   "question": "What is Yuri/Petro's average square footage per install visit in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "87.0 sq ft per visit",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering installs by salesperson (Yuri/Petro), date range (H1 2026), and calculating average sq ft per activity using structured fields.",
+   "route_latency": 1.464737432077527,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Yuri/Petro%'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)), c AS (SELECT COUNT(*) AS visits FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Yuri/Petro%') SELECT j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j, c LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      35,
+      42,
+      "3653.1",
+      "87.0"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yuri/Petro's average square footage per install visit in the first half of 2026 was **87.0 sq ft/visit** [SQL].\n\nThis is based on 35 jobs completed across 42 install visits, totaling 3,653.1 sq ft [SQL].",
+    "cost": 0.008797,
+    "latency": {
+     "sql": 2.0550045389682055,
+     "answer": 1.3582579297944903,
+     "router": 1.464737432077527
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "68",
+   "question": "How many jobs did Leo install in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "16 jobs, 23 install visits, 1,089.5 sq ft total",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Count of Install activities by salesperson (Leo) and date range (Jan\u2013Jun 2026) \u2014 answerable by filtering activity type, salesperson, and date fields.",
+   "route_latency": 1.704321838915348,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Leo%'), j AS (SELECT COUNT(*) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)), c AS (SELECT COUNT(*) AS visits, COUNT(*) - COUNT(DISTINCT job_id) AS repeat_visits FROM v) SELECT j.jobs, c.visits, c.repeat_visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j, c LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "visits",
+     "repeat_visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      16,
+      23,
+      7,
+      "1089.5",
+      "68.1",
+      "47.4"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Leo installed **16 jobs** in the first half of 2026 (January\u2013June), completing 23 install visits across them. Seven of those visits were repeat visits to jobs (meaning 9 jobs needed a second visit). The total square footage installed was 1,089.5 sq ft, averaging 68.1 sq ft per job and 47.4 sq ft per visit. [SQL]",
+    "cost": 0.008753,
+    "latency": {
+     "sql": 2.636911280453205,
+     "answer": 1.4990378851071,
+     "router": 1.704321838915348
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "69",
+   "question": "What is Leo's average job size in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "68.1 sq ft per job",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering jobs assigned to Leo in H1 2026 and calculating average countertop area (sq ft) \u2014 a structured field.",
+   "route_latency": 1.865058553405106,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Leo%'), j AS (SELECT COUNT(*) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)), c AS (SELECT COUNT(*) AS visits, COUNT(*) - COUNT(DISTINCT job_id) AS repeat_visits FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01' AND assignees ILIKE '%Leo%') SELECT j.jobs, c.visits, c.repeat_visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j, c LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "visits",
+     "repeat_visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      16,
+      23,
+      7,
+      "1089.5",
+      "68.1",
+      "47.4"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Leo's average job size in the first half of 2026 is **68.1 sq ft per job** [SQL].\n\nThis is based on 16 distinct jobs totaling 1,089.5 sq ft, completed across 23 install visits (7 of which were repeat visits to jobs already worked on). The data counts only dated, completed install activities assigned to Leo between January 1 and June 30, 2026.",
+    "cost": 0.009198,
+    "latency": {
+     "sql": 3.043038187548518,
+     "answer": 1.5518706198781729,
+     "router": 1.865058553405106
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "70",
+   "question": "What is Leo's average square footage per install visit in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "47.4 sq ft per visit",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering Install activities by salesperson (Leo) and date range (H1 2026), summing countertop areas, and dividing by activity count.",
+   "route_latency": 1.104841137304902,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id FROM v_activities WHERE type_name = 'Install' AND happened AND assignees ILIKE '%Leo%' AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), j AS (SELECT SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft, COUNT(*) AS jobs FROM (SELECT DISTINCT job_id FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id)), c AS (SELECT COUNT(*) AS visits FROM v_activities WHERE type_name = 'Install' AND happened AND assignees ILIKE '%Leo%' AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01') SELECT j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j, c LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      16,
+      23,
+      "1089.5",
+      "68.1",
+      "47.4"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Leo's average square footage per install visit in the first half of 2026 is **47.4 sq ft** [SQL].\n\nThis is based on 16 distinct jobs totaling 1,089.5 sq ft across 23 completed install visits (counting only dated, completed activities assigned to Leo between 2026-01-01 and 2026-07-01).",
+    "cost": 0.008982,
+    "latency": {
+     "sql": 1.9959119390696287,
+     "answer": 1.1002141702920198,
+     "router": 1.104841137304902
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "71",
+   "question": "Which install crew has the smallest average job size in the first half of 2026?",
+   "route": "structured",
+   "expected_answer": "Leo, 68.1 sq ft per job",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering Install activities in H1 2026, grouping by crew, calculating average job size (sq ft), and ranking.",
+   "route_latency": 1.3011527061462402,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id, assignees FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), j AS (SELECT d.assignees, COUNT(*) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM (SELECT DISTINCT job_id, assignees FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id) GROUP BY d.assignees), c AS (SELECT assignees, COUNT(*) AS visits FROM v GROUP BY assignees) SELECT j.assignees, j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j JOIN c USING (assignees) WHERE j.assignees <> '' ORDER BY sq_ft_per_job ASC LIMIT 1",
+    "sql_error": null,
+    "row_count": 6,
+    "sql_columns": [
+     "assignees",
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      "Leo",
+      16,
+      23,
+      "1089.5",
+      "68.1",
+      "47.4"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Leo** has the smallest average job size in the first half of 2026, at **68.1 sq ft per job** [SQL].\n\nLeo completed 16 jobs across 23 visits, totaling 1,089.5 sq ft, which works out to 47.4 sq ft per visit [SQL].",
+    "cost": 0.008876,
+    "latency": {
+     "sql": 2.695592038333416,
+     "answer": 1.252180302515626,
+     "router": 1.3011527061462402
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "72",
+   "question": "Rank all four install crews by total square footage installed in the first half of 2026",
+   "route": "structured",
+   "expected_answer": "Ivan Andreev 9,067.6; Ihor/Tolik 9,027.0; Yuri/Petro 3,653.1; Leo 1,089.5",
+   "difficulty": "medium",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Ranking crews by total square footage of Install activities in a date range is a straightforward aggregation over structured fields (activity type, date, crew assignment, countertop area).",
+   "route_latency": 1.7280692057684064,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH v AS (SELECT job_id, assignees FROM v_activities WHERE type_name = 'Install' AND happened AND activity_date >= '2026-01-01' AND activity_date < '2026-07-01'), j AS (SELECT d.assignees, COUNT(*) AS jobs, SUM(COALESCE(s.total_sq_ft, 0)) AS total_sq_ft FROM (SELECT DISTINCT job_id, assignees FROM v) AS d LEFT JOIN v_job_sqft AS s USING (job_id) GROUP BY d.assignees), c AS (SELECT assignees, COUNT(*) AS visits FROM v GROUP BY assignees) SELECT j.assignees, j.jobs, c.visits, j.total_sq_ft, ROUND(j.total_sq_ft / j.jobs, 1) AS sq_ft_per_job, ROUND(j.total_sq_ft / c.visits, 1) AS sq_ft_per_visit FROM j JOIN c USING (assignees) WHERE j.assignees <> '' ORDER BY j.total_sq_ft DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 6,
+    "sql_columns": [
+     "assignees",
+     "jobs",
+     "visits",
+     "total_sq_ft",
+     "sq_ft_per_job",
+     "sq_ft_per_visit"
+    ],
+    "sql_rows": [
+     [
+      "Ivan Andreev",
+      87,
+      149,
+      "9067.6",
+      "104.2",
+      "60.9"
+     ],
+     [
+      "Ihor/Tolik",
+      108,
+      154,
+      "9027.0",
+      "83.6",
+      "58.6"
+     ],
+     [
+      "Yuri/Petro",
+      35,
+      42,
+      "3653.1",
+      "104.4",
+      "87.0"
+     ],
+     [
+      "Leo",
+      16,
+      23,
+      "1089.5",
+      "68.1",
+      "47.4"
+     ],
+     [
+      "Murilo",
+      2,
+      2,
+      "200.3",
+      "100.2",
+      "100.2"
+     ],
+     [
+      "Other\u00e2\u20ac\u2122s",
+      1,
+      1,
+      "102",
+      "102.0",
+      "102.0"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**Ranking of install crews by total square footage (H1 2026):** [SQL]\n\n1. **Ivan Andreev**: 9,067.6 sq ft (87 jobs, 149 visits, 104.2 sq ft/job, 60.9 sq ft/visit)\n2. **Ihor/Tolik**: 9,027.0 sq ft (108 jobs, 154 visits, 83.6 sq ft/job, 58.6 sq ft/visit)\n3. **Yuri/Petro**: 3,653.1 sq ft (35 jobs, 42 visits, 104.4 sq ft/job, 87.0 sq ft/visit)\n4. **Leo**: 1,089.5 sq ft (16 jobs, 23 visits, 68.1 sq ft/job, 47.4 sq ft/visit)\n\n(Two additional crew entries\u2014Murilo and Other\u2014installed 200.3 and 102 sq ft respectively, but represent minimal activity.)",
+    "cost": 0.009881000000000001,
+    "latency": {
+     "sql": 1.651236865669489,
+     "answer": 1.8056131042540073,
+     "router": 1.7280692057684064
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "73",
+   "question": "For job 5637, how many square feet were installed and how many install visits did it take?",
+   "route": "structured",
+   "expected_answer": "102 sq ft total, across 2 install visits",
+   "difficulty": "hard",
+   "status": "verified",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Answerable by filtering job 5637 and counting install activities and summing countertop area from structured fields.",
+   "route_latency": 0.9083110885694623,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT s.total_sq_ft, (SELECT COUNT(*) FROM v_activities AS a WHERE a.job_id = 5637 AND a.type_name = 'Install' AND a.happened) AS visits FROM v_job_sqft AS s WHERE s.job_id = 5637 LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "total_sq_ft",
+     "visits"
+    ],
+    "sql_rows": [
+     [
+      "102",
+      2
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "For job 5637, **102 square feet were installed across 2 install visits** [SQL].",
+    "cost": 0.0072840000000000005,
+    "latency": {
+     "sql": 1.2200426729395986,
+     "answer": 0.6956252856180072,
+     "router": 0.9083110885694623
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "74",
+   "question": "How many wasted templates have we had in total?",
+   "route": "structured",
+   "expected_answer": "252 wasted templates",
+   "difficulty": "easy",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Wasted templates is a curated structured metric (flagged per template trip in the tracking view); counting total wasted templates across all jobs, salespeople, and years is a direct aggregation over structured fields.",
+   "route_latency": 1.7655079439282417,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS wasted_templates FROM v_wasted_templates WHERE wasted LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "wasted_templates"
+    ],
+    "sql_rows": [
+     [
+      252
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "We have had **252 wasted templates in total** [SQL].",
+    "cost": 0.006874,
+    "latency": {
+     "sql": 0.9188163764774799,
+     "answer": 0.6674782605841756,
+     "router": 1.7655079439282417
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "75",
+   "question": "How many wasted templates in 2025?",
+   "route": "structured",
+   "expected_answer": "48 wasted templates",
+   "difficulty": "easy",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Wasted templates is a curated structured metric (view flags each template trip as wasted or not); counting them by year is a direct structured query.",
+   "route_latency": 1.0213033193722367,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT COUNT(*) AS wasted_templates FROM v_wasted_templates WHERE wasted AND template_year = 2025 LIMIT 200",
+    "sql_error": null,
+    "row_count": 1,
+    "sql_columns": [
+     "wasted_templates"
+    ],
+    "sql_rows": [
+     [
+      48
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "**48 wasted templates in 2025** [SQL].",
+    "cost": 0.006916,
+    "latency": {
+     "sql": 0.9755951073020697,
+     "answer": 0.6386730391532183,
+     "router": 1.0213033193722367
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "76",
+   "question": "Which salesperson had the most wasted templates?",
+   "route": "structured",
+   "expected_answer": "Victor Slabunov, 53",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Wasted templates per salesperson is a curated structured metric (view flags each template trip as wasted or not, per salesperson and year); ranking by count is a direct structured query.",
+   "route_latency": 1.068317973986268,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "WITH wasted_by_pm AS (SELECT salesperson, SUM(CASE WHEN wasted THEN 1 ELSE 0 END) AS wasted_count FROM v_wasted_templates WHERE salesperson <> '' AND salesperson IS NOT NULL GROUP BY salesperson) SELECT salesperson, wasted_count FROM wasted_by_pm ORDER BY wasted_count DESC LIMIT 1",
+    "sql_error": null,
+    "row_count": 10,
+    "sql_columns": [
+     "salesperson",
+     "wasted_count"
+    ],
+    "sql_rows": [
+     [
+      "Victor Slabunov",
+      53
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Victor Slabunov had the most wasted templates with 53 [SQL].",
+    "cost": 0.007405999999999999,
+    "latency": {
+     "sql": 1.9659856669604778,
+     "answer": 0.5514313094317913,
+     "router": 1.068317973986268
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "77",
+   "question": "What percentage of templates were wasted per salesperson in 2025?",
+   "route": "structured",
+   "expected_answer": "Max Konikov 25.0%, Victor Slabunov 12.2%, Diana Diaz 10.0%, Natalia Pavlenko 9.2%, Alex Sorokin 6.1%",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Wasted templates per salesperson and year is a curated structured metric; percentages are calculated from counts.",
+   "route_latency": 1.582026433199644,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT salesperson, template_year, real_templates, wasted_templates, wasted_pct FROM v_wasted_templates_by_pm WHERE template_year = 2025 AND salesperson <> '' AND salesperson IS NOT NULL ORDER BY wasted_pct DESC LIMIT 200",
+    "sql_error": null,
+    "row_count": 5,
+    "sql_columns": [
+     "salesperson",
+     "template_year",
+     "real_templates",
+     "wasted_templates",
+     "wasted_pct"
+    ],
+    "sql_rows": [
+     [
+      "Max Konikov",
+      2025,
+      4,
+      1,
+      "25.0"
+     ],
+     [
+      "Victor Slabunov",
+      2025,
+      82,
+      10,
+      "12.2"
+     ],
+     [
+      "Diana Diaz",
+      2025,
+      20,
+      2,
+      "10.0"
+     ],
+     [
+      "Natalia Pavlenko",
+      2025,
+      174,
+      16,
+      "9.2"
+     ],
+     [
+      "Alex Sorokin",
+      2025,
+      279,
+      17,
+      "6.1"
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "In 2025, wasted template percentages by salesperson were [SQL]:\n\n- **Max Konikov**: 25.0% (1 wasted of 4 templates)\n- **Victor Slabunov**: 12.2% (10 wasted of 82 templates)\n- **Diana Diaz**: 10.0% (2 wasted of 20 templates)\n- **Natalia Pavlenko**: 9.2% (16 wasted of 174 templates)\n- **Alex Sorokin**: 6.1% (17 wasted of 279 templates)",
+    "cost": 0.008031,
+    "latency": {
+     "sql": 1.1618933230638504,
+     "answer": 1.183580294251442,
+     "router": 1.582026433199644
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "78",
+   "question": "Was the first template on job 852 wasted?",
+   "route": "structured",
+   "expected_answer": "Yes - the first template on job 852 is wasted. Structural: a second template followed the next day with no install in between. wasted_reason is 'both' because the redo template's note says 'template again because the client wants to change the placement of the sink'.",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Wasted template status is a curated structured metric tracked per job; yes/no answer for a specific job is directly answerable from the data.",
+   "route_latency": 1.6482058307155967,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT template_date, wasted, structural_wasted, note_wasted, wasted_reason, matched_note, next_template_date, install_between FROM v_wasted_templates WHERE job_id = 852 ORDER BY template_date LIMIT 1",
+    "sql_error": null,
+    "row_count": 2,
+    "sql_columns": [
+     "template_date",
+     "wasted",
+     "structural_wasted",
+     "note_wasted",
+     "wasted_reason",
+     "matched_note",
+     "next_template_date",
+     "install_between"
+    ],
+    "sql_rows": [
+     [
+      "2020-11-11",
+      true,
+      true,
+      true,
+      "both",
+      "template again because the client wants   to change the placement of the sink",
+      "2020-11-12",
+      false
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yes, the first template on job 852 was wasted [SQL]. It occurred on 2020-11-11 and was marked wasted for both structural and note reasons: another template trip followed the next day (2020-11-12) with no install in between, AND the note records that \"template again because the client wants to change the placement of the sink\" [SQL].",
+    "cost": 0.0076159999999999995,
+    "latency": {
+     "sql": 1.288509731180966,
+     "answer": 1.437304493971169,
+     "router": 1.6482058307155967
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "79",
+   "question": "Was any template on job 3117 wasted?",
+   "route": "structured",
+   "expected_answer": "No - neither of the two real templates on job 3117 is wasted: an install happened between them (template, install, template, install).",
+   "difficulty": "hard",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Wasted template status is a curated structured metric tracked per job; answerable by looking up job 3117 in the template-waste view.",
+   "route_latency": 1.6932113356888294,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT template_date, wasted, structural_wasted, note_wasted, wasted_reason, matched_note, next_template_date, install_between FROM v_wasted_templates WHERE job_id = 3117 ORDER BY template_date LIMIT 200",
+    "sql_error": null,
+    "row_count": 2,
+    "sql_columns": [
+     "template_date",
+     "wasted",
+     "structural_wasted",
+     "note_wasted",
+     "wasted_reason",
+     "matched_note",
+     "next_template_date",
+     "install_between"
+    ],
+    "sql_rows": [
+     [
+      "2023-04-19",
+      false,
+      false,
+      false,
+      null,
+      null,
+      "2023-04-26",
+      true
+     ],
+     [
+      "2023-04-26",
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      false
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "No, neither template on job 3117 was wasted [SQL]. Both the April 19 and April 26 templates show `wasted = False`, with no `wasted_reason` recorded.",
+    "cost": 0.007363000000000001,
+    "latency": {
+     "sql": 0.9805838419124484,
+     "answer": 1.0703840088099241,
+     "router": 1.6932113356888294
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  },
+  {
+   "id": "80",
+   "question": "Was the template on job 478 wasted?",
+   "route": "structured",
+   "expected_answer": "Yes - the first template on job 478 is wasted (reason: both). Its note says 'Everything is templated except one uninstalled vanity in unit A', and a second template followed five days later with no install in between.",
+   "difficulty": "medium",
+   "status": "draft",
+   "gold_ids": [],
+   "predicted_route": "structured",
+   "route_reason": "Wasted template status is a curated structured metric tracked per job; yes/no answer for a specific job is directly answerable from the data.",
+   "route_latency": 1.093086116015911,
+   "lane_metrics": null,
+   "generation": {
+    "sql": "SELECT template_date, wasted, structural_wasted, note_wasted, wasted_reason, matched_note, next_template_date, install_between FROM v_wasted_templates WHERE job_id = 478 ORDER BY template_date LIMIT 200",
+    "sql_error": null,
+    "row_count": 2,
+    "sql_columns": [
+     "template_date",
+     "wasted",
+     "structural_wasted",
+     "note_wasted",
+     "wasted_reason",
+     "matched_note",
+     "next_template_date",
+     "install_between"
+    ],
+    "sql_rows": [
+     [
+      "2020-05-20",
+      true,
+      true,
+      true,
+      "both",
+      "Everything is templated except one uninstalled vanity in unit A.",
+      "2020-05-25",
+      false
+     ],
+     [
+      "2020-05-25",
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      false
+     ]
+    ],
+    "chunk_ids": [],
+    "answer": "Yes, the template on job 478 dated **May 20, 2020 was wasted** [SQL]. \n\nBoth signals fired: the structural signal (another template trip followed on May 25 with no install in between) and the note signal (the matched note records \"Everything is templated except one uninstalled vanity in unit A.\") [SQL].\n\nThe second template on May 25, 2020 was not wasted [SQL].",
+    "cost": 0.007683,
+    "latency": {
+     "sql": 1.1037124693393707,
+     "answer": 1.3448929004371166,
+     "router": 1.093086116015911
+    },
+    "correct": true,
+    "faithful": null,
+    "context_precision": null,
+    "judge_reason": null
+   }
+  }
+ ]
+}
