@@ -438,7 +438,15 @@ def main() -> int:
     ap.add_argument("--no-judge", action="store_true",
                     help="skip every judge call: structured rows scored by "
                          "numeric match only, others unscored")
+    ap.add_argument("--conversation", action="store_true",
+                    help="WO17: run the conversation tier "
+                         "(evals/golden_conversations.csv through the "
+                         "rewriter) instead of the single-question tiers; "
+                         "the rewriter is never used otherwise")
     args = ap.parse_args()
+    if args.conversation:
+        from evals.run_conversations import main as conv_main
+        return conv_main()
     tiers = {int(t) for t in args.tiers.split(",")}
 
     rows = load_golden(args.golden) if args.golden else load_golden()
