@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EMG RAG</title>
+<style>
+  :root { --bg:#f6f7f9; --panel:#fff; --ink:#1c2024; --muted:#6b7280; --line:#e5e7eb;
+          --accent:#1f5fbf; --structured:#1f5fbf; --semantic:#0f8a5f; --hybrid:#8a4bd1; --refuse:#b45309; --err:#b91c1c; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:var(--ink); background:var(--bg); }
+  .app { display:grid; grid-template-columns:280px 1fr; min-height:100vh; }
+  aside { background:var(--panel); border-right:1px solid var(--line); padding:14px; overflow:auto; }
+  main { padding:20px 24px; max-width:960px; width:100%; }
+  h1 { margin:0; font-size:22px; }
+  .sub { color:var(--muted); font-size:13px; margin:2px 0 16px; }
+  textarea { width:100%; min-height:72px; padding:10px; font:inherit; border:1px solid var(--line); border-radius:8px; resize:vertical; }
+  textarea:disabled { background:#f3f4f6; }
+  .row { display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap; }
+  button { font:inherit; padding:8px 16px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+  button:disabled { opacity:.55; cursor:default; }
+  button.ghost { background:transparent; color:var(--accent); }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px; }
+  .chip { font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px; background:var(--panel); cursor:pointer; color:var(--muted); }
+  .chip:hover { border-color:var(--accent); color:var(--accent); }
+  .spin { color:var(--muted); font-size:13px; }
+  .spin::before { content:""; display:inline-block; width:12px; height:12px; margin-right:6px; border:2px solid var(--line); border-top-color:var(--accent); border-radius:50%; animation:r 1s linear infinite; vertical-align:-2px; }
+  @keyframes r { to { transform:rotate(360deg); } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-top:14px; }
+  .badge { display:inline-block; font-size:11px; font-weight:600; letter-spacing:.03em; text-transform:uppercase; padding:2px 8px; border-radius:999px; color:#fff; vertical-align:middle; }
+  .b-structured { background:var(--structured);} .b-semantic { background:var(--semantic);} .b-hybrid { background:var(--hybrid);} .b-refuse { background:var(--refuse);} .b-error { background:var(--err);} .b-bot { background:#6b7280; }
+  .meta { color:var(--muted); font-size:12px; margin-top:8px; }
+  .answer { margin-top:10px; }
+  .answer p { margin:0 0 8px; } .answer ul, .answer ol { margin:4px 0 8px 20px; } .answer code { background:#f3f4f6; padding:0 4px; border-radius:4px; }
+  .err { color:var(--err); }
+  details summary { cursor:pointer; color:var(--accent); font-weight:600; }
+  .tabs { display:flex; gap:6px; margin:10px 0; } .tab { padding:4px 10px; border:1px solid var(--line); border-radius:6px; cursor:pointer; font-size:13px; background:#fafafa; } .tab.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  pre { background:#0f172a; color:#e2e8f0; padding:10px; border-radius:8px; overflow:auto; font-size:12.5px; white-space:pre-wrap; word-break:break-word; }
+  table { border-collapse:collapse; font-size:12.5px; width:100%; display:block; overflow:auto; } th, td { border:1px solid var(--line); padding:4px 8px; text-align:left; white-space:nowrap; } th { background:#f3f4f6; }
+  .chunk { border:1px solid var(--line); border-radius:8px; padding:10px; margin:8px 0; background:#fafafa; font-size:13.5px; }
+  .chunk .h { font-weight:600; margin-bottom:4px; } .chunk .ctx { color:var(--muted); font-size:12.5px; margin-bottom:6px; } .chunk .txt { white-space:pre-wrap; }
+  .fb { margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; } .fb button { padding:4px 10px; background:#fff; color:var(--ink); border-color:var(--line); } .fb button.sel { border-color:var(--accent); color:var(--accent); }
+  .fb input { font:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:6px; min-width:240px; }
+  .hist h2 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:6px 0 10px; }
+  .hi { padding:8px; border-radius:8px; cursor:pointer; border:1px solid transparent; }
+  .hi:hover { background:#f3f4f6; } .hi.on { border-color:var(--accent); background:#eef3fb; }
+  .hi.failed { opacity:.55; } .hi .q { font-size:13px; } .hi .d { font-size:11px; color:var(--muted); margin-top:2px; display:flex; gap:6px; align-items:center; }
+  .hi .badge { font-size:9px; padding:1px 6px; }
+  .again { font-size:12px; color:var(--accent); cursor:pointer; margin-left:8px; }
+  #drawerBtn { display:none; }
+  @media (max-width: 760px) {
+    .app { grid-template-columns:1fr; }
+    aside { position:fixed; inset:0 30% 0 0; z-index:10; transform:translateX(-100%); transition:transform .2s; box-shadow:2px 0 12px rgba(0,0,0,.15); }
+    aside.open { transform:none; }
+    #drawerBtn { display:inline-block; }
+    main { padding:14px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="side" class="hist">
+    <h2>Your questions</h2>
+    <div id="histList"></div>
+    <div class="row"><button class="ghost" id="moreBtn" onclick="loadHistory(true)">Load more</button></div>
+  </aside>
+  <main>
+    <div class="row" style="margin-top:0">
+      <button class="ghost" id="drawerBtn" onclick="document.getElementById('side').classList.toggle('open')">☰ History</button>
+      <div>
+        <h1>EMG RAG</h1>
+        <div class="sub">Data as of 2026-07-30 · answers cite job and chunk ids</div>
+      </div>
+    </div>
+
+    <div class="chips" id="chips"></div>
+    <textarea id="q" placeholder="Ask about jobs, quotes, templates, installs, invoices, crews, notes…"></textarea>
+    <div class="row">
+      <button id="askBtn" onclick="askNow()">Ask</button>
+      <span id="spin" class="spin" hidden>working… <span id="secs">0</span>s</span>
+      <span id="viewNote" class="meta" hidden></span>
+    </div>
+
+    <div id="out"></div>
+  </main>
+</div>
+
+<script>
+const SESSION_ID = (crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)));
+const EXAMPLES = [
+  "How much did we invoice in 2024?",
+  "How many jobs do we have in Mount Pleasant?",
+  "How many jobs did Leo install in the first half of 2026?",
+  "How many wasted templates have we had in total?",
+  "What is our overall quote-to-moved-forward conversion rate?",
+  "Were there jobs where we could not get material into the building?"
+];
+const $ = id => document.getElementById(id);
+const H = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+// light markdown: **bold**, *em*, `code`, headings, - / 1. lists, paragraphs, line breaks
+function md(src) {
+  const lines = String(src ?? "").split(/\r?\n/); let out = "", list = null, para = [];
+  const inline = t => H(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<i>$2</i>").replace(/`([^`]+)`/g,"<code>$1</code>");
+  const flushP = () => { if (para.length) { out += "<p>" + para.map(inline).join("<br>") + "</p>"; para = []; } };
+  const flushL = () => { if (list) { out += `</${list}>`; list = null; } };
+  for (const raw of lines) {
+    const l = raw.trimEnd();
+    let m;
+    if ((m = l.match(/^\s*[-*•]\s+(.*)/))) { flushP(); if (list !== "ul") { flushL(); out += "<ul>"; list = "ul"; } out += "<li>" + inline(m[1]) + "</li>"; continue; }
+    if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { flushP(); if (list !== "ol") { flushL(); out += "<ol>"; list = "ol"; } out += "<li>" + inline(m[1]) + "</li>"; continue; }
+    if ((m = l.match(/^#{1,3}\s+(.*)/))) { flushP(); flushL(); out += "<p><b>" + inline(m[1]) + "</b></p>"; continue; }
+    if (!l.trim()) { flushP(); flushL(); continue; }
+    flushL(); para.push(l);
+  }
+  flushP(); flushL(); return out;
+}
+
+function badge(route) { return `<span class="badge b-${H(route)}">${H(route)}</span>`; }
+
+function render(r, opts = {}) {
+  const out = $("out");
+  if (r.error && !r.answer) {
+    out.innerHTML = `<div class="card">${opts.question ? `<div class="meta">Q: ${H(opts.question)}</div>` : ""}<div class="err" style="margin-top:6px">${H(r.error)}</div></div>`;
+    return;
+  }
+  const lat = r.latency_ms != null ? `${(r.latency_ms/1000).toFixed(1)} s` : "";
+  const cost = r.cost_usd != null ? `$${Number(r.cost_usd).toFixed(4)}` : "";
+  let html = `<div class="card">
+    ${opts.question ? `<div class="meta">Q: ${H(opts.question)}${opts.again ? `<span class="again" onclick="reask(this)">Ask again</span>` : ""}</div>` : ""}
+    <div style="margin-top:6px">${badge(r.route)} <span class="meta" style="display:inline">${lat}${lat && cost ? " · " : ""}${cost}</span></div>
+    <div class="answer">${md(r.answer)}</div>`;
+  const hasSql = !!r.sql, hasNotes = (r.chunks || []).length > 0;
+  if (hasSql || hasNotes) {
+    html += `<details><summary>Evidence</summary><div class="tabs">` +
+      (hasSql ? `<span class="tab on" data-t="sql" onclick="tab(this)">SQL</span>` : "") +
+      (hasNotes ? `<span class="tab ${hasSql ? "" : "on"}" data-t="notes" onclick="tab(this)">Notes (${r.chunks.length})</span>` : "") + `</div>`;
+    if (hasSql) {
+      const cols = r.columns || [], rows = r.rows || [];
+      html += `<div class="pane" data-p="sql"><pre>${H(r.sql)}</pre>`;
+      if (r.sql_error) html += `<div class="err">${H(r.sql_error)}</div>`;
+      if (rows.length) {
+        html += `<div class="meta">showing ${rows.length} of ${r.row_count ?? rows.length} rows</div><table><thead><tr>${cols.map(c=>`<th>${H(c)}</th>`).join("")}</tr></thead><tbody>` +
+          rows.map(row => `<tr>${row.map(v=>`<td>${H(v)}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
+      } else html += `<div class="meta">no rows</div>`;
+      html += `</div>`;
+    }
+    if (hasNotes) {
+      html += `<div class="pane" data-p="notes" ${hasSql ? "hidden" : ""}>` + r.chunks.map(c =>
+        `<div class="chunk"><div class="h">job ${H(c.job_id)} · ${H(c.job_name)} <span class="meta" style="display:inline">chunk ${H(c.chunk_id)}</span> ${c.is_bot ? '<span class="badge b-bot">automated</span>' : ""}</div>` +
+        (c.context ? `<div class="ctx">${H(c.context)}</div>` : "") + `<div class="txt">${H(c.text)}</div></div>`).join("") + `</div>`;
+    }
+    html += `</details>`;
+  }
+  if (r.trace_id && !opts.noFeedback) {
+    html += `<div class="fb" data-trace="${H(r.trace_id)}"><span class="meta" style="margin:0">Was this useful?</span>
+      <button onclick="feedback(this,1)">👍</button><button onclick="feedback(this,0)">👎</button>
+      <input id="fbc" placeholder="what was wrong? (optional)" hidden><button id="fbsend" hidden onclick="feedbackSend(this)">Send</button><span class="meta" id="fbdone" style="margin:0"></span></div>`;
+  }
+  html += `</div>`;
+  out.innerHTML = html;
+}
+function tab(el) {
+  const box = el.closest("details");
+  box.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t === el));
+  box.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.p !== el.dataset.t);
+}
+function reask(el) { $("q").value = el.parentElement.textContent.replace(/^Q:\s*/, "").replace(/Ask again$/, "").trim(); $("q").focus(); $("viewNote").hidden = true; }
+
+let fbState = null;
+function feedback(btn, score) {
+  const box = btn.closest(".fb"); fbState = { trace: box.dataset.trace, score };
+  box.querySelectorAll("button").forEach(b => { b.classList.remove("sel"); });
+  btn.classList.add("sel");
+  if (score === 0) { $("fbc").hidden = false; $("fbsend").hidden = false; $("fbc").focus(); }
+  else feedbackSend(btn);
+}
+async function feedbackSend(btn) {
+  const box = btn.closest(".fb"); const comment = ($("fbc") && !$("fbc").hidden) ? $("fbc").value : "";
+  box.querySelectorAll("button, input").forEach(b => b.disabled = true);
+  try {
+    const r = await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json", "X-Session-Id": SESSION_ID },
+      body: JSON.stringify({ trace_id: fbState.trace, score: fbState.score, comment }) });
+    $("fbdone").textContent = r.ok ? "thanks — recorded" : "could not record feedback";
+  } catch (e) { $("fbdone").textContent = "could not record feedback"; }
+}
+
+let timer = null;
+async function askNow() {
+  const q = $("q").value.trim(); if (!q) return;
+  $("askBtn").disabled = true; $("q").disabled = true; $("viewNote").hidden = true;
+  $("spin").hidden = false; const t0 = Date.now(); timer = setInterval(() => $("secs").textContent = Math.round((Date.now()-t0)/1000), 500);
+  $("out").innerHTML = "";
+  let data = null;
+  try {
+    const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json", "X-Session-Id": SESSION_ID }, body: JSON.stringify({ question: q }) });
+    data = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+    if (!r.ok && !data.error) data.error = `HTTP ${r.status}`;
+  } catch (e) { data = { error: "Network error — is the service up?" }; }
+  clearInterval(timer); $("spin").hidden = true; $("askBtn").disabled = false; $("q").disabled = false;
+  render(data, { question: q });
+  loadHistory(false);
+}
+$("q").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askNow(); } });
+
+// ---------------- history sidebar
+let oldestId = null, selectedId = null;
+async function loadHistory(more) {
+  const url = "/api/history?limit=50" + (more && oldestId ? `&before=${oldestId}` : "");
+  let items = [];
+  try { const r = await fetch(url, { headers: { "X-Session-Id": SESSION_ID } }); if (r.ok) items = await r.json(); } catch (e) {}
+  const list = $("histList");
+  if (!more) list.innerHTML = "";
+  if (!items.length) { if (!more && !list.children.length) list.innerHTML = `<div class="meta">nothing asked yet</div>`; $("moreBtn").hidden = true; return; }
+  for (const it of items) {
+    const d = new Date(it.asked_at);
+    const el = document.createElement("div");
+    el.className = "hi" + (it.error ? " failed" : "") + (it.id === selectedId ? " on" : "");
+    el.dataset.id = it.id;
+    el.innerHTML = `<div class="q">${H(it.question)}</div><div class="d">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})} ${it.error ? '<span class="badge b-error">failed</span>' : badge(it.route || "?")}</div>` + (it.error ? `<div class="meta err">${H(it.error).slice(0,90)}</div>` : "");
+    el.onclick = () => openHistory(it.id, el);
+    list.appendChild(el);
+    oldestId = it.id;
+  }
+  $("moreBtn").hidden = items.length < 50;
+}
+async function openHistory(id, el) {
+  document.querySelectorAll(".hi").forEach(x => x.classList.toggle("on", x === el)); selectedId = id;
+  $("side").classList.remove("open");
+  try {
+    const r = await fetch(`/api/history/${id}`, { headers: { "X-Session-Id": SESSION_ID } });
+    if (!r.ok) { render({ error: r.status === 404 ? "That question is not yours to view." : `HTTP ${r.status}` }); return; }
+    const data = await r.json();
+    $("q").value = "";
+    $("viewNote").textContent = `viewing a past answer from ${new Date(data.asked_at).toLocaleString()}`; $("viewNote").hidden = false;
+    if (data.error && !data.answer) render({ error: data.error }, { question: data.question });
+    else render(data, { question: data.question, again: true, noFeedback: false });
+  } catch (e) { render({ error: "could not load that answer" }); }
+}
+
+// ---------------- boot
+$("chips").innerHTML = EXAMPLES.map(e => `<span class="chip" onclick="$('q').value=this.textContent;$('q').focus()">${H(e)}</span>`).join("");
+loadHistory(false);
+</script>
+</body>
+</html>
