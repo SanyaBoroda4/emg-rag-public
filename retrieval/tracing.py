@@ -200,10 +200,10 @@ def generation(name, *, model, input=None, metadata=None, trace_id=None):
 
 @contextlib.contextmanager
 def trace(name, *, input=None, metadata=None, session_id=None, tags=None,
-          trace_id=None):
-    """Root of one question. `metadata`/`session_id`/`tags` are propagated to
-    the trace (filterable in the dashboard); pass trace_id to attach several
-    root spans to one pre-created trace (the eval's tiers)."""
+          trace_id=None, user_id=None):
+    """Root of one question. `metadata`/`session_id`/`tags`/`user_id` are
+    propagated to the trace (filterable in the dashboard); pass trace_id to
+    attach several root spans to one pre-created trace (the eval's tiers)."""
     lf = get_client()
     if lf is None:
         yield Obs(None)
@@ -212,6 +212,7 @@ def trace(name, *, input=None, metadata=None, session_id=None, tags=None,
         from langfuse import propagate_attributes
         prop = propagate_attributes(
             session_id=session_id, tags=tags, trace_name=name,
+            user_id=user_id,
             metadata={k: str(v) for k, v in (metadata or {}).items()
                       if v is not None})
         prop.__enter__()
