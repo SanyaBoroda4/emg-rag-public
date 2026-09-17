@@ -63,6 +63,14 @@ class AskResult:
     latency_ms: int = 0
     cost_usd: float = 0.0
     trace_id: str | None = None
+    # conversational path only (WO17): what the user typed vs what was answered
+    original_question: str | None = None
+    standalone: bool = True
+    rewritten_question: str | None = None
+    rewrite_reason: str = ""
+    rewrite_latency_ms: int = 0
+    rewrite_cost_usd: float = 0.0
+    history_turns: int = 0
 
 
 def _meta(entry_point):
@@ -80,6 +88,39 @@ def ask(question: str, *, session_id=None, user_id=None, tags=("cli",),
                user_id=user_id) as root:
         res = _ask(question, root)
         res.trace_id = root.trace_id
+        return res
+
+
+def ask_conversational(question: str, history, *, session_id=None,
+                       user_id=None, tags=("ui",),
+                       entry_point="ui") -> AskResult:
+    """WO17: the UI path. Same trace as ask(); one extra `rewrite` span
+    before the router. `history` is a list of retrieval.rewrite.Turn (the
+    last <= 3 completed turns of this conversation for this user). The
+    pipeline itself still runs on exactly one question — the rewritten one
+    when the rewriter decided the question was a follow-up, the verbatim
+    question otherwise."""
+    from retrieval.rewrite import rewrite  # local import: CLI/eval never load it
+    with trace(entry_point, input=question, metadata=_meta(entry_point),
+               tags=list(tags), session_id=session_id,
+               user_id=user_id) as root:
+        rw = rewrite(question, history)
+        res = _ask(rw.question, root)
+        res.trace_id = root.trace_id
+        res.original_question = question
+        res.standalone = rw.standalone
+        res.rewritten_question = None if rw.standalone else rw.question
+        res.rewrite_reason = rw.reason
+        res.rewrite_latency_ms = rw.latency_ms
+        res.rewrite_cost_usd = rw.cost_usd
+        res.history_turns = rw.history_used
+        res.latency_ms += rw.latency_ms
+        res.cost_usd += rw.cost_usd
+        root.update(metadata={
+            "standalone": rw.standalone,
+            "rewritten_question": res.rewritten_question,
+            "history_turns": rw.history_used,
+            "rewrite_reason": rw.reason[:300]})
         return res
 
 

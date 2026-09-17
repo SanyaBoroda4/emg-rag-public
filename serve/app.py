@@ -42,7 +42,8 @@ from pydantic import BaseModel, Field  # noqa: E402
 
 from ingest.db import get_ro_conn, get_serve_conn  # noqa: E402
 from retrieval import tracing  # noqa: E402
-from retrieval.pipeline import AS_OF, ask  # noqa: E402
+from retrieval.pipeline import AS_OF, ask_conversational  # noqa: E402
+from retrieval.rewrite import MAX_HISTORY, Turn  # noqa: E402
 
 log = logging.getLogger("emg_rag.serve")
 STATIC = Path(__file__).resolve().parent / "static"
@@ -115,6 +116,13 @@ def _jsonable(v):
 
 def _payload(res) -> dict:
     return {
+        "question": res.original_question or res.question,
+        "rewritten_question": res.rewritten_question,
+        "standalone": res.standalone,
+        "rewrite_reason": res.rewrite_reason,
+        "rewrite_latency_ms": res.rewrite_latency_ms,
+        "rewrite_cost_usd": round(res.rewrite_cost_usd, 5),
+        "history_turns": res.history_turns,
         "route": res.route_used,
         "route_reason": res.route_reason,
         "answer": res.answer,
@@ -139,15 +147,17 @@ def _payload(res) -> dict:
 
 
 def _store(user, session_id, question, payload=None, error=None,
-           latency_ms=None):
+           latency_ms=None, conversation_id=None, parent_ask_id=None):
     """One serve.asks row per /api/ask; never raises."""
     try:
         with get_serve_conn() as conn, conn.cursor() as cur:
             cur.execute(
                 """INSERT INTO serve.asks (user_name, session_id, question,
                        route, answer, response, trace_id, latency_ms,
-                       cost_usd, error)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                       cost_usd, error, conversation_id, rewritten_question,
+                       standalone, parent_ask_id)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                           %s, %s, %s, %s)
                    RETURNING id""",
                 (user, session_id, question,
                  payload.get("route") if payload else None,
@@ -156,13 +166,35 @@ def _store(user, session_id, question, payload=None, error=None,
                  payload.get("trace_id") if payload else None,
                  latency_ms if latency_ms is not None
                  else (payload or {}).get("latency_ms"),
-                 (payload or {}).get("cost_usd"), error))
+                 (payload or {}).get("cost_usd"), error,
+                 conversation_id,
+                 (payload or {}).get("rewritten_question"),
+                 (payload or {}).get("standalone"),
+                 parent_ask_id))
             row_id = cur.fetchone()[0]
             conn.commit()
             return row_id
     except Exception:
         log.exception("history write failed (request still served)")
         return None
+
+
+def _load_history(user, conversation_id):
+    """Last <= MAX_HISTORY completed turns of this conversation, this user,
+    oldest first, as rewriter Turns; plus the id of the latest turn."""
+    with get_serve_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """SELECT id, question, rewritten_question, route, answer,
+                      response->>'sql'
+               FROM serve.asks
+               WHERE user_name = %s AND conversation_id = %s
+                 AND error IS NULL AND answer IS NOT NULL
+               ORDER BY id DESC LIMIT %s""",
+            (user, conversation_id, MAX_HISTORY))
+        rows = cur.fetchall()[::-1]
+    turns = [Turn(question=r[1], standalone_question=r[2] or r[1],
+                  route=r[3], answer=r[4] or "", sql=r[5]) for r in rows]
+    return turns, (rows[-1][0] if rows else None)
 
 
 # --------------------------------------------------------------- endpoints
@@ -189,6 +221,14 @@ async def healthz():
 
 class AskBody(BaseModel):
     question: str = Field(default="")
+    conversation_id: str | None = None
+
+
+def _conversation(cid):
+    try:
+        return str(uuid.UUID(cid)) if cid else str(uuid.uuid4())
+    except Exception:
+        return str(uuid.uuid4())
 
 
 @app.post("/api/ask")
@@ -206,33 +246,51 @@ async def api_ask(body: AskBody, request: Request):
                                       "questions — try again in a moment."},
                             429)
     session_id = _session(request)
+    conv_id = _conversation(body.conversation_id)
     _inflight += 1
     t0 = asyncio.get_event_loop().time()
+    parent_id = None
     try:
+        # WO17: this user's last completed turns of this conversation are the
+        # rewriter's only context; a fresh conversation has none.
+        try:
+            history, parent_id = await asyncio.to_thread(_load_history, user,
+                                                         conv_id)
+        except Exception:
+            log.exception("history load failed; asking without context")
+            history, parent_id = [], None
         res = await asyncio.wait_for(
-            asyncio.to_thread(ask, q, session_id=session_id, user_id=user,
+            asyncio.to_thread(ask_conversational, q, history,
+                              session_id=session_id, user_id=user,
                               tags=["ui"], entry_point="ui"),
             timeout=ASK_TIMEOUT_S)
     except asyncio.TimeoutError:
         ms = round((asyncio.get_event_loop().time() - t0) * 1000)
         log.error("ask timed out after %ss: %r", ASK_TIMEOUT_S, q[:120])
         await asyncio.to_thread(_store, user, session_id, q, None,
-                                f"timed out after {ASK_TIMEOUT_S} s", ms)
+                                f"timed out after {ASK_TIMEOUT_S} s", ms,
+                                conv_id, parent_id)
         return JSONResponse({"error": f"That question took longer than "
                                       f"{ASK_TIMEOUT_S} seconds and was "
-                                      f"cancelled. Try a narrower one."}, 504)
+                                      f"cancelled. Try a narrower one.",
+                             "conversation_id": conv_id}, 504)
     except Exception as e:
         ms = round((asyncio.get_event_loop().time() - t0) * 1000)
         log.exception("ask failed: %r", q[:120])  # traceback to the log only
         await asyncio.to_thread(_store, user, session_id, q, None,
-                                f"{type(e).__name__}: {e}"[:500], ms)
+                                f"{type(e).__name__}: {e}"[:500], ms,
+                                conv_id, parent_id)
         return JSONResponse({"error": "Something went wrong answering that "
-                                      "question. It has been logged."}, 500)
+                                      "question. It has been logged.",
+                             "conversation_id": conv_id}, 500)
     finally:
         _inflight -= 1
     payload = _payload(res)
+    payload["conversation_id"] = conv_id
+    payload["parent_ask_id"] = parent_id
     payload["id"] = await asyncio.to_thread(_store, user, session_id, q,
-                                            payload)
+                                            payload, None, None, conv_id,
+                                            parent_id)
     return payload
 
 
@@ -257,41 +315,77 @@ async def api_feedback(body: FeedbackBody, request: Request):
 @app.get("/api/history")
 async def api_history(request: Request, limit: int = 50,
                       before: int | None = None):
+    """This user's conversations, newest first (WO17). Pre-WO17 rows have
+    no conversation_id and appear as one-turn conversations."""
     user = _require_user(request)
     limit = max(1, min(limit, 200))
 
     def q():
         with get_serve_conn() as conn, conn.cursor() as cur:
             cur.execute(
-                """SELECT id, asked_at, question, route,
-                          left(coalesce(answer, ''), 160), error
-                   FROM serve.asks
-                   WHERE user_name = %s AND (%s::bigint IS NULL OR id < %s)
-                   ORDER BY id DESC LIMIT %s""",
+                """WITH c AS (
+                     SELECT COALESCE(conversation_id::text, 'ask-' || id) AS key,
+                            conversation_id, MIN(id) AS first_id, MAX(id) AS last_id,
+                            COUNT(*) AS turns, MAX(asked_at) AS last_at,
+                            (array_agg(question ORDER BY id))[1] AS title,
+                            (array_agg(route ORDER BY id DESC))[1] AS last_route,
+                            (array_agg(error ORDER BY id DESC))[1] AS last_error,
+                            bool_and(error IS NOT NULL) AS all_failed
+                     FROM serve.asks WHERE user_name = %s GROUP BY 1, 2)
+                   SELECT conversation_id, first_id, last_id, turns, last_at,
+                          title, last_route, last_error, all_failed
+                   FROM c WHERE (%s::bigint IS NULL OR last_id < %s)
+                   ORDER BY last_id DESC LIMIT %s""",
                 (user, before, before, limit))
-            return [{"id": r[0], "asked_at": r[1].isoformat(),
-                     "question": r[2], "route": r[3],
-                     "answer_preview": r[4], "error": r[5]}
+            return [{"conversation_id": str(r[0]) if r[0] else None,
+                     "id": r[1], "last_id": r[2], "turns": r[3],
+                     "asked_at": r[4].isoformat(), "question": r[5],
+                     "route": r[6], "error": r[7], "all_failed": r[8]}
                     for r in cur.fetchall()]
     return await asyncio.to_thread(q)
 
 
-@app.get("/api/history/{ask_id}")
-async def api_history_one(ask_id: int, request: Request):
+def _turn_payload(row):
+    payload = dict(row[3] or {})
+    payload.update({"id": row[0], "asked_at": row[1].isoformat(),
+                    "question": row[2], "error": row[4],
+                    "latency_ms": payload.get("latency_ms", row[5]),
+                    "rewritten_question": payload.get("rewritten_question",
+                                                      row[6]),
+                    "standalone": payload.get("standalone", row[7])})
+    return payload
+
+
+@app.get("/api/history/{ref}")
+async def api_history_one(ref: str, request: Request):
+    """The whole conversation, in order. `ref` is an ask id (any turn) or a
+    conversation uuid; 404 unless it belongs to the calling user."""
     user = _require_user(request)
 
     def q():
         with get_serve_conn() as conn, conn.cursor() as cur:
-            cur.execute(
-                """SELECT id, asked_at, question, response, error, latency_ms
-                   FROM serve.asks WHERE id = %s AND user_name = %s""",
-                (ask_id, user))
-            return cur.fetchone()
-    row = await asyncio.to_thread(q)
-    if row is None:  # other user's row or no such row: same answer
+            cols = ("id, asked_at, question, response, error, latency_ms, "
+                    "rewritten_question, standalone, conversation_id")
+            conv = None
+            if ref.isdigit():
+                cur.execute(f"SELECT {cols} FROM serve.asks WHERE id = %s "
+                            f"AND user_name = %s", (int(ref), user))
+                row = cur.fetchone()
+                if row is None:
+                    return None, []
+                conv = row[8]
+                if conv is None:  # pre-WO17 single ask
+                    return None, [row]
+            else:
+                try:
+                    conv = str(uuid.UUID(ref))
+                except Exception:
+                    return None, []
+            cur.execute(f"SELECT {cols} FROM serve.asks WHERE conversation_id = %s "
+                        f"AND user_name = %s ORDER BY id", (conv, user))
+            return conv, cur.fetchall()
+    conv, rows = await asyncio.to_thread(q)
+    if not rows:  # other user's row or no such row: same answer
         raise HTTPException(404, "not found")
-    payload = row[3] or {}
-    payload.update({"id": row[0], "asked_at": row[1].isoformat(),
-                    "question": row[2], "error": row[4],
-                    "latency_ms": payload.get("latency_ms", row[5])})
-    return payload
+    return {"conversation_id": str(conv) if conv else None,
+            "turns": [_turn_payload(r) for r in rows]}
