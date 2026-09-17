@@ -27,12 +27,12 @@
    "model_output": {
     "standalone": true,
     "question": "What is the capital of France?",
-    "reason": "This question is completely unrelated to the countertop company's job-tracking and invoicing data. It stands on its own as a general knowledge question, though it is outside the scope of the system's domain."
+    "reason": "This question is completely unrelated to the countertop company's job-tracking and invoicing data. It does not reference any previous context, filters, or entities from the conversation history. It stands entirely on its own, though it is outside the domain of the system."
    },
    "result": {
     "standalone": true,
     "question": "What is the capital of France?",
-    "reason": "This question is completely unrelated to the countertop company's job-tracking and invoicing data. It stands on its own as a general knowledge question, though it is outside the scope of the system's domain."
+    "reason": "This question is completely unrelated to the countertop company's job-tracking and invoicing data. It does not reference any previous context, filters, or entities from the conversation history. It stands entirely on its own, though it is outside the domain of the system."
    },
    "prompt_chars": 383
   },
@@ -54,12 +54,12 @@
    "model_output": {
     "standalone": true,
     "question": "Which jobs had a template wasted because cabinets weren't ready?",
-    "reason": "The question names its own subject (jobs), specifies the reason for waste (cabinets weren't ready), and does not depend on pronouns, deixis, or filters from the previous turn. It is self-contained."
+    "reason": "The new question names its own subject (jobs) and specifies a particular reason for waste (cabinets weren't ready). It does not rely on pronouns, deixis, or elided filters from the previous turn. It stands on its own."
    },
    "result": {
     "standalone": true,
     "question": "Which jobs had a template wasted because cabinets weren't ready?",
-    "reason": "The question names its own subject (jobs), specifies the reason for waste (cabinets weren't ready), and does not depend on pronouns, deixis, or filters from the previous turn. It is self-contained."
+    "reason": "The new question names its own subject (jobs) and specifies a particular reason for waste (cabinets weren't ready). It does not rely on pronouns, deixis, or elided filters from the previous turn. It stands on its own."
    },
    "prompt_chars": 269
   },
@@ -81,12 +81,12 @@
    "model_output": {
     "standalone": true,
     "question": "How many wasted templates have we had in total?",
-    "reason": "The question names its own subject (wasted templates) and metric (total count) without relying on previous context. It does not reference pronouns, deixis, or filters from the prior turn about Natalia Pavlenko's job sales."
+    "reason": "The new question introduces a completely new metric ('wasted templates') and asks about the total across the entire company, with no reference to the previous question about Natalia Pavlenko's job sales. It stands on its own as a self-contained query."
    },
    "result": {
     "standalone": true,
     "question": "How many wasted templates have we had in total?",
-    "reason": "The question names its own subject (wasted templates) and metric (total count) without relying on previous context. It does not reference pronouns, deixis, or filters from the prior turn about Natalia Pavlenko's job sales."
+    "reason": "The new question introduces a completely new metric ('wasted templates') and asks about the total across the entire company, with no reference to the previous question about Natalia Pavlenko's job sales. It stands on its own as a self-contained query."
    },
    "prompt_chars": 239
   },
@@ -108,12 +108,12 @@
    "model_output": {
     "standalone": true,
     "question": "Which jobs included a waterfall edge?",
-    "reason": "The question names its own subject (jobs with waterfall edge) and is not dependent on previous context. It does not use pronouns, deixis, or elided filters that reference the prior conversation about conversion rates."
+    "reason": "The question names its own subject (jobs with a waterfall edge) and does not depend on pronouns, deixis, or filters from the previous turn. It is a complete, self-contained question."
    },
    "result": {
     "standalone": true,
     "question": "Which jobs included a waterfall edge?",
-    "reason": "The question names its own subject (jobs with waterfall edge) and is not dependent on previous context. It does not use pronouns, deixis, or elided filters that reference the prior conversation about conversion rates."
+    "reason": "The question names its own subject (jobs with a waterfall edge) and does not depend on pronouns, deixis, or filters from the previous turn. It is a complete, self-contained question."
    },
    "prompt_chars": 295
   },
@@ -135,12 +135,12 @@
    "model_output": {
     "standalone": true,
     "question": "How many jobs do we have in Mount Pleasant?",
-    "reason": "The question names its own subject (jobs) and place (Mount Pleasant), making it self-contained despite the conversation continuing from a previous question about Leo's installations."
+    "reason": "The new question names its own subject (jobs) and place (Mount Pleasant), making it self-contained. It does not depend on the previous turn's filters (Leo, first half of 2026)."
    },
    "result": {
     "standalone": true,
     "question": "How many jobs do we have in Mount Pleasant?",
-    "reason": "The question names its own subject (jobs) and place (Mount Pleasant), making it self-contained despite the conversation continuing from a previous question about Leo's installations."
+    "reason": "The new question names its own subject (jobs) and place (Mount Pleasant), making it self-contained. It does not depend on the previous turn's filters (Leo, first half of 2026)."
    },
    "prompt_chars": 310
   },
@@ -162,12 +162,12 @@
    "model_output": {
     "standalone": true,
     "question": "What is our overall quote-to-moved-forward conversion rate?",
-    "reason": "The question names its own metric (quote-to-moved-forward conversion rate) and scope (overall), and does not depend on pronouns, deixis, or filters from the previous turn."
+    "reason": "The question names its own metric (quote-to-moved-forward conversion rate) and subject (overall), and does not depend on pronouns, deixis, or filters from the previous turn. It stands on its own."
    },
    "result": {
     "standalone": true,
     "question": "What is our overall quote-to-moved-forward conversion rate?",
-    "reason": "The question names its own metric (quote-to-moved-forward conversion rate) and scope (overall), and does not depend on pronouns, deixis, or filters from the previous turn."
+    "reason": "The question names its own metric (quote-to-moved-forward conversion rate) and subject (overall), and does not depend on pronouns, deixis, or filters from the previous turn. It stands on its own."
    },
    "prompt_chars": 249
   },
@@ -180,7 +180,7 @@
      "question": "How much did we invoice in 2024?",
      "standalone_question": "How much did we invoice in 2024?",
      "route": "structured",
-     "answer": "$5,200,113.02 (574 invoices)",
+     "answer": "$5,200,113.02",
      "sql": null
     }
    ],
@@ -189,14 +189,14 @@
    "model_output": {
     "standalone": true,
     "question": "How many jobs did Leo install in the first half of 2026?",
-    "reason": "The question names its own subject (Leo), metric (number of jobs), action (install), and time period (first half of 2026). It does not depend on any prior context from the conversation."
+    "reason": "The question names its own subject (Leo), metric (number of jobs), time period (first half of 2026), and action (install). It does not depend on any prior context to be understood."
    },
    "result": {
     "standalone": true,
     "question": "How many jobs did Leo install in the first half of 2026?",
-    "reason": "The question names its own subject (Leo), metric (number of jobs), action (install), and time period (first half of 2026). It does not depend on any prior context from the conversation."
+    "reason": "The question names its own subject (Leo), metric (number of jobs), time period (first half of 2026), and action (install). It does not depend on any prior context to be understood."
    },
-   "prompt_chars": 256
+   "prompt_chars": 241
   },
   {
    "id": "S08",
@@ -216,12 +216,12 @@
    "model_output": {
     "standalone": true,
     "question": "Were there jobs where we could not get material into the building?",
-    "reason": "The question names its own subject (jobs with material access issues) and does not rely on pronouns, deixis, or filters from the previous turn about wasted templates by salesperson."
+    "reason": "The new question introduces a completely new topic (material delivery issues) unrelated to the previous question about wasted templates. It does not reference pronouns, deixis, or filters from the prior turn, and it stands on its own as a self-contained inquiry."
    },
    "result": {
     "standalone": true,
     "question": "Were there jobs where we could not get material into the building?",
-    "reason": "The question names its own subject (jobs with material access issues) and does not rely on pronouns, deixis, or filters from the previous turn about wasted templates by salesperson."
+    "reason": "The new question introduces a completely new topic (material delivery issues) unrelated to the previous question about wasted templates. It does not reference pronouns, deixis, or filters from the prior turn, and it stands on its own as a self-contained inquiry."
    },
    "prompt_chars": 289
   },
@@ -250,12 +250,12 @@
    "model_output": {
     "standalone": true,
     "question": "How many quotes have we issued in total?",
-    "reason": "The question names its own metric (quotes issued) and scope (in total), with no pronouns, deixis, or elided filters referring to previous turns. It stands alone."
+    "reason": "The new question introduces a new metric (quotes issued) and scope (total, no location filter), making it self-contained and independent of the previous conversation about job counts in specific locations."
    },
    "result": {
     "standalone": true,
     "question": "How many quotes have we issued in total?",
-    "reason": "The question names its own metric (quotes issued) and scope (in total), with no pronouns, deixis, or elided filters referring to previous turns. It stands alone."
+    "reason": "The new question introduces a new metric (quotes issued) and scope (total, no location filter), making it self-contained and independent of the previous conversation about job counts in specific locations."
    },
    "prompt_chars": 366
   },
@@ -277,12 +277,12 @@
    "model_output": {
     "standalone": true,
     "question": "Which salesperson had the most wasted templates?",
-    "reason": "The question names its own subject (salesperson) and metric (wasted templates). It does not depend on the previous question about Ivan Andreev's average job size; it is a new inquiry with its own clear scope."
+    "reason": "The question names its own subject (salesperson) and metric (wasted templates). It does not depend on any filter or entity from the previous turn about Ivan Andreev's job size."
    },
    "result": {
     "standalone": true,
     "question": "Which salesperson had the most wasted templates?",
-    "reason": "The question names its own subject (salesperson) and metric (wasted templates). It does not depend on the previous question about Ivan Andreev's average job size; it is a new inquiry with its own clear scope."
+    "reason": "The question names its own subject (salesperson) and metric (wasted templates). It does not depend on any filter or entity from the previous turn about Ivan Andreev's job size."
    },
    "prompt_chars": 309
   },
@@ -304,12 +304,12 @@
    "model_output": {
     "standalone": false,
     "question": "How many jobs did Leo install in March 2026?",
-    "reason": "The new question uses 'those' to refer back to the jobs from the first half of 2026 mentioned in the previous turn. Rewritten to be self-contained by replacing 'those' with the explicit filter 'in March 2026', which is a subset of the previous period."
+    "reason": "The new question uses 'those' and 'of those', which refers back to the jobs from the previous turn. The filter on 'first half of 2026' is being replaced with the more specific 'March 2026', which is still within that period. The rewrite names the specific month while keeping the installer (Leo) and metric (number of jobs) from the previous context."
    },
    "result": {
     "standalone": false,
     "question": "How many jobs did Leo install in March 2026?",
-    "reason": "The new question uses 'those' to refer back to the jobs from the first half of 2026 mentioned in the previous turn. Rewritten to be self-contained by replacing 'those' with the explicit filter 'in March 2026', which is a subset of the previous period."
+    "reason": "The new question uses 'those' and 'of those', which refers back to the jobs from the previous turn. The filter on 'first half of 2026' is being replaced with the more specific 'March 2026', which is still within that period. The rewrite names the specific month while keeping the installer (Leo) and metric (number of jobs) from the previous context."
    },
    "prompt_chars": 308
   },
@@ -338,12 +338,12 @@
    "model_output": {
     "standalone": false,
     "question": "How many jobs did Ihor/Tolik install in the first half of 2026?",
-    "reason": "The new question uses 'What about' which is a comparative deixis referring back to the previous context. It elides the metric (jobs installed) and time period (first half of 2026) from Turn 1, replacing only the installer name from Leo to Ihor/Tolik."
+    "reason": "The new question uses 'What about' to elide the metric (jobs installed) and time period (first half of 2026) from the most recent resolved question, replacing only the person (Leo \u2192 Ihor/Tolik). The rewrite restores these filters to make it self-contained."
    },
    "result": {
     "standalone": false,
     "question": "How many jobs did Ihor/Tolik install in the first half of 2026?",
-    "reason": "The new question uses 'What about' which is a comparative deixis referring back to the previous context. It elides the metric (jobs installed) and time period (first half of 2026) from Turn 1, replacing only the installer name from Leo to Ihor/Tolik."
+    "reason": "The new question uses 'What about' to elide the metric (jobs installed) and time period (first half of 2026) from the most recent resolved question, replacing only the person (Leo \u2192 Ihor/Tolik). The rewrite restores these filters to make it self-contained."
    },
    "prompt_chars": 480
   },
@@ -365,12 +365,12 @@
    "model_output": {
     "standalone": false,
     "question": "How many jobs has Natalia Pavlenko sold in 2025?",
-    "reason": "The new question uses 'And in 2025?' which is an elided filter. It refers back to the previous question about Natalia Pavlenko's job sales and adds a year filter that was not in the original question."
+    "reason": "The new question uses 'and' and elides the subject and metric from the previous turn. It needs to be rewritten to include the salesperson (Natalia Pavlenko) and the year filter (2025) to stand alone."
    },
    "result": {
     "standalone": false,
     "question": "How many jobs has Natalia Pavlenko sold in 2025?",
-    "reason": "The new question uses 'And in 2025?' which is an elided filter. It refers back to the previous question about Natalia Pavlenko's job sales and adds a year filter that was not in the original question."
+    "reason": "The new question uses 'and' and elides the subject and metric from the previous turn. It needs to be rewritten to include the salesperson (Natalia Pavlenko) and the year filter (2025) to stand alone."
    },
    "prompt_chars": 204
   },
@@ -399,12 +399,12 @@
    "model_output": {
     "standalone": false,
     "question": "Which city did Natalia Pavlenko sell the most jobs in during 2025?",
-    "reason": "The pronoun 'she' refers to Natalia Pavlenko from the previous turns. The question is asking about cities where jobs were sold, continuing the 2025 filter from Turn 2. The rewrite makes explicit that we're asking about Natalia Pavlenko's sales in 2025, the most recent context."
+    "reason": "The pronoun 'she' refers to Natalia Pavlenko from the previous turns. The question implicitly continues the 2025 filter from Turn 2, the most recent resolved question. The rewrite names the person and year to make it self-contained."
    },
    "result": {
     "standalone": false,
     "question": "Which city did Natalia Pavlenko sell the most jobs in during 2025?",
-    "reason": "The pronoun 'she' refers to Natalia Pavlenko from the previous turns. The question is asking about cities where jobs were sold, continuing the 2025 filter from Turn 2. The rewrite makes explicit that we're asking about Natalia Pavlenko's sales in 2025, the most recent context."
+    "reason": "The pronoun 'she' refers to Natalia Pavlenko from the previous turns. The question implicitly continues the 2025 filter from Turn 2, the most recent resolved question. The rewrite names the person and year to make it self-contained."
    },
    "prompt_chars": 361
   },
@@ -426,12 +426,12 @@
    "model_output": {
     "standalone": false,
     "question": "How many jobs in Mount Pleasant are complete?",
-    "reason": "The pronoun 'those' refers to the jobs in Mount Pleasant from the previous question. Resolving it makes the question self-contained."
+    "reason": "The new question uses the pronoun 'those' referring to the jobs in Mount Pleasant from the previous turn. The rewrite resolves this pronoun and makes the question self-contained by naming the place and status filter."
    },
    "result": {
     "standalone": false,
     "question": "How many jobs in Mount Pleasant are complete?",
-    "reason": "The pronoun 'those' refers to the jobs in Mount Pleasant from the previous question. Resolving it makes the question self-contained."
+    "reason": "The new question uses the pronoun 'those' referring to the jobs in Mount Pleasant from the previous turn. The rewrite resolves this pronoun and makes the question self-contained by naming the place and status filter."
    },
    "prompt_chars": 228
   },
@@ -453,12 +453,12 @@
    "model_output": {
     "standalone": false,
     "question": "Which salesperson had the most wasted templates in 2025?",
-    "reason": "The new question uses 'What about' which is a comparative deixis referring to the previous question's subject (salesperson with most wasted templates), and adds a new temporal filter (2025) that needs to be explicit."
+    "reason": "The new question uses 'What about' which is a comparative deixis referring back to the previous turn's topic (salesperson with most wasted templates). The year 2025 is a new filter that replaces the implicit all-time scope of the previous question."
    },
    "result": {
     "standalone": false,
     "question": "Which salesperson had the most wasted templates in 2025?",
-    "reason": "The new question uses 'What about' which is a comparative deixis referring to the previous question's subject (salesperson with most wasted templates), and adds a new temporal filter (2025) that needs to be explicit."
+    "reason": "The new question uses 'What about' which is a comparative deixis referring back to the previous turn's topic (salesperson with most wasted templates). The year 2025 is a new filter that replaces the implicit all-time scope of the previous question."
    },
    "prompt_chars": 242
   },
@@ -486,13 +486,13 @@
    "expected_question": "Was the quote conversion rate in 2023 better than in 2024?",
    "model_output": {
     "standalone": false,
-    "question": "What was our quote-to-moved-forward conversion rate in 2023?",
-    "reason": "The new question uses the comparative 'better' which requires naming both things being compared. The previous turn established 2024's conversion rate (63.4%), and the user is asking whether 2023's rate was higher. The rewrite makes this explicit by asking for the 2023 conversion rate using the same metric (quote-to-moved-forward conversion rate) established in the conversation history."
+    "question": "What was our quote-to-moved-forward conversion rate in 2023, and was it better than the 63.4% we had in 2024?",
+    "reason": "The question uses the comparative 'better' and refers to 2024's result from the previous turn. The rewrite asks for both the 2023 rate and the comparison to 2024, naming both sides explicitly so the user can see the comparison being made."
    },
    "result": {
     "standalone": false,
-    "question": "What was our quote-to-moved-forward conversion rate in 2023?",
-    "reason": "The new question uses the comparative 'better' which requires naming both things being compared. The previous turn established 2024's conversion rate (63.4%), and the user is asking whether 2023's rate was higher. The rewrite makes this explicit by asking for the 2023 conversion rate using the same metric (quote-to-moved-forward conversion rate) established in the conversation history."
+    "question": "What was our quote-to-moved-forward conversion rate in 2023, and was it better than the 63.4% we had in 2024?",
+    "reason": "The question uses the comparative 'better' and refers to 2024's result from the previous turn. The rewrite asks for both the 2023 rate and the comparison to 2024, naming both sides explicitly so the user can see the comparison being made."
    },
    "prompt_chars": 418
   },
@@ -514,12 +514,12 @@
    "model_output": {
     "standalone": false,
     "question": "How many jobs that went quiet after a quote are canceled?",
-    "reason": "The pronoun 'those' refers to the 1306 jobs from the previous question that went quiet after a quote. The new question adds a filter (canceled status) to the previous result."
+    "reason": "The new question uses 'those' to refer back to the 1306 jobs from the previous turn that went quiet after a quote. The rewrite resolves this pronoun and adds the 'canceled' status filter to make the question self-contained."
    },
    "result": {
     "standalone": false,
     "question": "How many jobs that went quiet after a quote are canceled?",
-    "reason": "The pronoun 'those' refers to the 1306 jobs from the previous question that went quiet after a quote. The new question adds a filter (canceled status) to the previous result."
+    "reason": "The new question uses 'those' to refer back to the 1306 jobs from the previous turn that went quiet after a quote. The rewrite resolves this pronoun and adds the 'canceled' status filter to make the question self-contained."
    },
    "prompt_chars": 221
   },
@@ -532,14 +532,14 @@
      "question": "How much did we invoice in 2024?",
      "standalone_question": "How much did we invoice in 2024?",
      "route": "structured",
-     "answer": "$5,200,113.02 (574 invoices)",
+     "answer": "$5,200,113.02",
      "sql": null
     },
     {
      "question": "And in 2023?",
      "standalone_question": "How much did we invoice in 2023?",
      "route": "structured",
-     "answer": "$4,127,158.52 (553 invoices)",
+     "answer": "$4,127,158.52",
      "sql": null
     }
    ],
@@ -547,15 +547,15 @@
    "expected_question": "Which year had the higher invoiced total, 2023 or 2024?",
    "model_output": {
     "standalone": false,
-    "question": "Was invoicing higher in 2024 or 2023?",
-    "reason": "The question uses a comparative ('which year was higher') that requires naming both years being compared. The history shows invoicing totals for 2024 ($5,200,113.02) and 2023 ($4,127,158.52), so the rewrite makes explicit that we're comparing these two years."
+    "question": "Was the total invoiced amount in 2024 higher than in 2023?",
+    "reason": "The question uses the comparative 'which year was higher' and refers back to the two years discussed in the previous turns (2024 and 2023). The rewrite makes explicit that we're comparing the invoice totals from both years, naming both sides of the comparison."
    },
    "result": {
     "standalone": false,
-    "question": "Was invoicing higher in 2024 or 2023?",
-    "reason": "The question uses a comparative ('which year was higher') that requires naming both years being compared. The history shows invoicing totals for 2024 ($5,200,113.02) and 2023 ($4,127,158.52), so the rewrite makes explicit that we're comparing these two years."
+    "question": "Was the total invoiced amount in 2024 higher than in 2023?",
+    "reason": "The question uses the comparative 'which year was higher' and refers back to the two years discussed in the previous turns (2024 and 2023). The rewrite makes explicit that we're comparing the invoice totals from both years, naming both sides of the comparison."
    },
-   "prompt_chars": 364
+   "prompt_chars": 334
   },
   {
    "id": "F10",
@@ -565,7 +565,7 @@
     {
      "question": "Which jobs had a template wasted because cabinets weren't ready?",
      "standalone_question": "Which jobs had a template wasted because cabinets weren't ready?",
-     "route": "structured",
+     "route": "hybrid",
      "answer": "16 jobs: 60, 293, 853, 925, 1251, 1334, 2195, 2272, 3516, 3622, 4743, 4882, 4934, 5015, 5142, 5491",
      "sql": null
     }
@@ -574,15 +574,15 @@
    "expected_question": "Who were the salespeople on the jobs that had a template wasted because cabinets weren't ready?",
    "model_output": {
     "standalone": false,
-    "question": "Who were the salespeople on the 16 jobs that had a template wasted because cabinets weren't ready (jobs 60, 293, 853, 925, 1251, 1334, 2195, 2272, 3516, 3622, 4743, 4882, 4934, 5015, 5142, 5491)?",
-    "reason": "The pronoun 'those jobs' refers to the 16 jobs from the previous turn. The new question needs the filter from Turn 1 to be self-contained."
+    "question": "Who were the salespeople on the jobs where a template was wasted because cabinets weren't ready?",
+    "reason": "The new question uses the pronoun 'those jobs' which refers to the 16 jobs identified in the previous turn. The rewrite names the specific filter (jobs with template wasted due to cabinets not ready) to make the question self-contained."
    },
    "result": {
     "standalone": false,
-    "question": "Who were the salespeople on the 16 jobs that had a template wasted because cabinets weren't ready (jobs 60, 293, 853, 925, 1251, 1334, 2195, 2272, 3516, 3622, 4743, 4882, 4934, 5015, 5142, 5491)?",
-    "reason": "The pronoun 'those jobs' refers to the 16 jobs from the previous turn. The new question needs the filter from Turn 1 to be self-contained."
+    "question": "Who were the salespeople on the jobs where a template was wasted because cabinets weren't ready?",
+    "reason": "The new question uses the pronoun 'those jobs' which refers to the 16 jobs identified in the previous turn. The rewrite names the specific filter (jobs with template wasted due to cabinets not ready) to make the question self-contained."
    },
-   "prompt_chars": 373
+   "prompt_chars": 369
   }
  ]
 }
