@@ -2,7 +2,7 @@
 # EMG RAG — Project Handoff / Status
 
 > Purpose of this file: bring a brand-new collaborator (human or AI chat with no
-> prior context) fully up to speed. Last updated: 2026-09-14, after WO11 (golden re-key, quoted-jobs definition)
+> prior context) fully up to speed. Last updated: 2026-09-17, after WO16 (Phase 7: served at https://rag.emgcheckbot.us)
 > and WO15 (quoted-jobs ruling: dated Estimate signals count, v_quoted_jobs = 4,423). Read `CLAUDE.md` first for the hard operating
 > rules; this file is the story and the current state.
 
@@ -82,6 +82,7 @@ private repo is mirrored (sanitized) to a public repo.
 | DET2 | WO13: answer determinism, slow-query tail, judge left alone | **COMPLETE.** Answer model `temperature=0` (`f5a3d57`): three consecutive full evals 75/75/76 with failing sets {11,41,45,47,49,56}+{58} / +{30} / — — the two moving questions (Q30, Q58) had byte-identical answers, SQL, rows and chunks in all three runs; chunk sets identical 82/82; **the only remaining variance is the Sonnet judge** (out of scope by Alex's decision). Slow-query tail: all five `sql_execute` spans > 0.5 s were `v_wasted_templates`; EXPLAIN put 0.9 s of 1.17 s in the view's correlated same-day-Measure-note subquery (3,399 loops × 0.27 ms). `sql/018`: partial index `activities(job_id, activity_date) WHERE type_name='Measure'` (184 kB) → view 1,167 → 326 ms, output md5-identical; run p95 **1.96 s → 0.40 s**, max 2.40 → 0.60 s. Judge untouched (median 2.38 s, p95 13.9 s, $0.46/run, eval-only). Final eval @ `a03a724`: 96.3 / 90.2 (74/82) / 94.9, $1.06, 250 s — the two below run 3 are judge flips on unchanged answers (Q30, Q48). Score now has a ±1 judge noise floor; a change must move the failing set, not the count. Deliverable: `evals/results/wo13_determinism_slow_sql.md`. Cost ≈$3.98 |
 | CNT | WO14: skip redundant COUNT(*), judge determinism | **COMPLETE (A landed, B measured — no change).** A (`d11ff85`): `execute_sql` skips the true-total `COUNT(*)` re-execution when `len(rows) < LIMIT` (47 of 59 queries); at the cap (forced 200: Q26/Q41/Q56; model `LIMIT 1`: Q76 etc.) the count runs as before; span metadata `count_skipped`. 59/59 totals identical; `sql_execute` p95 0.40 → **0.20 s**, total 4.7 → 3.3 s; Q74 0.60 → 0.32 s. B: `evals/rejudge.py` re-judges a saved run ($0.46/pass); `JUDGE_VOTES=N` majority flag in `harness.py` (default 1). Sonnet 5 rejects `temperature`/`top_p` (400) with or without thinking → B1/B1′ impossible. Nine single-judge passes: 74–76/82; Q30 5✓/4✗, Q48 8/1, Q49 2/7, Q58 2/7. Majority-of-3 passes 75/75/74 — Q30 still flipped → decision rule: nothing changed. Final eval @ `126da85`: 96.3 / 91.5 (75/82) / 94.9, R@10 0.818, $1.04, 262 s. Deliverable: `evals/results/wo14_count_skip_judge.md`. Cost ≈$5.70 |
 | QJ | WO15: quoted-jobs diagnostic + ruling | **COMPLETE.** Read-only psql diagnostic, $0: both views agree on 4,231 jobs; the 184 pipeline-only jobs are all "only dated signal has status Estimate" (142 via Quote, 42 via Measure/Template; 148 Canceled, 73 with later activity, 8 installed; 136 from 2024–25); the 5 WO11-only jobs are 2 undated Confirmed quotes + 3 templates dated after the as-of. Excluding the 184 would move conversion 70.0 → 72.8% and 2024 63.4 → 72.5%. Five hand-checks in the report. **Alex ruled "count as quoted"** → `sql/019` v2 of `v_quoted_jobs`: accepted status (dated or not) OR dated at all → **4,423** (⊇ pipeline's 4,415; the 8 extra are undated-Confirmed and after-as-of rows). Conversion rates unchanged; Q16 key 4,236 → 4,423; schema prompt reworded. One definition, one cutoff difference. Deliverable: `evals/results/wo15_quoted_jobs_diagnostic.md` |
+| SRV | WO16: Phase 7 — serve over HTTPS (FastAPI + single-page UI + Caddy) | **COMPLETE.** `retrieval/pipeline.py:ask()` extracted (CLI output byte-identical on Q1/Q59; Q27 differs only by temperature-0 wording jitter, chunk lines md5-identical). `sql/020` `serve` schema + `rag_serve` role (fence verified: `rag_reader` denied on `serve`). `serve/app.py`: `/`, `/healthz`, `/api/ask` (500-char cap, 2 in flight → 429, 60 s → 504, one `serve.asks` row per ask incl. errors), `/api/feedback` (Langfuse `user_feedback`), `/api/history` (+`/{id}`, per-user, 404 for others). `serve/static/index.html`: one file, no CDN, evidence tabs, feedback, history sidebar. Unit on **172.18.0.1:8080** (a 127.0.0.1 bind is unreachable from Caddy's bridge). Caddy block + steps in `deploy/`; Alex installed the unit and reloaded Caddy by hand (permission policy blocks Claude Code there) — **bind-mounted Caddyfile: never `sed -i`**. Part 5: 401 without creds, LE cert, five asks = CLI, Langfuse `ui`/`user_id`/session + feedback score, 400/429, memory idle 122 MB / in flight 134 MB / host ≥ 912 MB, containers unchanged, history per user + timeout row. Final eval @ `fd2ae61`: 96.3 / 90.2 (74/82, floor) / 93.6, R@10 0.818, $1.02, 251 s; Q68/Q76 red on SQL-text jitter, Q41 exposes the per-column (not per-view) validator whitelist. Deliverable: `evals/results/wo16_serving.md`. Cost ≈$1.20 |
 | QCONV | Quote → moved-forward conversion | **COMPLETE (definition v3).** `v_quote_conversion_monthly` (`sql/008` v2, `sql/009` v3), wired into the SQL lane. Locked definition: quoted = job's first DATED Quote, OR measure-proxy (undated Quote + dated Measure ⇒ quote happened unlogged, cohort = first Measure date); re-quotes = ONE job; moved = dated Install OR dated Removal (future dates count) OR chatbot payment note (`Payment received/recorded —` / `check-bot`, 85 activities — human "asked for payment" excluded); invoice numbers do NOT count; 7-day freshness rule; as-of hardcoded 2026-07-30 (TODO CURRENT_DATE). **Overall 65.9%** (2,523/3,830); yearly: 2020 64.7 → 2023 peak 85.2 → 2024 61.1 → 2025 54.3 → 2026 47.6. Sanity jobs verified (483 proxy, 5693 future-Removal, 5022 payment-only, 377 invoiced-not-moved, 5840 fresh-excluded). Golden candidates Q59–63 added (draft, v3 numbers). Visibility stats: 111 invoiced-but-not-moved; 279 dated-Measure-but-no-Quote-activity (excluded, awaiting Alex's call) |
 
 ## WO7 detail (complete — kept for context)
@@ -215,19 +216,29 @@ data/city_map_final.csv   Alex-approved city mapping (294 → 68)
   index cannot reach a CTE; only a view rewrite (EXISTS against `activities`
   + an Install partial index) takes it. Out of scope so far; output must be
   md5-identical if attempted.
-- **HTTP API / UI (WO16, Phase 7 — in progress):** `serve/app.py` (FastAPI)
-  over `retrieval/pipeline.py:ask()`, served by systemd unit
-  `deploy/emg-rag-api.service` on **172.18.0.1:8080** (the docker bridge
-  gateway; Caddy on `checkbot_default` proxies to it; never 0.0.0.0). URL once
-  Caddy is configured: **https://rag.emgcheckbot.us** (Basic-Auth users
-  `alex`, `office`; steps in `deploy/CADDY_STEPS.md`). **Code changes under
-  `serve/` or `retrieval/` need `systemctl restart emg-rag-api`** — the cron
-  git pull does not restart the service. Add a user: `docker exec -it caddy
-  caddy hash-password`, add a line to the `basic_auth` block, `caddy
-  validate`, `caddy reload`. History lives in `serve.asks` (role `rag_serve`,
-  password `PG_SERVE_PASSWORD` in `.env`; `scripts/setup_serve_role.py`).
-  Claude Code cannot install the unit or touch Caddy (permission policy):
-  both are Alex's three-command steps in `deploy/CADDY_STEPS.md` §0 and §2–6.
+- **Phase 7 ✅ — the RAG is served at https://rag.emgcheckbot.us** (WO16,
+  2026-09-17; Basic-Auth users `alex`, `office`). `serve/app.py` (FastAPI)
+  over `retrieval/pipeline.py:ask()`, systemd unit `emg-rag-api`
+  (`deploy/emg-rag-api.service`) on **172.18.0.1:8080** — the docker bridge
+  gateway, which Caddy on `checkbot_default` proxies to; never 0.0.0.0; a
+  `127.0.0.1` bind is unreachable from containers. Idle ~120–140 MB RSS,
+  `MemoryMax=350M`. History in `serve.asks` (role `rag_serve`, password
+  `PG_SERVE_PASSWORD` in `.env`, `scripts/setup_serve_role.py`); every ask is
+  a Langfuse trace `ui` with `user_id` and a per-tab session.
+  - **Restart rule: code changes under `serve/` or `retrieval/` need
+    `systemctl restart emg-rag-api`** — the cron git pull does not restart it.
+  - **Add a user:** `docker exec -it caddy caddy hash-password` → add
+    `name <hash>` inside the `basic_auth` block of `/root/checkbot/Caddyfile`
+    → `docker exec caddy caddy validate --config /etc/caddy/Caddyfile` →
+    `docker exec caddy caddy reload --config /etc/caddy/Caddyfile` (never
+    restart). Full steps: `deploy/CADDY_STEPS.md`.
+  - **⚠ The Caddyfile is a single-file bind mount. Never `sed -i` it** — that
+    writes a new inode and the container keeps the old file (the edit
+    silently does not take). Edit in place, or write through the mount from
+    inside the container:
+    `docker exec -i caddy sh -c 'cat > /etc/caddy/Caddyfile' < /root/checkbot/Caddyfile`.
+  - Claude Code cannot install systemd units or touch the Caddy container
+    (permission policy enforces CLAUDE.md); those steps are Alex's.
 - Server cron pull fails silently on dirty tree (bit us once — results files).
 - `evals/results/latest.md` gets overwritten by whatever ran last on the
   server, including fixture runs — check the timestamped JSONs for truth.
