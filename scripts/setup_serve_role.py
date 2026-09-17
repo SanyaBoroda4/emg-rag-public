@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from dotenv import load_dotenv
+from psycopg import sql
 
 from ingest.db import get_conn
 from scripts.setup_ro_role import VIEWS
@@ -29,7 +30,8 @@ def main() -> int:
         print("PG_SERVE_PASSWORD missing from .env", file=sys.stderr)
         return 1
     with get_conn(autocommit=True) as conn, conn.cursor() as cur:
-        cur.execute("ALTER ROLE rag_serve WITH LOGIN PASSWORD %s", (password,))
+        cur.execute(sql.SQL("ALTER ROLE rag_serve WITH LOGIN PASSWORD {}")
+                    .format(sql.Literal(password)))  # DDL: no bind params
         cur.execute("ALTER ROLE rag_serve SET statement_timeout = '10s'")
         for v in VIEWS + ["v_quoted_jobs"]:
             cur.execute(f"GRANT SELECT ON {v} TO rag_serve")
