@@ -1,6 +1,6 @@
-# Eval run 2026-09-17 09:55:15
+# Eval run 2026-09-17 10:34:55
 
-commit `fd2ae61` · answer=claude-haiku-4-5 · sql=claude-haiku-4-5 · judge=claude-sonnet-5 · rerank=voyage
+commit `49eef59` · answer=claude-haiku-4-5 · sql=claude-haiku-4-5 · judge=claude-sonnet-5 · rerank=voyage
 
 ## Tier 1 — routing
 
@@ -25,26 +25,26 @@ refuse                           0           0           0           3
 
 ## Tier 3 — generation
 
-- correct: **74/82 (90.2%)**
-- faithfulness: 93.6%
+- correct: **73/82 (89.0%)**
+- faithfulness: 94.9%
 - context precision: 63.2%
 - generator: claude-haiku-4-5 · judge: claude-sonnet-5 (never the same model)
-- tier-3 cost: $0.94
+- tier-3 cost: $0.95
 
 ## Stage timing (whole run)
 
 ```
 stage        seconds % of sum  calls
-router         109.9    17.2%     82
-embed            0.5     0.1%      1
+router         107.6    17.4%     82
+embed            0.3     0.1%      1
 bm25             0.8     0.1%     26
 dense            0.9     0.1%     26
-rerank           4.4     0.7%     26
-sql             81.5    12.8%     59
-answer         122.8    19.3%     79
-judge          316.9    49.7%     78
-sum            637.7   100.0%
-wall           251.0     (stages overlap across 4 workers; no gap row)
+rerank           4.5     0.7%     26
+sql             81.8    13.2%     59
+answer         121.9    19.7%     79
+judge          300.3    48.6%     78
+sum            618.2   100.0%
+wall           240.7     (stages overlap across 4 workers; no gap row)
 ```
 
 Known-FAILING: 
