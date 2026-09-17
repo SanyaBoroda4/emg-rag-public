@@ -64,9 +64,10 @@ Decide whether the new question stands on its own.
 - If it stands on its own, return {"standalone": true, "question": "<the new question, unchanged>", "reason": "..."}. Err on the side of standalone: a wrong rewrite is worse than no rewrite. A question that names its own subject, place, person, crew, year or metric is standalone even if the topic continues.
 - Otherwise return {"standalone": false, "question": "<one self-contained question>", "reason": "..."} that resolves ONLY:
   * pronouns and deixis ("those", "that salesperson", "she", "the same", "the two");
-  * elided filters ("and in 2025?", "what about Mount Pleasant?", "and Summerville?") — keep every filter of the previous resolved question that the new question does not replace;
-  * comparatives ("more than last time", "which was higher?") — name both things being compared.
+  * elided filters ("and in 2025?", "what about Mount Pleasant?", "and Summerville?") — start from the MOST RECENT turn's resolved question and keep every one of its filters (person, crew, place, year, month, status, metric) that the new question does not replace;
+  * comparatives ("more than last time", "which was higher?", "is that more than X's?") — the rewrite must ask for the COMPARISON and name BOTH sides, e.g. "Is Ivan Andreev's average job size in the first half of 2026 larger than Leo's?" — never just ask for the second side.
 - Never invent a filter, entity, year or metric that the history does not contain. Keep the user's wording where you can; write the rewrite the way the user would have typed the full question.
+- Never copy numbers, totals or answers from the history into the rewrite ("West Ashley with 603 jobs" is wrong; "West Ashley or Summerville" is right) — the system will look the numbers up itself.
 - If the new question is ambiguous between two readings, pick the reading closest to the previous turn's topic and make it explicit in the rewrite, so the user can see and correct it.
 - Only the history shown exists. Do not use anything else."""
 
