@@ -84,7 +84,8 @@ def test_only_last_three_turns_are_used():
     hist = [Turn(f"q{i}", f"q{i}", "structured", "a") for i in range(6)]
     seen = {}
     rewrite("and those?", hist,
-            call=lambda p: seen.setdefault("p", p) or {"standalone": True, "question": "x"})
+            call=lambda p: (seen.setdefault("p", p),
+                            {"standalone": True, "question": "x"})[1])
     assert "Turn 3" in seen["p"] and "Turn 4" not in seen["p"]
 
 
