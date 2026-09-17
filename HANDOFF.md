@@ -215,6 +215,19 @@ data/city_map_final.csv   Alex-approved city mapping (294 → 68)
   index cannot reach a CTE; only a view rewrite (EXISTS against `activities`
   + an Install partial index) takes it. Out of scope so far; output must be
   md5-identical if attempted.
+- **HTTP API / UI (WO16, Phase 7 — in progress):** `serve/app.py` (FastAPI)
+  over `retrieval/pipeline.py:ask()`, served by systemd unit
+  `deploy/emg-rag-api.service` on **172.18.0.1:8080** (the docker bridge
+  gateway; Caddy on `checkbot_default` proxies to it; never 0.0.0.0). URL once
+  Caddy is configured: **https://rag.emgcheckbot.us** (Basic-Auth users
+  `alex`, `office`; steps in `deploy/CADDY_STEPS.md`). **Code changes under
+  `serve/` or `retrieval/` need `systemctl restart emg-rag-api`** — the cron
+  git pull does not restart the service. Add a user: `docker exec -it caddy
+  caddy hash-password`, add a line to the `basic_auth` block, `caddy
+  validate`, `caddy reload`. History lives in `serve.asks` (role `rag_serve`,
+  password `PG_SERVE_PASSWORD` in `.env`; `scripts/setup_serve_role.py`).
+  Claude Code cannot install the unit or touch Caddy (permission policy):
+  both are Alex's three-command steps in `deploy/CADDY_STEPS.md` §0 and §2–6.
 - Server cron pull fails silently on dirty tree (bit us once — results files).
 - `evals/results/latest.md` gets overwritten by whatever ran last on the
   server, including fixture runs — check the timestamped JSONs for truth.
