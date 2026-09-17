@@ -1,0 +1,39 @@
+conv_id,turn,question,expected_standalone,expected_route,expected_answer,status,notes
+C1,1,How many jobs did Leo install in the first half of 2026?,SAME,structured,"16 jobs, 23 install visits, 1,089.5 sq ft total",draft,Golden Q68 key
+C1,2,And how many of those were in March 2026?,How many jobs did Leo install in March 2026?,structured,"8 jobs, 10 install visits, 497 sq ft",draft,filter narrowing (crew + month); crew-workload pattern psql 2026-09-17
+C1,3,What about Ihor/Tolik?,How many jobs did Ihor/Tolik install in March 2026?,structured,"23 jobs, 29 install visits, 1,909.3 sq ft",draft,crew carry-over keeping the month; psql 2026-09-17
+C2,1,How many jobs has Natalia Pavlenko sold?,SAME,structured,1198,draft,Golden Q1
+C2,2,And in 2025?,How many jobs did Natalia Pavlenko sell in 2025?,structured,272,draft,salesperson carry-over + year (creation_date 2025); psql 2026-09-17
+C2,3,Which city did she sell the most in?,Which city has Natalia Pavlenko sold the most jobs in?,structured,"Mount Pleasant, 101",draft,pronoun resolution; psql 2026-09-17
+C3,1,How many jobs do we have in Mount Pleasant?,SAME,structured,516,draft,Golden Q-city
+C3,2,How many of those are complete?,How many jobs in Mount Pleasant have status Complete?,structured,75,draft,deixis 'those' + status filter; psql 2026-09-17
+C3,3,What is the capital of France?,SAME,refuse,This system only answers questions about EMG's job-tracking and invoicing data,draft,deliberate standalone mid-conversation: must pass through unchanged
+C4,1,Which salesperson had the most wasted templates?,SAME,structured,"Victor Slabunov, 53",draft,Golden Q76 key
+C4,2,What about in 2025?,Which salesperson had the most wasted templates in 2025?,structured,"Alex Sorokin, 17",draft,elided filter (year) on a ranking; v_wasted_templates_by_pm 2025; psql 2026-09-17
+C5,1,What is our overall quote-to-moved-forward conversion rate?,SAME,structured,70.0% (3063 of 4377 quoted jobs),draft,Golden Q59
+C5,2,And for 2024?,What was our quote conversion rate in 2024?,structured,63.4% (401 of 632),draft,Golden Q61 key via follow-up
+C5,3,Was 2023 better?,Was the quote conversion rate in 2023 better than in 2024?,structured,"Yes: 2023 85.7% (409 of 477) vs 2024 63.4% (401 of 632)",draft,comparative across two turns of context
+C6,1,How many wasted templates have we had in total?,SAME,structured,252,draft,Golden Q74
+C6,2,Which jobs had a template wasted because cabinets weren't ready?,SAME,structured,"16 jobs: 60, 293, 853, 925, 1251, 1334, 2195, 2272, 3516, 3622, 4743, 4882, 4934, 5015, 5142, 5491",draft,standalone mid-conversation (Golden Q82): must pass through unchanged
+C6,3,What did the notes say on those jobs?,What did the notes say on the jobs that had a template wasted because cabinets weren't ready?,hybrid,"The template notes record cabinets not installed or not ready, e.g. job 2272 'Cabinets were not ready', job 1251 'Top cabinets not installed yet', job 1334 'Two cabinets not ready yet', job 4743 'client needed to redo some cabinets before I could template'",draft,entity carry-over into a notes question -> hybrid; matched_note texts from v_wasted_templates
+C7,1,What is the capital of France?,SAME,refuse,This system only answers questions about EMG's job-tracking and invoicing data,draft,refuse first
+C7,2,And how many jobs do we have in Kiawah Island?,SAME,structured,178,draft,follow-up after a refuse: treated as standalone by rule; psql 2026-09-17
+C8,1,How many quotes have we issued in total?,SAME,structured,4423,draft,Golden Q16 (v_quoted_jobs v2)
+C8,2,How many of those were in 2024?,How many jobs did we quote in 2024?,structured,632,draft,deixis + year; v_quoted_jobs first_signal_date 2024; psql 2026-09-17
+C9,1,How many jobs went quiet after a quote?,SAME,structured,1306,draft,Golden Q26
+C9,2,How many of those are canceled?,How many of the jobs that went quiet after a quote are Canceled?,structured,1093,draft,deixis + process_name filter; psql 2026-09-17
+C10,1,How much did we invoice in 2024?,SAME,structured,"$5,200,113.02 (574 invoices)",draft,revenue; v_invoices SUM(total_amt) txn_date 2024; psql 2026-09-17
+C10,2,And in 2023?,How much did we invoice in 2023?,structured,"$4,127,158.52 (553 invoices)",draft,elided year; psql 2026-09-17
+C10,3,Which year was higher?,"Which year had the higher invoiced total, 2023 or 2024?",structured,"2024 ($5,200,113.02 vs $4,127,158.52)",draft,comparative over two prior turns
+C11,1,How many jobs has Natalia Pavlenko sold?,SAME,structured,1198,draft,Golden Q1
+C11,2,and templates?,How many wasted templates did Natalia Pavlenko have?,structured,51 wasted templates (of 811 template trips),draft,AMBIGUOUS on purpose: 'templates' could mean template trips (811) or wasted templates (51). The right behaviour is a rewrite that states one reading so the user can see and correct it; either reading is acceptable if the rewrite says which
+C12,1,What was Ivan Andreev's average job size in the first half of 2026?,SAME,structured,104.2 sq ft per job,draft,Golden Q35 key
+C12,2,Is that more than Leo's?,Is Ivan Andreev's average job size in the first half of 2026 larger than Leo's?,structured,"Yes: Ivan Andreev 104.2 sq ft per job vs Leo 68.1",draft,comparative with crew carry-over (Golden Q69 for Leo)
+C13,1,How many jobs have we done in West Ashley?,SAME,structured,603,draft,West Ashley is the largest area (WO5)
+C13,2,And Summerville?,How many jobs have we done in Summerville?,structured,163,draft,elided city; psql 2026-09-17
+C13,3,Which of the two has more?,"Which has more jobs, West Ashley or Summerville?",structured,West Ashley (603 vs 163),draft,comparative over two turns
+C14,1,Which jobs had a template wasted because cabinets weren't ready?,SAME,structured,"16 jobs: 60, 293, 853, 925, 1251, 1334, 2195, 2272, 3516, 3622, 4743, 4882, 4934, 5015, 5142, 5491",draft,Golden Q82
+C14,2,Who were the salespeople on those jobs?,Who were the salespeople on the jobs that had a template wasted because cabinets weren't ready?,structured,"Diana Diaz 3, Alex Sorokin 3, Victor Slabunov 1, Galya Gornishka 1, Max Konikov 1, Natalia Pavlenko 1; 6 of the 16 jobs have no salesperson",draft,entity carry-over to a grouped structured question; psql 2026-09-17
+C15,1,How many jobs went quiet after a quote?,SAME,structured,1306,draft,Golden Q26
+C15,2,What is the capital of Spain?,SAME,refuse,This system only answers questions about EMG's job-tracking and invoicing data,draft,refuse in the middle
+C15,3,How many of those quiet jobs were quoted in 2025?,SAME,structured,279,draft,follow-up right after a refuse: rule says standalone; 'quiet jobs' is self-describing so the pipeline can still answer; psql 2026-09-17 (quiet AND first_signal_date in 2025)
