@@ -380,3 +380,27 @@ services were not touched. Local: scans and dry runs only.
   `scripts/pii_common_words.txt`.
 - Not committed, by design: `private/pii_terms.json`, `private/shingles.txt`,
   `private/exclusions.json`.
+
+---
+
+## 9. Part 3 outcome — option (a), executed 2026-09-21
+
+Alex's decision: option (a). Alex made the old repository private by hand;
+the rest ran in order:
+
+| step | command | result |
+|---|---|---|
+| 1 | `gh repo view SanyaBoroda4/emg-rag-public --json visibility` | PRIVATE (before any change) |
+| 2 | `gh repo rename emg-rag-public-archive --repo SanyaBoroda4/emg-rag-public --yes` | `emg-rag-public-archive`, PRIVATE: the 164-commit history is kept, unreadable to the public |
+| 3 | `gh repo create SanyaBoroda4/emg-rag-public --public` | new empty repository, PUBLIC, created 2026-09-21 20:15 UTC |
+| 4 | `bash scripts/sync_public.sh` | transform 152 files, guard 0 guarded hits, one snapshot commit `afd5dc3` ("sync: private 6d72d90") pushed to `main` |
+| 5 | `gh repo view … --json visibility` on both | archive PRIVATE, new repo PUBLIC, default branch `main` |
+| 6 | fresh clone + `python scripts/public_scan.py blobs <clone>` | 1 commit, 127 text blobs scanned, **0** customer / contact / note-text / secret / dollar hits; 1 `employee` line = the OFL licence word noted in §3 |
+| 7 | `gh run list --repo SanyaBoroda4/emg-rag-public --workflow tests` | run 35650021001 on `afd5dc3`: **success**, steps rewriter / SQL validator / public-mirror guard all green |
+| 8 | badge `…/actions/workflows/tests.yml/badge.svg` | renders **passing** (with and without `?branch=main`) |
+| 9 | `gh repo edit … --description … --add-topic …` | description set to the two lines from `docs/wo21_portfolio.md`; topics `rag, text-to-sql, llm-evaluation, postgres, pgvector, fastapi, langfuse, anthropic-claude` |
+
+The public repository now holds only allowlisted, transformed content with a
+history that starts at the snapshot. Every later sync adds one commit. The
+79 unique cloners of the old repository keep what they took; no secret was
+ever public, so nothing was rotated.

@@ -29,7 +29,7 @@ mock data.
   https://github.com/SanyaBoroda4/emg-rag/actions/runs/35611399674
 - The validator's recorded-SQL guard skips in CI (the run files are not in
   the public tree) and reports it; the other four validator tests run.
-- **Public mirror: not yet confirmed.** WO19 Part 3 (recreate the public repo
+- **Public mirror: confirmed after this report's first version** (WO19 report §9): the new `emg-rag-public` runs the `tests` workflow green on its first snapshot and the badge renders "passing". The paragraph below is the state at the time of writing. WO19 Part 3 (recreate the public repo
   or rewrite its history) is still Alex's decision, and nothing has been
   pushed to the public repo since `d69a060` on purpose. The README badge
   points at the public repo's `tests` workflow and will render once the first
@@ -73,9 +73,7 @@ Topics: `rag`, `text-to-sql`, `llm-evaluation`, `postgres`, `pgvector`,
   Cutting a decision would lose sourced evidence, so it stayed.
 - **The eval workflow no longer runs on push.** Routing regressions on the
   fixture corpus are now caught only when someone dispatches it by hand.
-- **The badge is red until Part 3 is decided**: it points at a workflow the
-  public repo does not have yet, so it renders "no status" on the private
-  copy.
+- **The badge was blank until Part 3 was decided** (it points at the public repo's workflow); it renders "passing" since the first snapshot.
 - The old README's detail is one click further away (`docs/OPERATING_NOTES.md`).
 
 ## Surprises
