@@ -1,0 +1,46 @@
+# WO19: what the public mirror (emg-rag-public) may contain. Globs relative to
+# the repo root, one per line, matched with Python fnmatch against tracked
+# files at HEAD. Everything not listed stays private. Every listed text file
+# still goes through scripts/public_transform.py and must pass
+# scripts/public_scan.py before anything is pushed.
+#
+# Out by design (never list them here): evals/results/*.json (run JSONs with
+# retrieved note text), evals/results/2026-*.md (per-question renders),
+# evals/results/latest.md, evals/fixtures/fixture.sql (chunk rows),
+# data/*.csv (raw address / city extracts), .env*, private/.
+
+README.md
+CLAUDE.md
+HANDOFF.md
+.gitignore
+.env.example
+.github/workflows/*.yml
+docker-compose.yml
+requirements.txt
+requirements-rerank-local.txt
+
+retrieval/*.py
+ingest/*.py
+serve/*.py
+serve/static/index.html
+serve/static/fonts/*
+sql/*.sql
+scripts/*
+tests/*.py
+deploy/*
+
+evals/*.py
+evals/baseline.json
+evals/golden_set.csv
+evals/golden_conversations.csv
+evals/fixtures/load_fixture.py
+evals/fixtures/fixture_baseline.json
+evals/fixtures/fixture_golden.csv
+evals/fixtures/rewrite_cases.json
+
+docs/*.md
+evals/results/wo*.md
+evals/results/ablation.md
+evals/results/before_after.md
+evals/results/benchmark.md
+evals/results/wo18_screens/*

@@ -1,0 +1,4 @@
+{
+  "comment": "CI baseline for Tier 2 on the synthetic fixture corpus (post-rerank recall@10). Run: 2026-08-08, commit c568b2b.",
+  "recall_at_10": 0.835
+}

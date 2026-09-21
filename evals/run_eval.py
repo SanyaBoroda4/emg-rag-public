@@ -1,0 +1,527 @@
+"""Eval runner: Tier 1 (routing), Tier 2 (retrieval), Tier 3 (generation).
+
+  python3 evals/run_eval.py                 # all tiers, all 58 questions
+  python3 evals/run_eval.py --tiers 1,2     # the free tiers only
+  python3 evals/run_eval.py --subset 20     # first N questions (PR CI)
+  python3 evals/run_eval.py --check-baseline evals/baseline.json
+                                            # exit 1 if routing accuracy or
+                                            # reranked Recall@10 drops >5pts
+  python3 evals/run_eval.py --tiers 1,3 --route structured --no-judge
+                                            # judge-free numeric scoring of
+                                            # the structured subset (~$0.30)
+
+Writes:
+  evals/results/YYYY-MM-DD-HHMM.json   full per-question detail
+  evals/results/latest.md              markdown summary for the README
+
+Every run records git SHA, model names, config flags, and total cost —
+a result that cannot be traced to a code state is not evidence.
+"""
+
+import argparse
+import json
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from ingest.db import get_conn
+from evals import metrics
+from evals.harness import (ANSWER_MODEL, embed_questions, judge_answer,
+                           judge_model_for, load_chunk_rows, load_golden,
+                           run_generation, run_metadata, run_retrieval,
+                           run_router)
+from retrieval import tracing
+
+RESULTS_DIR = Path(__file__).resolve().parent / "results"
+LANES = ["bm25", "dense", "fused", "reranked"]
+
+# Langfuse run context (WO12): one deterministic trace id per question so
+# the tier-1 router call, tier-2 retrieval and tier-3 generation of the same
+# question land in ONE trace; the run id is the trace's session_id and a
+# tag, so a whole eval is one filterable group in the dashboard.
+RUN = {"id": None, "meta": {}}
+
+
+def qtrace(row, tier):
+    m = RUN["meta"]
+    return tracing.trace(
+        "eval_run", trace_id=row.get("_trace_id"), session_id=RUN["id"],
+        tags=["eval", RUN["id"] or "no-run"], input=row["question"],
+        metadata={"question_id": row["id"], "status": row["status"],
+                  "route_expected": row["route"], "tier": tier,
+                  "git_sha": m.get("git_sha"),
+                  "answer_model": m.get("answer_model"),
+                  "sql_model": m.get("sql_model"),
+                  "router_model": m.get("router_model"),
+                  "rerank_backend": m.get("rerank_backend"),
+                  "run_id": RUN["id"]})
+
+
+def tier1(rows):
+    print(f"\n=== Tier 1: routing ({len(rows)} questions) ===")
+    total_cost = 0.0
+    for row in rows:
+        with qtrace(row, "tier1_router") as root:
+            predicted, reason, cost = run_router(row)
+            root.update(output={"route": predicted, "reason": reason},
+                        metadata={"route_predicted": predicted,
+                                  "route_expected": row["route"],
+                                  "routing_correct": predicted == row["route"]})
+        row["_predicted_route"] = predicted
+        row["_route_reason"] = reason
+        total_cost += cost
+    matrix, accuracy = metrics.confusion_matrix(
+        [(r["route"], r["_predicted_route"]) for r in rows])
+    print(metrics.format_confusion(matrix))
+    print(f"routing accuracy: {accuracy:.1%}   (router cost ${total_cost:.4f})")
+    return {"accuracy": accuracy, "matrix": matrix, "cost": total_cost}
+
+
+def tier2(rows, cur, qvecs):
+    gold_rows = [r for r in rows if r["gold_ids"]]
+    print(f"\n=== Tier 2: retrieval ({len(gold_rows)} questions with "
+          f"gold chunk ids) ===")
+    per_lane = {lane: [] for lane in LANES}
+    for row in gold_rows:
+        with qtrace(row, "tier2_retrieval") as root:
+            ret = run_retrieval(cur, row["question"], qvecs[row["id"]])
+            root.update(output={"reranked_top10": ret["reranked"][:10],
+                                "gold_ids": row["gold_ids"]})
+        row["_retrieval"] = ret
+        row["_lane_metrics"] = {}
+        for lane in LANES:
+            m = metrics.ranking_metrics(ret[lane], row["gold_ids"])
+            row["_lane_metrics"][lane] = m
+            per_lane[lane].append(m)
+
+    agg = {}
+    keys = ["recall@5", "recall@10", "recall@20", "mrr", "ndcg@10"]
+    print(f"{'lane':<12}" + "".join(f"{k:>11}" for k in keys))
+    for lane in LANES:
+        agg[lane] = {k: metrics.mean_of(per_lane[lane], k) for k in keys}
+        print(f"{lane:<12}" + "".join(
+            f"{agg[lane][k]:>11.3f}" if agg[lane][k] is not None
+            else f"{'—':>11}" for k in keys))
+    return agg
+
+
+def _tier3_one(row, cur, qvecs, judge, answer_model, sql_model,
+               no_judge=False):
+    """Generate + judge ONE question on the given cursor; returns its cost.
+    Per-row work only, so tier3 can run it on a thread pool (WO10): every
+    Claude/Voyage call builds its own client and each worker owns its own
+    DB connection, so rows never share mutable state.
+
+    no_judge=True skips every judge call: structured rows are scored by
+    numeric match only, semantic/hybrid rows are left unscored (correct=None).
+    Used for cheap determinism runs of the structured subset (WO10)."""
+    total_cost = 0.0
+    with qtrace(row, "tier3_generation") as root:
+        route = row.get("_predicted_route") or row["route"]
+        ret = row.get("_retrieval")
+        if ret is None and route in ("semantic", "hybrid"):
+            ret = run_retrieval(cur, row["question"], qvecs[row["id"]])
+            row["_retrieval"] = ret
+        rec = run_generation(cur, row, ret or {"candidates": []}, route,
+                             answer_model=answer_model, sql_model=sql_model)
+        total_cost += rec["cost"]
+
+        chunk_rows = load_chunk_rows(cur, rec["chunk_ids"])
+        expected_route = row["route"]
+        verdict = {}
+        if rec["sql_error"]:
+            # WO11: a query that errors is a failure however gracefully the
+            # answerer declines afterwards — Q26 scored "correct" for an
+            # honest refusal after UndefinedColumn. No judge call.
+            rec["correct"] = False
+            rec["faithful"] = None
+            rec["context_precision"] = None
+            verdict = {"reason": "SQL lane raised an exception — scored "
+                                 "incorrect by rule: " + rec["sql_error"]}
+        elif expected_route == "refuse":
+            declined = ("only answers questions about" in (rec["answer"] or "")
+                        or "cannot answer" in (rec["answer"] or "").lower())
+            if not declined and not no_judge:
+                verdict, jcost = judge_answer(row, rec, chunk_rows, judge)
+                total_cost += jcost
+                declined = verdict.get("declined", False)
+            rec["correct"] = declined
+            rec["faithful"] = None
+            rec["context_precision"] = None
+        elif expected_route == "structured":
+            rec["correct"] = metrics.numeric_match(row["expected_answer"],
+                                                   rec["answer"])
+            if not no_judge:
+                verdict, jcost = judge_answer(row, rec, chunk_rows, judge)
+                total_cost += jcost
+            rec["faithful"] = verdict.get("faithful")
+            rec["context_precision"] = None
+            if rec["correct"] is None:  # no number in expected answer
+                rec["correct"] = verdict.get("correct")
+        elif no_judge:  # semantic / hybrid without a judge: unscored
+            rec["correct"] = None
+            rec["faithful"] = None
+            rec["context_precision"] = None
+        else:  # semantic / hybrid
+            verdict, jcost = judge_answer(row, rec, chunk_rows, judge)
+            total_cost += jcost
+            rec["correct"] = verdict.get("correct")
+            rec["faithful"] = verdict.get("faithful")
+            useful = set(verdict.get("useful_chunk_ids", []))
+            rec["context_precision"] = (
+                len(useful & set(rec["chunk_ids"])) / len(rec["chunk_ids"])
+                if rec["chunk_ids"] else None)
+        rec["judge_reason"] = verdict.get("reason")
+        rec["latency"]["router"] = row.get("_route_latency")
+        row["_generation"] = rec
+        root.update(output=rec["answer"], metadata={
+            "route_predicted": route, "correct": rec["correct"],
+            "faithful": rec["faithful"], "sql_error": rec["sql_error"],
+            "cost_usd": round(total_cost, 5)})
+        root.set_trace_io(input=row["question"], output=rec["answer"])
+    # Scores attach to the question's trace (WO12 §4): the dashboard can
+    # then filter "every question that failed in run X" with the trace.
+    tid = row.get("_trace_id")
+    tracing.score(tid, "correct", rec["correct"],
+                  comment=(rec.get("judge_reason") or "")[:500] or None)
+    tracing.score(tid, "faithfulness", rec["faithful"])
+    tracing.score(tid, "context_precision", rec["context_precision"])
+    lm = (row.get("_lane_metrics") or {}).get("reranked") or {}
+    tracing.score(tid, "retrieval_recall_at_10", lm.get("recall@10"))
+    if rec["sql_error"]:
+        tracing.score(tid, "sql_error", 1.0, comment=rec["sql_error"][:500])
+    return total_cost
+
+
+def tier3(rows, cur, qvecs, answer_model=None, sql_model=None, workers=1,
+          no_judge=False):
+    judge = judge_model_for(answer_model or ANSWER_MODEL)
+    print(f"\n=== Tier 3: generation "
+          f"(answer={answer_model or ANSWER_MODEL}, "
+          f"judge={'none' if no_judge else judge}, "
+          f"workers={workers}) ===")
+    t_start = time.perf_counter()
+    if workers <= 1:
+        total_cost = sum(_tier3_one(row, cur, qvecs, judge, answer_model,
+                                    sql_model, no_judge) for row in rows)
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+        import threading
+        local = threading.local()  # one DB connection per worker thread
+
+        def work(row):
+            if not hasattr(local, "conn"):
+                local.conn = get_conn()
+                local.cur = local.conn.cursor()
+            return _tier3_one(row, local.cur, qvecs, judge, answer_model,
+                              sql_model, no_judge)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            total_cost = sum(pool.map(work, rows))
+    wall = time.perf_counter() - t_start
+
+    scored = [r["_generation"] for r in rows]
+    n_correct = sum(1 for g in scored if g["correct"])
+    agg = {
+        "correct": n_correct, "total": len(rows),
+        "accuracy": n_correct / len(rows),
+        "faithfulness": metrics.mean_of(
+            [{"f": 1.0 if g["faithful"] else 0.0}
+             for g in scored if g["faithful"] is not None], "f"),
+        "context_precision": metrics.mean_of(
+            [{"p": g["context_precision"]} for g in scored
+             if g["context_precision"] is not None], "p"),
+        "cost": total_cost,
+        "judge_model": None if no_judge else judge,
+        "workers": workers,
+        "wall_seconds": round(wall, 1),
+        "latency_totals": {k: round(sum(
+            (g.get("latency") or {}).get(k) or 0 for g in scored), 1)
+            for k in ("router", "sql", "answer", "judge")},
+    }
+    def pct(x):  # None when no question in the run produced the metric
+        return f"{x:.1%}" if x is not None else "—"
+    print(f"correct: {n_correct}/{len(rows)} ({agg['accuracy']:.1%})  "
+          f"faithfulness: {pct(agg['faithfulness'])}  "
+          f"context precision: {pct(agg['context_precision'])}  "
+          f"cost: ${total_cost:.2f}  wall: {wall:.0f}s  "
+          f"latency totals: {agg['latency_totals']}")
+    return agg
+
+
+STAGES = ("router", "embed", "bm25", "dense", "rerank", "sql", "answer",
+          "judge")
+
+
+def stage_table(rows, embed_seconds, wall, workers=1):
+    """Per-stage totals of call time for the whole run (WO10; corrected in
+    WO12). Retrieval stages are counted wherever they ran (tier 2 for gold
+    rows, tier 3 for the rest).
+
+    Shares are of WALL time only at --workers 1, where the stage sum vs wall
+    gap is the harness's untimed residual (0.8 s of 737 s on 2026-09-14).
+    With a thread pool the stages overlap, the sum exceeds wall time, and
+    the old table printed 263% and a negative gap — so at workers > 1 the
+    share column is each stage's share of the SUMMED call time and there is
+    no gap row. Langfuse records the same call boundaries per observation
+    (WO12); the two agree because they time the same `with` blocks."""
+    tot = {k: 0.0 for k in STAGES}
+    calls = {k: 0 for k in STAGES}
+    if embed_seconds is not None:
+        tot["embed"], calls["embed"] = embed_seconds, 1
+    for row in rows:
+        if row.get("_route_latency") is not None:
+            tot["router"] += row["_route_latency"]
+            calls["router"] += 1
+        ret = row.get("_retrieval")
+        if ret:
+            for k in ("bm25", "dense", "rerank"):
+                tot[k] += ret["latency"][k]
+                calls[k] += 1
+        gen = row.get("_generation")
+        if gen:
+            lat = gen.get("latency") or {}
+            for k in ("sql", "answer"):
+                if lat.get(k) is not None:
+                    tot[k] += lat[k]
+                    calls[k] += 1
+            if lat.get("judge") is not None:
+                tot["judge"] += lat["judge"]
+                calls["judge"] += gen.get("judge_calls") or 1
+    total = sum(tot.values())
+    sequential = workers <= 1
+    base = wall if sequential else total
+    share = (lambda s: f"{s / base:.1%}") if base else (lambda s: "—")
+    col = "% wall" if sequential else "% of sum"
+    lines = [f"{'stage':<10}{'seconds':>10}{col:>9}{'calls':>7}"]
+    for k in STAGES:
+        lines.append(f"{k:<10}{tot[k]:>10.1f}{share(tot[k]):>9}"
+                     f"{calls[k]:>7}")
+    lines.append(f"{'sum':<10}{total:>10.1f}{share(total):>9}")
+    if sequential:
+        lines += [f"{'wall':<10}{wall:>10.1f}{share(wall):>9}",
+                  f"{'gap':<10}{wall - total:>10.1f}"
+                  f"{share(wall - total):>9}"]
+    else:
+        lines.append(f"{'wall':<10}{wall:>10.1f}     (stages overlap "
+                     f"across {workers} workers; no gap row)")
+    table = {"seconds": {k: round(v, 1) for k, v in tot.items()},
+             "calls": calls, "sum_seconds": round(total, 1),
+             "wall_seconds": round(wall, 1), "workers": workers,
+             "share_basis": "wall" if sequential else "sum",
+             "gap_seconds": round(wall - total, 1) if sequential else None}
+    return table, "\n".join(lines)
+
+
+def report_failures(rows):
+    """The most interesting output: verified rows that fail, FAILING rows
+    that (unexpectedly) pass."""
+    news, known = [], []
+    for row in rows:
+        gen = row.get("_generation")
+        if gen is None:
+            continue
+        ok = bool(gen["correct"]) and \
+            row["_predicted_route"] == row["route"]
+        if row["status"] == "FAILING":
+            known.append((row, ok))
+        elif row["status"] == "verified" and not ok:
+            news.append(row)
+    print("\n=== Known-FAILING rows (must stay failing until bugs fixed) ===")
+    for row, ok in known:
+        print(f"  Q{row['id']}: {'*** NOW PASSES ***' if ok else 'still fails'}"
+              f" — {row['question'][:60]}"
+              f" (routed {row['_predicted_route']}, expected {row['route']})")
+    print("\n=== NEW failures among status=verified rows ===")
+    if not news:
+        print("  (none)")
+    for row in news:
+        gen = row["_generation"]
+        print(f"  Q{row['id']} [{row['route']}→{row['_predicted_route']}] "
+              f"{row['question'][:70]}")
+        print(f"    expected: {row['expected_answer'][:90]}")
+        print(f"    got:      {(gen['answer'] or '')[:90]}")
+    return {"new_failures": [r["id"] for r in news],
+            "known_failing": {r["id"]: ok for r, ok in known}}
+
+
+def write_reports(meta, rows, t1, t2, t3, failures, stages=None,
+                  stages_text=None):
+    RESULTS_DIR.mkdir(exist_ok=True)
+    detail = []
+    for row in rows:
+        d = {k: row[k] for k in ("id", "question", "route", "expected_answer",
+                                 "difficulty", "status")}
+        d["gold_ids"] = row["gold_ids"]
+        d["predicted_route"] = row.get("_predicted_route")
+        d["route_reason"] = row.get("_route_reason")
+        d["route_latency"] = row.get("_route_latency")
+        d["lane_metrics"] = row.get("_lane_metrics")
+        ret = row.get("_retrieval")
+        if ret:
+            d["retrieved"] = [
+                {"chunk_id": c["chunk_id"], "bm25_rank": c["bm25_rank"],
+                 "dense_rank": c["dense_rank"], "rrf": round(c["score"], 5),
+                 "rerank_score": round(c["rerank_score"], 4)
+                 if c.get("rerank_score") is not None else None}
+                for c in ret["candidates"][:10]]
+            d["retrieval_latency"] = ret["latency"]
+        d["generation"] = row.get("_generation")
+        detail.append(d)
+
+    result = {"meta": meta, "tier1": t1, "tier2": t2, "tier3": t3,
+              "stages": stages, "failures": failures, "questions": detail}
+    stamp = time.strftime("%Y-%m-%d-%H%M")
+    out = RESULTS_DIR / f"{stamp}.json"
+    out.write_text(json.dumps(result, indent=1, default=str),
+                   encoding="utf-8")
+
+    md = [f"# Eval run {meta['timestamp']}",
+          f"", f"commit `{meta['git_sha']}` · answer={meta['answer_model']} · "
+          f"sql={meta['sql_model']} · judge={t3['judge_model'] if t3 else '—'}"
+          f" · rerank={meta['rerank_backend']}", ""]
+    if t1:
+        md += [f"## Tier 1 — routing", "",
+               f"Accuracy: **{t1['accuracy']:.1%}**", "", "```",
+               metrics.format_confusion(t1["matrix"]), "```", ""]
+    if t2:
+        md += ["## Tier 2 — retrieval (per lane)", "",
+               "| lane | R@5 | R@10 | R@20 | MRR | NDCG@10 |",
+               "|---|---|---|---|---|---|"]
+        for lane in LANES:
+            a = t2[lane]
+            md.append("| " + lane + " | " + " | ".join(
+                f"{a[k]:.3f}" if a[k] is not None else "—"
+                for k in ["recall@5", "recall@10", "recall@20", "mrr",
+                          "ndcg@10"]) + " |")
+        md.append("")
+    if t3:
+        md += ["## Tier 3 — generation", "",
+               f"- correct: **{t3['correct']}/{t3['total']} "
+               f"({t3['accuracy']:.1%})**",
+               f"- faithfulness: {t3['faithfulness']:.1%}"
+               if t3['faithfulness'] is not None else "- faithfulness: —",
+               f"- context precision: {t3['context_precision']:.1%}"
+               if t3['context_precision'] is not None
+               else "- context precision: —",
+               f"- generator: {meta['answer_model']} · judge: "
+               f"{t3['judge_model']} (never the same model)",
+               f"- tier-3 cost: ${t3['cost']:.2f}", ""]
+    if stages_text:
+        md += ["## Stage timing (whole run)", "", "```", stages_text, "```",
+               ""]
+    md += [f"Known-FAILING: " + ", ".join(
+        f"Q{qid} {'PASSES(!)' if ok else 'still failing'}"
+        for qid, ok in failures.get("known_failing", {}).items()),
+        f"New failures (verified rows): "
+        + (", ".join(f"Q{q}" for q in failures.get("new_failures", []))
+           or "none"), ""]
+    (RESULTS_DIR / "latest.md").write_text("\n".join(md), encoding="utf-8")
+    print(f"\nwrote {out.name} and latest.md")
+    return result
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--tiers", default="1,2,3")
+    ap.add_argument("--subset", type=int, default=None)
+    ap.add_argument("--check-baseline", default=None)
+    ap.add_argument("--golden", default=None,
+                    help="alternate golden CSV (CI uses the fixture set)")
+    ap.add_argument("--workers", type=int, default=1,
+                    help="tier-3 thread pool size (1 = sequential, the "
+                         "pre-WO10 behaviour)")
+    ap.add_argument("--route", default=None,
+                    help="only rows whose gold route is in this "
+                         "comma-separated list (e.g. structured)")
+    ap.add_argument("--no-judge", action="store_true",
+                    help="skip every judge call: structured rows scored by "
+                         "numeric match only, Crew R unscored")
+    ap.add_argument("--conversation", action="store_true",
+                    help="WO17: run the conversation tier "
+                         "(evals/golden_conversations.csv through the "
+                         "rewriter) instead of the single-question tiers; "
+                         "the rewriter is never used otherwise")
+    args = ap.parse_args()
+    if args.conversation:
+        from evals.run_conversations import main as conv_main
+        return conv_main()
+    tiers = {int(t) for t in args.tiers.split(",")}
+
+    rows = load_golden(args.golden) if args.golden else load_golden()
+    if args.route:
+        keep = set(args.route.split(","))
+        rows = [r for r in rows if r["route"] in keep]
+    if args.subset:
+        rows = rows[:args.subset]
+    meta = run_metadata({"tiers": sorted(tiers),
+                         "questions": len(rows), "workers": args.workers,
+                         "route_filter": args.route,
+                         "no_judge": args.no_judge})
+    # Langfuse: run id = session id + tag on every trace of this run
+    RUN["id"] = f"eval-{time.strftime('%Y%m%d-%H%M')}-{meta['git_sha']}"
+    RUN["meta"] = meta
+    meta["langfuse_run_id"] = RUN["id"] if tracing.enabled() else None
+    for row in rows:
+        row["_trace_id"] = tracing.new_trace_id(f"{RUN['id']}:Q{row['id']}")
+    t_run = time.perf_counter()
+    print(f"eval @ {meta['git_sha']} · {len(rows)} questions · "
+          f"tiers {sorted(tiers)}"
+          + (f" · langfuse session {RUN['id']}" if tracing.enabled()
+             else " · langfuse off"))
+
+    t1 = t2 = t3 = None
+    failures = {}
+    embed_seconds = None
+    try:
+        if 1 in tiers:
+            t1 = tier1(rows)  # routing needs no database
+        if 2 in tiers or 3 in tiers:
+            t0 = time.perf_counter()
+            qvecs = embed_questions(rows)
+            embed_seconds = time.perf_counter() - t0
+            with get_conn() as conn, conn.cursor() as cur:
+                if 2 in tiers:
+                    t2 = tier2(rows, cur, qvecs)
+                if 3 in tiers:
+                    if t1 is None:
+                        t1 = tier1(rows)
+                    t3 = tier3(rows, cur, qvecs, workers=args.workers,
+                               no_judge=args.no_judge)
+                    failures = report_failures(rows)
+    finally:
+        tracing.flush()  # never lose a run's traces to a crash or exit
+
+    total = (t1["cost"] if t1 else 0) + (t3["cost"] if t3 else 0)
+    meta["total_cost_usd"] = round(total, 4)
+    meta["wall_seconds"] = round(time.perf_counter() - t_run, 1)
+    print(f"\ntotal run cost: ${total:.4f}   wall: {meta['wall_seconds']:.0f}s")
+    stages, stages_text = stage_table(rows, embed_seconds,
+                                      meta["wall_seconds"], args.workers)
+    print("\n=== Stage timing (summed call time per stage"
+          + ("; gap = untimed) ===" if args.workers <= 1
+             else f"; {args.workers} workers overlap) ==="))
+    print(stages_text)
+    write_reports(meta, rows, t1, t2, t3, failures, stages, stages_text)
+
+    if args.check_baseline:
+        base = json.loads(Path(args.check_baseline).read_text())
+        bad = []
+        if t1 and "routing_accuracy" in base and \
+                t1["accuracy"] < base["routing_accuracy"] - 0.05:
+            bad.append(f"routing {t1['accuracy']:.3f} < baseline "
+                       f"{base['routing_accuracy']:.3f} - 0.05")
+        if t2 and "recall_at_10" in base and \
+                t2["reranked"]["recall@10"] < base["recall_at_10"] - 0.05:
+            bad.append(f"recall@10 {t2['reranked']['recall@10']:.3f} < "
+                       f"baseline {base['recall_at_10']:.3f} - 0.05")
+        if bad:
+            print("BASELINE CHECK FAILED: " + "; ".join(bad))
+            return 1
+        print("baseline check OK")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

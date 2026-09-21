@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>EMG RAG</title>
+<style>
+  /* WO18: dark console. Tokens are the only colours in this file. */
+  :root {
+    color-scheme: dark;
+    --bg:#0F1419; --bg-raised:#151B22; --line:#232C36;
+    --text:#D7DEE5; --text-dim:#7C8894;
+    --accent:#22D3EE; --accent-dim:#0E7490; --danger:#F87171;
+    --r-semantic:#A78BFA; --r-hybrid:#34D399; --r-refuse:#FBBF24;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace;
+  }
+  @font-face { font-family:"IBM Plex Sans"; font-style:normal; font-weight:400; font-display:swap; src:url(/static/fonts/IBMPlexSans-Regular-Latin1.woff2) format("woff2"); }
+  @font-face { font-family:"IBM Plex Sans"; font-style:normal; font-weight:500; font-display:swap; src:url(/static/fonts/IBMPlexSans-Medium-Latin1.woff2) format("woff2"); }
+  @font-face { font-family:"IBM Plex Mono"; font-style:normal; font-weight:400; font-display:swap; src:url(/static/fonts/IBMPlexMono-Regular-Latin1.woff2) format("woff2"); }
+  @font-face { font-family:"IBM Plex Mono"; font-style:normal; font-weight:500; font-display:swap; src:url(/static/fonts/IBMPlexMono-Medium-Latin1.woff2) format("woff2"); }
+
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 var(--sans); color:var(--text); background:var(--bg); }
+  .mono { font-family:var(--mono); }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  .app { display:grid; grid-template-columns:280px 1fr; min-height:100vh; }
+  aside { background:var(--bg-raised); border-right:1px solid var(--line); padding:14px; overflow:auto; }
+  main { padding:20px 24px; max-width:880px; width:100%; min-width:0; }
+  h1 { margin:0; font-size:20px; font-weight:500; line-height:1.3; }
+  .sub { color:var(--text-dim); font-size:13px; margin:2px 0 16px; }
+
+  textarea { width:100%; min-height:72px; padding:10px 12px; font:inherit; color:var(--text); background:var(--bg-raised);
+             border:1px solid var(--line); border-radius:4px; resize:vertical; }
+  textarea::placeholder { color:var(--text-dim); }
+  textarea:focus { border-color:var(--accent); outline:none; }
+  textarea:disabled { color:var(--text-dim); }
+  .row { display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap; }
+  button { font:inherit; font-size:14px; padding:7px 14px; border-radius:4px; border:1px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer; }
+  button:disabled { opacity:.55; cursor:default; }
+  button.ghost { border-color:var(--line); color:var(--text-dim); }
+  #askBtn.busy { background:var(--accent); color:var(--bg); opacity:1; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px; }
+  /* WO20: real buttons (Tab reaches them, Enter/Space fill the box), styled as before */
+  button.chip { font:inherit; font-size:12.5px; line-height:1.4; padding:3px 9px; border:1px solid var(--line); border-radius:3px; background:transparent; cursor:pointer; color:var(--text-dim); text-align:left; }
+  button.chip:hover { border-color:var(--text-dim); color:var(--text); }
+  .spin { color:var(--text-dim); font-size:13px; font-family:var(--mono); }
+
+  .card { background:var(--bg-raised); border:1px solid var(--line); border-radius:6px; padding:14px 16px; margin-top:14px; animation:land 150ms ease-out; }
+  @keyframes land { from { opacity:0; } to { opacity:1; } }
+  .card.failed { opacity:.7; }
+  .card .qline { font-weight:500; margin-bottom:4px; overflow-wrap:anywhere; }
+  .interp { font-family:var(--mono); font-size:13px; color:var(--text-dim); margin:2px 0 8px; }
+  .interp .rq { color:var(--text); }
+  .interp a { color:var(--accent); cursor:pointer; margin-left:10px; }
+  .badge { display:inline-block; font-family:var(--mono); font-size:11px; line-height:1.4; text-transform:lowercase; padding:1px 6px; border:1px solid currentColor; border-radius:3px; vertical-align:middle; }
+  .b-structured { color:var(--accent); } .b-semantic { color:var(--r-semantic); } .b-hybrid { color:var(--r-hybrid); }
+  .b-refuse { color:var(--r-refuse); } .b-error { color:var(--danger); } .b-bot { color:var(--text-dim); }
+  .meta { color:var(--text-dim); font-size:13px; margin-top:8px; }
+  .meta.mono { font-size:12.5px; }
+  .answer { margin-top:10px; max-width:72ch; }
+  .answer p { margin:0 0 8px; } .answer ul, .answer ol { margin:4px 0 8px 20px; }
+  .answer code, .answer .n { font-family:var(--mono); font-size:14px; }
+  .answer code { background:var(--bg); border:1px solid var(--line); padding:0 4px; border-radius:3px; }
+  .err { color:var(--danger); }
+
+  /* evidence: the one bold element on the page, drawn as a terminal block */
+  details { margin-top:10px; }
+  details summary { cursor:pointer; font-weight:500; font-size:14px; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:"▸ " / ""; color:var(--text-dim); }
+  details[open] summary::before { content:"▾ " / ""; }
+  .tabs { display:flex; gap:14px; margin:8px 0; }
+  .tab { font-family:var(--mono); font-size:12.5px; color:var(--text-dim); cursor:pointer; padding:2px 0; border-bottom:1px solid transparent; }
+  .tab.on { color:var(--accent); border-bottom-color:var(--accent); }
+  .term { background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:10px 12px; overflow:auto; }
+  .term pre { margin:0; font-family:var(--mono); font-size:13px; line-height:1.5; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+  .term pre::before { content:"sql › " / ""; color:var(--accent-dim); }
+  .term .kw { color:var(--accent); }
+  .term .meta { margin:8px 0 4px; font-family:var(--mono); font-size:12.5px; }
+  table { border-collapse:collapse; font-family:var(--mono); font-size:13px; width:100%; display:block; overflow:auto; }
+  th, td { padding:4px 10px 4px 0; text-align:left; white-space:nowrap; border-bottom:1px solid var(--line); }
+  th { color:var(--text-dim); font-weight:500; border-bottom:1px solid var(--accent); }
+  th.n, td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tbody tr:last-child td { border-bottom:0; }
+
+  .chunk { border:1px solid var(--line); border-radius:4px; padding:10px 12px; margin:8px 0; font-size:14px; }
+  .chunk .h { margin-bottom:2px; } .chunk .h .name { font-weight:500; }
+  .chunk .h .id { font-family:var(--mono); font-size:12.5px; } .chunk .h .cid { font-family:var(--mono); font-size:12px; color:var(--text-dim); }
+  .chunk .ctx { color:var(--text-dim); font-size:12.5px; margin-bottom:6px; } .chunk .txt { white-space:pre-wrap; }
+
+  .fb { margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .fb .meta { margin:0; }
+  .fb button { padding:3px 10px; color:var(--text); border-color:var(--line); } .fb button.sel { border-color:var(--accent); color:var(--accent); }
+  .fb input { font:inherit; font-size:14px; padding:5px 8px; color:var(--text); background:var(--bg); border:1px solid var(--line); border-radius:4px; min-width:240px; }
+  .fb input:focus { border-color:var(--accent); outline:none; }
+
+  .hist h2 { font-size:13px; font-weight:500; color:var(--text-dim); margin:6px 0 10px; }
+  .hi { padding:8px; border-radius:4px; cursor:pointer; border:1px solid transparent; }
+  .hi:hover { background:var(--bg); } .hi.on { background:var(--bg); border-color:var(--line); border-left-color:var(--accent); }
+  .hi.failed { opacity:.55; } .hi .q { font-size:13.5px; }
+  .hi .d { font-family:var(--mono); font-size:11px; color:var(--text-dim); margin-top:3px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .hi .badge { font-size:10px; padding:0 5px; }
+  .hi .meta { margin-top:2px; font-size:12px; }
+  #drawerBtn { display:none; }
+  @media (max-width: 760px) {
+    .app { grid-template-columns:1fr; }
+    aside { position:fixed; inset:0 30% 0 0; z-index:10; transform:translateX(-100%); }
+    aside.open { transform:none; }
+    #drawerBtn { display:inline-block; }
+    main { padding:14px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card { animation:none; }
+    .spin .t { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="side" class="hist">
+    <h2>Conversations</h2>
+    <div id="histList"></div>
+    <div class="row"><button class="ghost" id="moreBtn" onclick="loadHistory(true)">Load more</button></div>
+  </aside>
+  <main>
+    <div class="row" style="margin-top:0">
+      <button class="ghost" id="drawerBtn" onclick="document.getElementById('side').classList.toggle('open')">☰ Conversations</button>
+      <div>
+        <h1>EMG RAG</h1>
+        <div class="sub">Data as of 2026-07-30. Answers cite job and chunk ids.</div>
+      </div>
+    </div>
+
+    <div class="chips" id="chips"></div>
+    <textarea id="q" placeholder="Ask about jobs, quotes, templates, installs, invoices, crews, notes… then follow up"></textarea>
+    <div class="row">
+      <button id="askBtn" onclick="askNow()">Ask</button>
+      <button class="ghost" id="newBtn" onclick="newConversation()">New conversation</button>
+      <span id="spin" class="spin" hidden>working… <span class="t"><span id="secs">0</span> s</span></span>
+      <span id="convNote" class="meta" style="margin:0" hidden></span>
+    </div>
+
+    <div id="out"></div>
+  </main>
+</div>
+
+<script>
+const SESSION_ID = (crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)));
+const EXAMPLES = [
+  "How much did we invoice in 2024?",
+  "How many jobs do we have in Mount Pleasant?",
+  "How many jobs did Crew J install in the first half of 2026?",
+  "How many wasted templates have we had in total?",
+  "What is our overall quote-to-moved-forward conversion rate?",
+  "Were there jobs where we could not get material into the building?"
+];
+const $ = id => document.getElementById(id);
+const H = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let conversationId = null;   // set by the first answer of a conversation; null = start a new one
+let turnCount = 0;
+
+// WO18: numbers in answer prose take the mono face so the eye connects them to the rows table.
+const NUM = /(?<![\w#&$.\-])(\$?\d[\d,]*(?:[.\-\/:]\d+)*%?)(?!\w)/g;
+const nums = t => t.replace(NUM, '<span class="n">$1</span>');
+function md(src) {
+  const lines = String(src ?? "").split(/\r?\n/); let out = "", list = null, para = [];
+  const inline = t => nums(H(t)).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<i>$2</i>").replace(/`([^`]+)`/g,"<code>$1</code>");
+  const flushP = () => { if (para.length) { out += "<p>" + para.map(inline).join("<br>") + "</p>"; para = []; } };
+  const flushL = () => { if (list) { out += `</${list}>`; list = null; } };
+  for (const raw of lines) {
+    const l = raw.trimEnd(); let m;
+    if ((m = l.match(/^\s*[-*•]\s+(.*)/))) { flushP(); if (list !== "ul") { flushL(); out += "<ul>"; list = "ul"; } out += "<li>" + inline(m[1]) + "</li>"; continue; }
+    if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { flushP(); if (list !== "ol") { flushL(); out += "<ol>"; list = "ol"; } out += "<li>" + inline(m[1]) + "</li>"; continue; }
+    if ((m = l.match(/^#{1,3}\s+(.*)/))) { flushP(); flushL(); out += "<p><b>" + inline(m[1]) + "</b></p>"; continue; }
+    if (!l.trim()) { flushP(); flushL(); continue; }
+    flushL(); para.push(l);
+  }
+  flushP(); flushL(); return out;
+}
+function badge(route) { return `<span class="badge b-${H(route)}">${H(route)}</span>`; }
+// WO18: SQL keywords tinted in the evidence terminal (on already-escaped text).
+const KW = /\b(select|from|where|group by|order by|limit|offset|join|left|right|inner|outer|on|as|and|or|not|in|is|null|count|sum|avg|min|max|distinct|having|case|when|then|else|end|between|like|ilike|desc|asc|with|union|all|date|interval|coalesce|extract|exists|true|false)\b/gi;
+const sqlHtml = s => H(s).replace(KW, '<span class="kw">$1</span>');
+
+// one turn -> one card, appended to #out
+function renderTurn(r, opts = {}) {
+  const out = $("out");
+  const card = document.createElement("div"); card.className = "card";
+  if (r.error && !r.answer) {
+    card.className = "card failed";
+    card.innerHTML = `<div class="qline">${H(r.question || opts.question || "")}</div><div class="err">${H(r.error)}</div>`;
+    out.appendChild(card); card.scrollIntoView({ block: "nearest" }); return;
+  }
+  const lat = r.latency_ms != null ? `${(r.latency_ms/1000).toFixed(1)} s` : "";
+  const cost = r.cost_usd != null ? `$${Number(r.cost_usd).toFixed(4)}` : "";
+  let html = `<div class="qline">${H(r.question || opts.question || "")}</div>`;
+  if (r.standalone === false && r.rewritten_question) {
+    html += `<div class="interp">Interpreted as: <span class="rq">${H(r.rewritten_question)}</span><a onclick="rephrase(this)" data-q="${H(r.rewritten_question)}">Not what I meant? Rephrase</a></div>`;
+  }
+  html += `<div>${badge(r.route)} <span class="meta mono" style="display:inline">${lat}${lat && cost ? "&nbsp;&nbsp;" : ""}${cost}</span></div><div class="answer">${md(r.answer)}</div>`;
+  const hasSql = !!r.sql, hasNotes = (r.chunks || []).length > 0;
+  if (hasSql || hasNotes) {
+    const openByDefault = r.route === "structured" || r.route === "hybrid";
+    html += `<details${openByDefault ? " open" : ""}><summary>Evidence</summary><div class="tabs">` +
+      (hasSql ? `<span class="tab on" data-t="sql" onclick="tab(this)">sql</span>` : "") +
+      (hasNotes ? `<span class="tab ${hasSql ? "" : "on"}" data-t="notes" onclick="tab(this)">notes (${r.chunks.length})</span>` : "") + `</div>`;
+    if (hasSql) {
+      const cols = r.columns || [], rows = r.rows || [];
+      const numCol = cols.map((_, i) => rows.some(row => typeof row[i] === "number"));
+      html += `<div class="pane term" data-p="sql"><pre>${sqlHtml(r.sql)}</pre>`;
+      if (r.sql_error) html += `<div class="err">${H(r.sql_error)}</div>`;
+      if (rows.length) html += `<div class="meta">showing ${rows.length} of ${r.row_count ?? rows.length} rows</div><table><thead><tr>${cols.map((c, i)=>`<th${numCol[i] ? ' class="n"' : ""}>${H(c)}</th>`).join("")}</tr></thead><tbody>` + rows.map(row => `<tr>${row.map((v, i)=>`<td${numCol[i] ? ' class="n"' : ""}>${H(v)}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
+      else html += `<div class="meta">no rows</div>`;
+      html += `</div>`;
+    }
+    if (hasNotes) {
+      html += `<div class="pane" data-p="notes" ${hasSql ? "hidden" : ""}>` + r.chunks.map(c =>
+        `<div class="chunk"><div class="h"><span class="id">job ${H(c.job_id)}</span> <span class="name">${H(c.job_name)}</span> <span class="cid">chunk ${H(c.chunk_id)}</span> ${c.is_bot ? '<span class="badge b-bot">automated</span>' : ""}</div>` +
+        (c.context ? `<div class="ctx">${H(c.context)}</div>` : "") + `<div class="txt">${H(c.text)}</div></div>`).join("") + `</div>`;
+    }
+    html += `</details>`;
+  }
+  if (r.trace_id) {
+    html += `<div class="fb" data-trace="${H(r.trace_id)}"><span class="meta">Was this useful?</span>
+      <button onclick="feedback(this,1)">👍</button><button onclick="feedback(this,0)">👎</button>
+      <input class="fbc" placeholder="what was wrong? (optional)" hidden><button class="fbsend" hidden onclick="feedbackSend(this)">Send</button><span class="meta fbdone"></span></div>`;
+  }
+  card.innerHTML = html;
+  out.appendChild(card); card.scrollIntoView({ block: "nearest" });
+}
+function tab(el) {
+  const box = el.closest("details");
+  box.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t === el));
+  box.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.p !== el.dataset.t);
+}
+function rephrase(el) { $("q").value = el.dataset.q; $("q").focus(); }
+
+function feedback(btn, score) {
+  const box = btn.closest(".fb"); box.dataset.score = score;
+  box.querySelectorAll("button").forEach(b => b.classList.remove("sel")); btn.classList.add("sel");
+  if (score === 0) { box.querySelector(".fbc").hidden = false; box.querySelector(".fbsend").hidden = false; box.querySelector(".fbc").focus(); }
+  else feedbackSend(btn);
+}
+async function feedbackSend(btn) {
+  const box = btn.closest(".fb"); const inp = box.querySelector(".fbc"); const comment = inp.hidden ? "" : inp.value;
+  box.querySelectorAll("button, input").forEach(b => b.disabled = true);
+  try {
+    const r = await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json", "X-Session-Id": SESSION_ID },
+      body: JSON.stringify({ trace_id: box.dataset.trace, score: Number(box.dataset.score), comment }) });
+    box.querySelector(".fbdone").textContent = r.ok ? "thanks — recorded" : "could not record feedback";
+  } catch (e) { box.querySelector(".fbdone").textContent = "could not record feedback"; }
+}
+
+function newConversation() {
+  conversationId = null; turnCount = 0; $("out").innerHTML = ""; $("q").value = "";
+  $("convNote").hidden = true; document.querySelectorAll(".hi").forEach(x => x.classList.remove("on")); $("q").focus();
+}
+function convNote() {
+  $("convNote").textContent = turnCount ? `Conversation of ${turnCount} turn${turnCount === 1 ? "" : "s"}. The next question may refer to these.` : "";
+  $("convNote").hidden = !turnCount;
+}
+
+let timer = null;
+async function askNow() {
+  const q = $("q").value.trim(); if (!q) return;
+  $("askBtn").disabled = true; $("askBtn").classList.add("busy"); $("q").disabled = true;
+  $("spin").hidden = false; const t0 = Date.now(); timer = setInterval(() => $("secs").textContent = Math.round((Date.now()-t0)/1000), 500);
+  let data = null;
+  try {
+    const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json", "X-Session-Id": SESSION_ID },
+      body: JSON.stringify({ question: q, conversation_id: conversationId }) });
+    data = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+    if (!r.ok && !data.error) data.error = `HTTP ${r.status}`;
+  } catch (e) { data = { error: "Network error — is the service up?" }; }
+  clearInterval(timer); $("spin").hidden = true; $("askBtn").disabled = false; $("askBtn").classList.remove("busy"); $("q").disabled = false;
+  if (data.conversation_id) conversationId = data.conversation_id;
+  if (!data.error || data.answer) { turnCount += 1; $("q").value = ""; }
+  renderTurn(data, { question: q });
+  convNote();
+  loadHistory(false);
+}
+$("q").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askNow(); } });
+
+// ---------------- history sidebar: conversations
+let oldestLastId = null;
+async function loadHistory(more) {
+  const url = "/api/history?limit=50" + (more && oldestLastId ? `&before=${oldestLastId}` : "");
+  let items = [];
+  try { const r = await fetch(url, { headers: { "X-Session-Id": SESSION_ID } }); if (r.ok) items = await r.json(); } catch (e) {}
+  const list = $("histList");
+  if (!more) list.innerHTML = "";
+  if (!items.length) { if (!more && !list.children.length) list.innerHTML = `<div class="meta">nothing asked yet</div>`; $("moreBtn").hidden = true; return; }
+  for (const it of items) {
+    const d = new Date(it.asked_at);
+    const el = document.createElement("div");
+    const key = it.conversation_id || String(it.id);
+    el.className = "hi" + (it.all_failed ? " failed" : "") + (key === conversationId ? " on" : "");
+    el.dataset.key = key;
+    el.innerHTML = `<div class="q">${H(it.question)}</div><div class="d"><span>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</span><span>${it.turns} turn${it.turns === 1 ? "" : "s"}</span> ${it.error ? '<span class="badge b-error">failed</span>' : badge(it.route || "?")}</div>` + (it.error ? `<div class="meta err">${H(it.error).slice(0,90)}</div>` : "");
+    el.onclick = () => openConversation(it, el);
+    list.appendChild(el);
+    oldestLastId = it.last_id;
+  }
+  $("moreBtn").hidden = items.length < 50;
+}
+async function openConversation(it, el) {
+  document.querySelectorAll(".hi").forEach(x => x.classList.toggle("on", x === el));
+  $("side").classList.remove("open");
+  try {
+    const r = await fetch(`/api/history/${it.conversation_id || it.id}`, { headers: { "X-Session-Id": SESSION_ID } });
+    if (!r.ok) { $("out").innerHTML = `<div class="card err">${r.status === 404 ? "That conversation is not yours to view." : "HTTP " + r.status}</div>`; return; }
+    const data = await r.json();
+    $("out").innerHTML = ""; $("q").value = "";
+    conversationId = data.conversation_id;           // continuing it is allowed: the next question extends it
+    turnCount = 0;
+    for (const t of data.turns) { renderTurn(t); if (!t.error || t.answer) turnCount += 1; }
+    convNote();
+    if (!conversationId) { $("convNote").textContent = "A single past answer, from before conversations existed. Asking starts a new conversation."; $("convNote").hidden = false; }
+  } catch (e) { $("out").innerHTML = `<div class="card err">could not load that conversation</div>`; }
+}
+
+// ---------------- boot
+$("chips").innerHTML = EXAMPLES.map(e => `<button type="button" class="chip" onclick="$('q').value=this.textContent;$('q').focus()">${H(e)}</button>`).join("");
+loadHistory(false);
+</script>
+</body>
+</html>
