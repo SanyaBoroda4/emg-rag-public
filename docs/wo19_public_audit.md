@@ -5,11 +5,11 @@ is written to be public: it holds counts, paths and line numbers only. No
 customer name, contact detail, note text or dollar figure from EMG's data
 appears in it, and none appears in any file it references as public.
 
-Status at the end of the session: **Parts 0, 1 and 2 complete. Part 3
-stopped at the decision point** because the public repository's history holds
-customer data. Nothing has been pushed to the public repo since `d69a060`
-(the old sync script has been replaced and the new one has only been run in
-dry-run mode).
+Status: **Parts 0–2 complete; Part 3 stopped at the decision point** because
+the public repository's history held customer data, then **executed as option
+(a) on 2026-09-21** once Alex decided (§9): the old repository is now the
+private `emg-rag-public-archive`, and `emg-rag-public` is a fresh repository
+whose history starts at the first allowlisted snapshot.
 
 ---
 
