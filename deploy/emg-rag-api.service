@@ -1,0 +1,21 @@
+[Unit]
+Description=EMG RAG HTTP API (FastAPI over the query pipeline, WO16)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/emg-rag
+EnvironmentFile=/opt/emg-rag/.env
+# 172.18.0.1 = the checkbot_default docker bridge gateway: reachable by the
+# Caddy container, not by the public interface. Never 0.0.0.0.
+ExecStart=/opt/emg-rag/.venv/bin/uvicorn serve.app:app --host 172.18.0.1 --port 8080 --workers 1 --timeout-keep-alive 15
+Restart=on-failure
+RestartSec=5
+MemoryMax=350M
+MemoryHigh=300M
+# code under serve/ changes only take effect after: systemctl restart emg-rag-api
+# (the cron git pull does not restart the service)
+
+[Install]
+WantedBy=multi-user.target

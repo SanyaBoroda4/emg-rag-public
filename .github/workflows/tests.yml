@@ -1,0 +1,28 @@
+# Unit tests (WO21). No secrets, no database, no ML extras: everything here
+# runs from committed fixtures — the rewriter's recorded model outputs, the
+# per-alias SQL validator, and the public-mirror guard with its own fake
+# term lists. The eval tiers (API keys, a database) live in eval.yml and run
+# only on manual dispatch, so a missing secret can never paint this badge red.
+
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt   # no torch / sentence-transformers: that file is requirements-rerank-local.txt
+      - name: rewriter (recorded fixtures, no LLM)
+        run: python tests/test_rewrite.py
+      - name: SQL validator (per-alias columns; the recorded-SQL guard skips when run files are absent)
+        run: python tests/test_sql_validator.py
+      - name: public-mirror guard (fake term lists)
+        run: python tests/test_public_guard.py

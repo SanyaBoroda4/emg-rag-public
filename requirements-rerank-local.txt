@@ -1,0 +1,8 @@
+# Optional: local cross-encoder reranker (RERANK_BACKEND=local).
+# ~600 MiB resident (measured by scripts/measure_reranker.py) — NEVER install
+# on the memory-constrained server; it failed the 400 MiB gate there.
+# Also: merely having torch/transformers installed makes `import voyageai`
+# pull them in (~430 MiB in every process), so keep these off any
+# memory-budgeted host entirely.
+sentence-transformers
+torch

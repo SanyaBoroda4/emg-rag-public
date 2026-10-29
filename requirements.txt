@@ -1,0 +1,12 @@
+psycopg[binary]
+python-dotenv
+openpyxl
+anthropic
+voyageai
+sqlglot
+langfuse    # WO12 tracing; pure-Python + opentelemetry, ~6 MB of wheels, no torch
+fastapi==0.141.1          # WO16 HTTP API (serve/app.py)
+uvicorn[standard]==0.53.0 # WO16; ~9 MB of wheels with fastapi, no torch
+# NOTE: do NOT install requirements-rerank-local.txt on the 2GB server.
+# With torch/transformers present, `import voyageai` transitively imports
+# them (~430 MiB RSS in every process). The server uses RERANK_BACKEND=voyage.

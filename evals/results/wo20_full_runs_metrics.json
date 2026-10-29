@@ -1,0 +1,259 @@
+{
+ "note": "Metrics-only extract of the private run files (questions, answers and retrieved note text removed). Built from the files named below.",
+ "runs": {
+  "2026-09-21-1359-wo20-full3.json": {
+   "meta": {
+    "git_sha": "a070597",
+    "answer_model": "claude-haiku-4-5",
+    "sql_model": "claude-haiku-4-5",
+    "router_model": "claude-haiku-4-5",
+    "rerank_backend": "voyage",
+    "rerank_enabled": "1",
+    "embed_model": "voyage-3.5-lite",
+    "timestamp": "2026-09-21 13:49:30",
+    "tiers": [
+     1,
+     2,
+     3
+    ],
+    "questions": 82,
+    "workers": 1,
+    "route_filter": null,
+    "no_judge": false,
+    "total_cost_usd": 1.0441,
+    "wall_seconds": 605.4
+   },
+   "tier1": {
+    "accuracy": 0.9634146341463414,
+    "matrix": {
+     "structured": {
+      "structured": 53,
+      "semantic": 0,
+      "hybrid": 0,
+      "refuse": 0
+     },
+     "semantic": {
+      "structured": 2,
+      "semantic": 20,
+      "hybrid": 1,
+      "refuse": 0
+     },
+     "hybrid": {
+      "structured": 0,
+      "semantic": 0,
+      "hybrid": 3,
+      "refuse": 0
+     },
+     "refuse": {
+      "structured": 0,
+      "semantic": 0,
+      "hybrid": 0,
+      "refuse": 3
+     }
+    },
+    "cost": 0.07836200000000001
+   },
+   "tier2": {
+    "bm25": {
+     "recall@5": 0.09090909090909091,
+     "recall@10": 0.09090909090909091,
+     "recall@20": 0.18181818181818182,
+     "mrr": 0.11112587076249981,
+     "ndcg@10": 0.09090909090909091
+    },
+    "dense": {
+     "recall@5": 0.28030303030303033,
+     "recall@10": 0.28030303030303033,
+     "recall@20": 0.5757575757575757,
+     "mrr": 0.32646353646353643,
+     "ndcg@10": 0.27335612013677246
+    },
+    "fused": {
+     "recall@5": 0.2727272727272727,
+     "recall@10": 0.5,
+     "recall@20": 0.6439393939393939,
+     "mrr": 0.1962339340246317,
+     "ndcg@10": 0.2558296353050069
+    },
+    "reranked": {
+     "recall@5": 0.6742424242424243,
+     "recall@10": 0.8181818181818182,
+     "recall@20": 0.9090909090909091,
+     "mrr": 0.6597796143250689,
+     "ndcg@10": 0.6911681583989598
+    }
+   },
+   "tier3": {
+    "correct": 75,
+    "total": 82,
+    "accuracy": 0.9146341463414634,
+    "faithfulness": 0.9620253164556962,
+    "context_precision": 0.6736111111111112,
+    "cost": 0.965767,
+    "judge_model": "claude-sonnet-5",
+    "workers": 1,
+    "wall_seconds": 507.4,
+    "latency_totals": {
+     "router": 92.9,
+     "sql": 73.2,
+     "answer": 109.9,
+     "judge": 319.7
+    }
+   },
+   "stages": {
+    "seconds": {
+     "router": 92.9,
+     "embed": 0.8,
+     "bm25": 0.8,
+     "dense": 0.9,
+     "rerank": 5.4,
+     "sql": 73.2,
+     "answer": 109.9,
+     "judge": 319.7
+    },
+    "calls": {
+     "router": 82,
+     "embed": 1,
+     "bm25": 26,
+     "dense": 26,
+     "rerank": 26,
+     "sql": 59,
+     "answer": 79,
+     "judge": 79
+    },
+    "sum_seconds": 603.8,
+    "wall_seconds": 605.4,
+    "workers": 1,
+    "share_basis": "wall",
+    "gap_seconds": 1.6
+   }
+  },
+  "2026-09-21-1411-wo20-full4.json": {
+   "meta": {
+    "git_sha": "a070597",
+    "answer_model": "claude-haiku-4-5",
+    "sql_model": "claude-haiku-4-5",
+    "router_model": "claude-haiku-4-5",
+    "rerank_backend": "voyage",
+    "rerank_enabled": "1",
+    "embed_model": "voyage-3.5-lite",
+    "timestamp": "2026-09-21 13:59:37",
+    "tiers": [
+     1,
+     2,
+     3
+    ],
+    "questions": 82,
+    "workers": 1,
+    "route_filter": null,
+    "no_judge": false,
+    "total_cost_usd": 1.0717,
+    "wall_seconds": 700.8
+   },
+   "tier1": {
+    "accuracy": 0.9634146341463414,
+    "matrix": {
+     "structured": {
+      "structured": 53,
+      "semantic": 0,
+      "hybrid": 0,
+      "refuse": 0
+     },
+     "semantic": {
+      "structured": 2,
+      "semantic": 20,
+      "hybrid": 1,
+      "refuse": 0
+     },
+     "hybrid": {
+      "structured": 0,
+      "semantic": 0,
+      "hybrid": 3,
+      "refuse": 0
+     },
+     "refuse": {
+      "structured": 0,
+      "semantic": 0,
+      "hybrid": 0,
+      "refuse": 3
+     }
+    },
+    "cost": 0.07824700000000002
+   },
+   "tier2": {
+    "bm25": {
+     "recall@5": 0.09090909090909091,
+     "recall@10": 0.09090909090909091,
+     "recall@20": 0.18181818181818182,
+     "mrr": 0.11112587076249981,
+     "ndcg@10": 0.09090909090909091
+    },
+    "dense": {
+     "recall@5": 0.28030303030303033,
+     "recall@10": 0.28030303030303033,
+     "recall@20": 0.5757575757575757,
+     "mrr": 0.32646353646353643,
+     "ndcg@10": 0.27335612013677246
+    },
+    "fused": {
+     "recall@5": 0.2727272727272727,
+     "recall@10": 0.5,
+     "recall@20": 0.6439393939393939,
+     "mrr": 0.1962339340246317,
+     "ndcg@10": 0.2558296353050069
+    },
+    "reranked": {
+     "recall@5": 0.6742424242424243,
+     "recall@10": 0.8181818181818182,
+     "recall@20": 0.9090909090909091,
+     "mrr": 0.6597796143250689,
+     "ndcg@10": 0.6911681583989598
+    }
+   },
+   "tier3": {
+    "correct": 75,
+    "total": 82,
+    "accuracy": 0.9146341463414634,
+    "faithfulness": 0.9240506329113924,
+    "context_precision": 0.7361111111111112,
+    "cost": 0.993461,
+    "judge_model": "claude-sonnet-5",
+    "workers": 1,
+    "wall_seconds": 572.0,
+    "latency_totals": {
+     "router": 124.2,
+     "sql": 71.0,
+     "answer": 115.1,
+     "judge": 380.9
+    }
+   },
+   "stages": {
+    "seconds": {
+     "router": 124.2,
+     "embed": 0.4,
+     "bm25": 0.9,
+     "dense": 1.0,
+     "rerank": 6.8,
+     "sql": 71.0,
+     "answer": 115.1,
+     "judge": 380.9
+    },
+    "calls": {
+     "router": 82,
+     "embed": 1,
+     "bm25": 26,
+     "dense": 26,
+     "rerank": 26,
+     "sql": 59,
+     "answer": 79,
+     "judge": 79
+    },
+    "sum_seconds": 700.3,
+    "wall_seconds": 700.8,
+    "workers": 1,
+    "share_basis": "wall",
+    "gap_seconds": 0.5
+   }
+  }
+ }
+}

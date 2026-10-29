@@ -1,0 +1,32 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: emg_rag_db
+    # Hard cap — this box runs live WhatsApp services; never raise without checking
+    # free memory on the server first.
+    mem_limit: 600m
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    ports:
+      # localhost only; 5433 avoids colliding with evolution_postgres on 5432
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - emg_rag_pgdata:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - effective_cache_size=512MB
+      - -c
+      - max_connections=20
+
+volumes:
+  emg_rag_pgdata:

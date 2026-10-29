@@ -1,0 +1,5 @@
+{
+  "comment": "Committed CI baseline. routing_accuracy from Tier 1 on the real 58-question golden set; recall_at_10 is post-rerank on the production corpus (documented; the CI retrieval gate uses fixture_baseline.json). Run: 2026-08-08, commit 55090e3.",
+  "routing_accuracy": 0.948,
+  "recall_at_10": 0.522
+}
